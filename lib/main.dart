@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'constants.dart';
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
+import 'screens/home_shell.dart';
 import 'services/hive_service.dart';
 
 void main() async {
@@ -25,7 +27,7 @@ class TapVerifyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF059669),
           primary: const Color(0xFF059669),
-          secondary: const Color(0xFFD97706),
+          secondary: const Color(0xFFF97316),
           surface: Colors.white,
           brightness: Brightness.light,
         ),
@@ -42,7 +44,7 @@ class TapVerifyApp extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0,
           color: Colors.white,
           shape: RoundedRectangleBorder(
@@ -62,7 +64,7 @@ class TapVerifyApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(color: Colors.grey.shade200),
@@ -78,7 +80,7 @@ class TapVerifyApp extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
-      home: const AuthWrapper(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -97,7 +99,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (snapshot.hasData && snapshot.data == true) {
-          return const DashboardScreen();
+          return const HomeShell();
         }
         return const LoginScreen();
       },

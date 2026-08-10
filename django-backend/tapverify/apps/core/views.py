@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -6,17 +7,22 @@ from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 import logging
+import hashlib
 
-from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder
+from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder, PaymentLink
 from .serializers import (
     WorkspaceSerializer, StaffSerializer, MemberSerializer, MemberListSerializer,
     VerificationEventSerializer, VerifyRequestSerializer, ReceiptSerializer,
-    MpesaTransactionSerializer, PaymentReminderSerializer
+    MpesaTransactionSerializer, PaymentReminderSerializer, PaymentLinkSerializer
 )
-from .services import AfricasTalkingSMSService, build_receipt_sms, build_reminder_sms
+from .services import AfricasTalkingSMSService, build_receipt_sms, build_reminder_sms, get_payment_rail
 
 logger = logging.getLogger(__name__)
 
+
+# ───────────────────────────────────────────────
+# AUTH & STAFF
+# ───────────────────────────────────────────────
 
 class StaffLoginView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
@@ -33,7 +39,6 @@ class StaffLoginView(generics.GenericAPIView):
         except Staff.DoesNotExist:
             return Response({'error': 'Invalid credentials'}, status=401)
 
-        import hashlib
         token = hashlib.sha256(f"{staff.id}{phone}{pin}".encode()).hexdigest()[:32]
 
         return Response({
@@ -53,6 +58,10 @@ class StaffLoginView(generics.GenericAPIView):
             }
         })
 
+
+# ───────────────────────────────────────────────
+# MEMBERS
+# ───────────────────────────────────────────────
 
 class MemberListView(generics.ListAPIView):
     serializer_class = MemberListSerializer
@@ -82,6 +91,10 @@ class MemberHistoryView(generics.ListAPIView):
         member_id = self.kwargs.get('member_id')
         return VerificationEvent.objects.filter(member_id=member_id).order_by('-created_at')
 
+
+# ───────────────────────────────────────────────
+# VERIFICATION (THE CORE) — uses Payment Rail
+# ───────────────────────────────────────────────
 
 class VerifyMemberView(generics.GenericAPIView):
     serializer_class = VerifyRequestSerializer
@@ -134,7 +147,7 @@ class VerifyMemberView(generics.GenericAPIView):
             verified_at=timezone.now()
         )
 
-        if data.get('event_type') == 'payment_cash' or data.get('event_type') == 'payment_mpesa':
+        if data.get('event_type') in ('payment_cash', 'payment_mpesa'):
             member.balance_due = max(0, member.balance_due - data['amount'])
             member.last_paid_at = timezone.now()
             member.save()
@@ -170,6 +183,10 @@ class VerifyMemberView(generics.GenericAPIView):
         }, status=201)
 
 
+# ───────────────────────────────────────────────
+# RECEIPT PORTAL (Web)
+# ───────────────────────────────────────────────
+
 def receipt_view(request, token):
     event = get_object_or_404(VerificationEvent, receipt_token=token)
 
@@ -189,6 +206,10 @@ def receipt_view(request, token):
 
     return render(request, 'core/receipt_pin.html', {'token': token, 'error': None})
 
+
+# ───────────────────────────────────────────────
+# DASHBOARD STATS
+# ───────────────────────────────────────────────
 
 class WorkspaceStatsView(generics.GenericAPIView):
     def get(self, request):
@@ -219,6 +240,10 @@ class WorkspaceStatsView(generics.GenericAPIView):
         }
         return Response(stats)
 
+
+# ───────────────────────────────────────────────
+# REMINDERS
+# ───────────────────────────────────────────────
 
 class SendRemindersView(generics.GenericAPIView):
     def post(self, request):
@@ -272,16 +297,23 @@ class SendRemindersView(generics.GenericAPIView):
         })
 
 
+# ───────────────────────────────────────────────
+# M-PESA WEBHOOK (Legacy / PayHero)
+# ───────────────────────────────────────────────
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def mpesa_callback(request):
-    data = request.data
+    rail = get_payment_rail('payhero')
+    parsed = rail.verify_webhook(request.data, request.headers)
 
-    receipt = data.get('mpesaReceiptNumber') or data.get('receipt_number') or data.get('TransID')
-    phone = data.get('phoneNumber') or data.get('phone') or data.get('MSISDN')
-    amount = data.get('amount') or data.get('TransAmount')
-    account_ref = data.get('accountReference') or data.get('BillRefNumber') or data.get('reference')
-    result_code = data.get('resultCode') or data.get('ResultCode')
+    if not parsed.get('valid'):
+        return Response({'error': 'Invalid webhook'}, status=400)
+
+    receipt = parsed.get('receipt_number')
+    phone = parsed.get('phone')
+    amount = parsed.get('amount')
+    reference = parsed.get('reference')
 
     if not receipt or not phone:
         return Response({'error': 'Missing required fields'}, status=400)
@@ -291,9 +323,9 @@ def mpesa_callback(request):
         phone = '254' + phone[1:]
 
     workspace = None
-    if account_ref:
+    if reference:
         try:
-            workspace = Workspace.objects.get(account_number=account_ref)
+            workspace = Workspace.objects.get(account_number=reference)
         except Workspace.DoesNotExist:
             pass
 
@@ -317,12 +349,12 @@ def mpesa_callback(request):
         mpesa_receipt_number=receipt,
         phone_number=phone,
         amount=amount,
-        account_reference=account_ref or '',
-        raw_callback=data,
+        account_reference=reference or '',
+        raw_callback=request.data,
         is_matched=bool(member)
     )
 
-    if member and workspace and str(result_code) == '0':
+    if member and workspace and parsed.get('status') == 'success':
         event = VerificationEvent.objects.create(
             workspace=workspace,
             member=member,
@@ -349,6 +381,271 @@ def mpesa_callback(request):
 
     return Response({'success': True, 'matched': bool(member), 'transaction_id': str(txn.id)})
 
+
+# ───────────────────────────────────────────────
+# LOOP IPN WEBHOOK
+# ───────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def loop_webhook(request):
+    """
+    Receive Loop IPN callback.
+    Flow: verify signature → find PaymentLink by reference → create VerificationEvent → send SMS → return 200
+    """
+    rail = get_payment_rail('loop')
+    parsed = rail.verify_webhook(request.data, request.headers)
+
+    if not parsed.get('valid'):
+        logger.warning("Invalid Loop IPN received")
+        return Response({'error': 'Invalid webhook'}, status=400)
+
+    reference = parsed.get('reference')
+    receipt_number = parsed.get('receipt_number')
+    phone = parsed.get('phone')
+    amount = parsed.get('amount')
+    payment_status = parsed.get('status')
+
+    logger.info(f"Loop IPN: ref={reference} status={payment_status} receipt={receipt_number}")
+
+    payment_link = None
+    event = None
+    member = None
+    workspace = None
+
+    if reference:
+        try:
+            payment_link = PaymentLink.objects.select_related('member', 'workspace').get(token=reference)
+        except PaymentLink.DoesNotExist:
+            pass
+
+    if payment_link:
+        member = payment_link.member
+        workspace = payment_link.workspace
+
+        if payment_status == 'success' and payment_link.status == 'pending':
+            event = VerificationEvent.objects.create(
+                workspace=workspace,
+                member=member,
+                event_type='payment_mpesa',
+                amount=payment_link.amount,
+                verification_method='mpesa_callback',
+                status='approved',
+                verified_at=timezone.now(),
+                notes=f'Loop payment via link {payment_link.token}'
+            )
+
+            member.balance_due = max(0, member.balance_due - payment_link.amount)
+            member.last_paid_at = timezone.now()
+            member.save()
+
+            payment_link.status = 'paid'
+            payment_link.paid_at = timezone.now()
+            payment_link.transaction_ref = receipt_number or ''
+            payment_link.event = event
+            payment_link.save()
+
+            sms_service = AfricasTalkingSMSService()
+            sms_message = build_receipt_sms(event)
+            success, msg_id, error = sms_service.send_sms(member.phone, sms_message)
+            if success:
+                event.sms_status = 'sent'
+                event.sms_message_id = msg_id or ''
+                event.save()
+
+    elif phone and workspace:
+        try:
+            member = Member.objects.get(workspace=workspace, phone=phone, is_active=True)
+        except Member.DoesNotExist:
+            pass
+
+        if member and payment_status == 'success':
+            event = VerificationEvent.objects.create(
+                workspace=workspace,
+                member=member,
+                event_type='payment_mpesa',
+                amount=amount,
+                verification_method='mpesa_callback',
+                status='approved',
+                verified_at=timezone.now(),
+                notes='Loop direct payment'
+            )
+
+            member.balance_due = max(0, member.balance_due - amount)
+            member.last_paid_at = timezone.now()
+            member.save()
+
+            sms_service = AfricasTalkingSMSService()
+            sms_message = build_receipt_sms(event)
+            success, msg_id, error = sms_service.send_sms(member.phone, sms_message)
+            if success:
+                event.sms_status = 'sent'
+                event.sms_message_id = msg_id or ''
+                event.save()
+
+    return Response({
+        'success': True,
+        'matched': bool(member),
+        'event_id': str(event.id) if event else None,
+    })
+
+
+# ───────────────────────────────────────────────
+# PAYMENT LINKS — Member pays on their own phone
+# ───────────────────────────────────────────────
+
+class PaymentLinkCreateView(generics.GenericAPIView):
+    """
+    POST /api/v1/payment-link/create/
+    Creates a payment link so the MEMBER can pay on their own phone via Loop.
+    """
+    def post(self, request):
+        workspace_id = request.data.get('workspace_id')
+        member_id = request.data.get('member_id')
+        amount = request.data.get('amount')
+
+        if not all([workspace_id, member_id, amount]):
+            return Response({'error': 'workspace_id, member_id, and amount required'}, status=400)
+
+        try:
+            workspace = Workspace.objects.get(id=workspace_id, is_active=True)
+            member = Member.objects.get(id=member_id, workspace=workspace, is_active=True)
+        except (Workspace.DoesNotExist, Member.DoesNotExist):
+            return Response({'error': 'Invalid workspace or member'}, status=404)
+
+        payment_link = PaymentLink.objects.create(
+            workspace=workspace,
+            member=member,
+            amount=amount,
+            description=f'Payment to {workspace.name}',
+        )
+
+        link_url = f"{settings.RECEIPT_BASE_URL}/p/{payment_link.token}"
+
+        rail = get_payment_rail()
+        payment_result = rail.initiate_payment(
+            phone=member.phone,
+            amount=amount,
+            reference=payment_link.token,
+            description=f'{workspace.name} - {member.name}',
+        )
+
+        if payment_result.get('success'):
+            payment_link.transaction_ref = payment_result.get('transaction_id', '')
+            payment_link.save()
+            return Response({
+                'success': True,
+                'link_url': link_url,
+                'token': payment_link.token,
+                'amount': str(amount),
+                'member': member.name,
+                'status': 'payment_initiated',
+            })
+        else:
+            return Response({
+                'success': True,
+                'link_url': link_url,
+                'token': payment_link.token,
+                'amount': str(amount),
+                'member': member.name,
+                'status': 'link_created',
+                'message': 'Payment link created. Member can pay when ready.',
+            })
+
+
+def payment_link_view(request, token):
+    """
+    Member opens payment link on their phone.
+    Shows amount + group name + PAY NOW button.
+    Auto-refreshes via JS polling to show confirmation.
+    """
+    pl = get_object_or_404(PaymentLink, token=token)
+
+    if pl.status == 'paid':
+        event = pl.event
+        return render(request, 'core/payment_success.html', {
+            'payment_link': pl,
+            'event': event,
+        })
+
+    if pl.is_expired:
+        pl.status = 'expired'
+        pl.save()
+        return render(request, 'core/payment_expired.html', {
+            'payment_link': pl,
+        })
+
+    return render(request, 'core/payment_link.html', {
+        'payment_link': pl,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def payment_link_pay(request, token):
+    """
+    POST /p/<token>/pay/
+    Initiates Loop Request to Pay for the member.
+    """
+    pl = get_object_or_404(PaymentLink, token=token, status='pending')
+
+    if pl.is_expired:
+        return Response({'error': 'Payment link expired'}, status=400)
+
+    rail = get_payment_rail()
+    result = rail.initiate_payment(
+        phone=pl.member.phone,
+        amount=pl.amount,
+        reference=pl.token,
+        description=f'{pl.workspace.name} - {pl.member.name}',
+    )
+
+    if result.get('success'):
+        pl.transaction_ref = result.get('transaction_id', '')
+        pl.save()
+        return Response({
+            'success': True,
+            'message': 'M-Pesa prompt sent to your phone. Enter your PIN to complete.',
+            'transaction_id': result.get('transaction_id'),
+        })
+    else:
+        return Response({
+            'success': False,
+            'error': 'Could not initiate payment. Please try again.',
+        }, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def payment_link_status(request, token):
+    """
+    GET /p/<token>/status/
+    Returns current payment status (for JS polling).
+    """
+    pl = get_object_or_404(PaymentLink, token=token)
+    return Response({
+        'status': pl.status,
+        'paid_at': pl.paid_at.isoformat() if pl.paid_at else None,
+    })
+
+
+# ───────────────────────────────────────────────
+# PAYMENT RAIL INFO
+# ───────────────────────────────────────────────
+
+@api_view(['GET'])
+def payment_rail_info(request):
+    """Returns which payment rail is active."""
+    rail = get_payment_rail()
+    return Response({
+        'active_rail': rail.get_rail_name(),
+        'available_rails': ['loop', 'payhero'],
+    })
+
+
+# ───────────────────────────────────────────────
+# ADMIN / UTILITY
+# ───────────────────────────────────────────────
 
 @api_view(['POST'])
 def create_workspace_demo(request):

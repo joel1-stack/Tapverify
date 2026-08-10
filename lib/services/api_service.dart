@@ -158,4 +158,32 @@ class ApiService {
     );
     return jsonDecode(resp.body);
   }
+
+  static Future<Map<String, dynamic>> createPaymentLink({
+    required String workspaceId,
+    required String memberId,
+    required double amount,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$baseUrl/api/v1/payment-link/create/'),
+      headers: _headers,
+      body: jsonEncode({
+        'workspace_id': workspaceId,
+        'member_id': memberId,
+        'amount': amount,
+      }),
+    );
+    return jsonDecode(resp.body);
+  }
+
+  static Future<Map<String, dynamic>> getPaymentRailInfo() async {
+    final resp = await http.get(
+      Uri.parse('$baseUrl/api/v1/rail/info/'),
+      headers: _headers,
+    );
+    if (resp.statusCode == 200) {
+      return jsonDecode(resp.body);
+    }
+    throw Exception('Failed to get rail info');
+  }
 }

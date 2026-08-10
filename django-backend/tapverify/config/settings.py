@@ -100,6 +100,16 @@ AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='')
 AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='')
 AFRICASTALKING_SENDER_ID = config('AFRICASTALKING_SENDER_ID', default='TAPVERIFY')
 
+# Active payment rail: 'loop' or 'payhero'
+ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='loop')
+
+# Loop API (primary rail for hackathon)
+LOOP_BASE_URL = config('LOOP_BASE_URL', default='https://sandbox.looponline.co.ke')
+LOOP_API_KEY = config('LOOP_API_KEY', default='')
+LOOP_MERCHANT_ID = config('LOOP_MERCHANT_ID', default='')
+LOOP_IPN_SECRET = config('LOOP_IPN_SECRET', default='')
+
+# PayHero (legacy, secondary rail)
 PAYHERO_API_USERNAME = config('PAYHERO_API_USERNAME', default='')
 PAYHERO_API_PASSWORD = config('PAYHERO_API_PASSWORD', default='')
 PAYHERO_CHANNEL_ID = config('PAYHERO_CHANNEL_ID', default='')

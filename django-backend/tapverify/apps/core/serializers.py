@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder
+from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder, PaymentLink
 
 class WorkspaceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -89,3 +89,13 @@ class PaymentReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentReminder
         fields = ['id', 'member_name', 'member_phone', 'reminder_type', 'amount_due', 'sms_sent', 'created_at']
+
+
+class PaymentLinkSerializer(serializers.ModelSerializer):
+    member_name = serializers.CharField(source='member.name', read_only=True)
+    workspace_name = serializers.CharField(source='workspace.name', read_only=True)
+
+    class Meta:
+        model = PaymentLink
+        fields = ['id', 'workspace', 'workspace_name', 'member', 'member_name', 'token',
+                  'amount', 'description', 'status', 'rail_used', 'expires_at', 'paid_at', 'created_at']

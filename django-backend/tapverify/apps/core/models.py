@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 import uuid
 import secrets
 
@@ -196,3 +197,42 @@ class PaymentReminder(models.Model):
 
     def __str__(self):
         return f"{self.member.name} — {self.reminder_type}"
+
+
+class PaymentLink(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('paid', 'Paid'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='payment_links')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payment_links')
+    event = models.OneToOneField(VerificationEvent, on_delete=models.SET_NULL, null=True, blank=True, related_name='payment_link')
+
+    token = models.CharField(max_length=32, unique=True, db_index=True,
+                             default=lambda: secrets.token_urlsafe(16))
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.CharField(max_length=200, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    rail_used = models.CharField(max_length=20, default='loop')
+    transaction_ref = models.CharField(max_length=100, blank=True)
+
+    expires_at = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payment_links'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Link for {self.member.name} — Ksh {self.amount} ({self.status})"
+
+    @property
+    def is_expired(self):
+        if self.expires_at:
+            return timezone.now() > self.expires_at
+        return False

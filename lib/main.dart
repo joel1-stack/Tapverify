@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -22,29 +23,59 @@ class TapVerifyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2D6A4F),
-          primary: const Color(0xFF2D6A4F),
-          secondary: const Color(0xFF8B6914),
-          surface: const Color(0xFFFFF8E7),
+          seedColor: const Color(0xFF059669),
+          primary: const Color(0xFF059669),
+          secondary: const Color(0xFFD97706),
+          surface: Colors.white,
+          brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF5F5F0),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2D6A4F),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        textTheme: GoogleFonts.interTextTheme(),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xFF059669),
           foregroundColor: Colors.white,
           elevation: 0,
+          centerTitle: false,
+          titleTextStyle: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
         cardTheme: CardTheme(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey.shade100),
+          ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2D6A4F),
+            backgroundColor: const Color(0xFF059669),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+            elevation: 0,
           ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
       home: const AuthWrapper(),
@@ -62,7 +93,7 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator(color: Color(0xFF2D6A4F))),
+            body: Center(child: CircularProgressIndicator(color: Color(0xFF059669))),
           );
         }
         if (snapshot.hasData && snapshot.data == true) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/member.dart';
 import '../services/api_service.dart';
 import '../services/hive_service.dart';
@@ -17,11 +18,22 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   String _eventType = 'payment_cash';
   bool _loading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _amountCtrl.text = widget.member.balanceDue.toStringAsFixed(0);
+  }
+
   Future<void> _confirm() async {
     final amount = double.tryParse(_amountCtrl.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid amount')),
+        SnackBar(
+          content: Text('Enter a valid amount', style: GoogleFonts.inter()),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }
@@ -53,9 +65,11 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e', style: GoogleFonts.inter())),
+        );
+      }
     } finally {
       setState(() => _loading = false);
     }
@@ -65,60 +79,157 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Confirm Collection')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.member.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Text(widget.member.phone, style: const TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    Text('Code: ${widget.member.memberCode}', style: const TextStyle(fontFamily: 'monospace')),
-                    Text('Balance Due: Ksh ${widget.member.balanceDue.toStringAsFixed(0)}',
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
-                  ],
-                ),
+            // Member Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: const Color(0xFF059669).withOpacity(0.1),
+                        child: Text(
+                          widget.member.name[0].toUpperCase(),
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF059669),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.member.name,
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0f172a),
+                              ),
+                            ),
+                            Text(
+                              widget.member.phone,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Code', style: GoogleFonts.inter(fontSize: 11, color: Colors.grey.shade500)),
+                            Text(
+                              widget.member.memberCode,
+                              style: GoogleFonts.inter(fontFamily: 'monospace', fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('Balance Due', style: GoogleFonts.inter(fontSize: 11, color: Colors.grey.shade500)),
+                            Text(
+                              'Ksh ${widget.member.balanceDue.toStringAsFixed(0)}',
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFFDC2626),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            const Text('Amount Collected', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 28),
+
+            // Amount
+            Text(
+              'Amount Collected',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _amountCtrl,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+              decoration: const InputDecoration(
                 prefixText: 'Ksh ',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                hintText: '0',
               ),
             ),
-            const SizedBox(height: 16),
-            const Text('Payment Type', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 20),
+
+            // Payment Type
+            Text(
+              'Payment Type',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _eventType,
-              items: const [
-                DropdownMenuItem(value: 'payment_cash', child: Text('Cash')),
-                DropdownMenuItem(value: 'payment_mpesa', child: Text('M-Pesa')),
-                DropdownMenuItem(value: 'payment_till', child: Text('Till Payment')),
-                DropdownMenuItem(value: 'attendance_only', child: Text('Attendance Only')),
+              items: [
+                DropdownMenuItem(value: 'payment_cash', child: Text('Cash', style: GoogleFonts.inter())),
+                DropdownMenuItem(value: 'payment_mpesa', child: Text('M-Pesa', style: GoogleFonts.inter())),
+                DropdownMenuItem(value: 'payment_till', child: Text('Till Payment', style: GoogleFonts.inter())),
+                DropdownMenuItem(value: 'attendance_only', child: Text('Attendance Only', style: GoogleFonts.inter())),
               ],
               onChanged: (v) => setState(() => _eventType = v!),
-              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+              decoration: const InputDecoration(),
             ),
-            const Spacer(),
+            const SizedBox(height: 32),
+
+            // Confirm Button
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
                 onPressed: _loading ? null : _confirm,
                 child: _loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('CONFIRM & SEND SMS'),
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                  : Text('CONFIRM & SEND SMS', style: GoogleFonts.inter(fontWeight: FontWeight.w800, letterSpacing: 0.5)),
               ),
             ),
           ],

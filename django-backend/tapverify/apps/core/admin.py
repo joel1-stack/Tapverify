@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder
+from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder, PaymentLink
 
 @admin.register(Workspace)
 class WorkspaceAdmin(admin.ModelAdmin):
@@ -42,3 +42,10 @@ class MpesaTransactionAdmin(admin.ModelAdmin):
 class PaymentReminderAdmin(admin.ModelAdmin):
     list_display = ['member', 'reminder_type', 'amount_due', 'sms_sent', 'created_at']
     list_filter = ['reminder_type', 'sms_sent']
+
+@admin.register(PaymentLink)
+class PaymentLinkAdmin(admin.ModelAdmin):
+    list_display = ['member', 'workspace', 'amount', 'status', 'rail_used', 'paid_at', 'created_at']
+    list_filter = ['status', 'rail_used']
+    search_fields = ['member__name', 'token']
+    readonly_fields = ['token', 'created_at']

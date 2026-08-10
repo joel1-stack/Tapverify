@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapVerify — Receipt</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a5f3c 0%, #0d3b25 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .logo {
+            width: 60px; height: 60px;
+            background: #2D6A4F;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 28px;
+        }
+        h1 { color: #1B4332; font-size: 22px; margin-bottom: 8px; }
+        p { color: #666; margin-bottom: 24px; font-size: 14px; }
+        .pin-input {
+            display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;
+        }
+        .pin-input input {
+            width: 50px; height: 60px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 24px; font-weight: bold;
+            color: #1B4332;
+            transition: border-color 0.2s;
+        }
+        .pin-input input:focus {
+            outline: none; border-color: #2D6A4F;
+        }
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #2D6A4F;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px; font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #1B4332; }
+        .error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        .secure-badge {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-top: 20px;
+            color: #888; font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">🔒</div>
+        <h1>Enter Receipt PIN</h1>
+        <p>Check your SMS for the 4-digit PIN sent with this receipt link.</p>
+
+        <form method="POST" action="/r/{{ token }}/">
+            {% csrf_token %}
+            <div class="pin-input">
+                <input type="password" name="pin" maxlength="4" placeholder="••••"
+                       inputmode="numeric" pattern="[0-9]*" required autofocus>
+            </div>
+            <button type="submit">View Receipt</button>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+        </form>
+
+        <div class="secure-badge">
+            <span>🔒</span>
+            <span>Secured by TapVerify</span>
+        </div>
+    </div>
+</body>
+</html>

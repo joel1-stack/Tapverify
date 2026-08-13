@@ -25,6 +25,38 @@ class TapVerifyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TapVerify',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Desktop web: cap the app to a centered 960px column so forms, tables
+        // and demo mockups never stretch edge-to-edge. Phones/tablets keep the
+        // full-width layout.
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (child == null) return const SizedBox.shrink();
+            if (constraints.maxWidth <= 1000) return child;
+            return ColoredBox(
+              color: const Color(0xFF0C3D30),
+              child: Center(
+                child: SizedBox(
+                  width: 960,
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFAF7F2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x66000000),
+                          blurRadius: 40,
+                          offset: Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                    child: child,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

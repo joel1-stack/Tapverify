@@ -34,11 +34,19 @@ class _LoopDemoScreenState extends State<LoopDemoScreen> {
   Timer? _timer;
 
   static const _steps = [
-    'Sending Request to Pay via LOOP...',
+    'Mpesa Prompt fired — STK Push sent',
     'Member sees M-Pesa prompt on their phone',
     'Member enters M-Pesa PIN',
-    'LOOP confirms payment (IPN)',
+    'IPN webhook — payment confirmed',
     'SMS receipt sent to member',
+  ];
+
+  static const _stepApis = [
+    'mpesa/prompt',
+    '',
+    '',
+    'ipn',
+    'sms + inquiry',
   ];
 
   @override
@@ -127,7 +135,8 @@ class _LoopDemoScreenState extends State<LoopDemoScreen> {
                   member: widget.member,
                   amount: widget.amount,
                   org: orgName,
-                  till: till),
+                  till: till,
+                  step: _step),
               const SizedBox(height: 36),
               // Live status tracker
               Container(
@@ -173,6 +182,29 @@ class _LoopDemoScreenState extends State<LoopDemoScreen> {
                               ),
                             ),
                           ),
+                          if (_stepApis[i].isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: done
+                                    ? const Color(0xFFECFDF5)
+                                    : const Color(0xFFFFF7E6),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                _stepApis[i],
+                                style: GoogleFonts.inter(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: done
+                                      ? const Color(0xFF047857)
+                                      : const Color(0xFFB45309),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -208,12 +240,14 @@ class _PhoneMockup extends StatefulWidget {
   final double amount;
   final String org;
   final String till;
+  final int step;
 
   const _PhoneMockup({
     required this.member,
     required this.amount,
     required this.org,
     required this.till,
+    required this.step,
   });
 
   @override
@@ -363,7 +397,7 @@ class _PhoneMockupState extends State<_PhoneMockup>
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'CANCEL',
+                    'OK',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                         fontSize: 12,
@@ -371,16 +405,65 @@ class _PhoneMockupState extends State<_PhoneMockup>
                         color: Colors.white),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 8),
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: const Color(0xFFE2E8F0), width: 3),
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'CANCEL',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF64748B)),
                   ),
                 ),
+                const Spacer(),
+                if (widget.step >= 4) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00A651),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.check_circle_rounded,
+                            color: Colors.white, size: 26),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Payment approved',
+                          style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'by LOOP · ref confirmed',
+                          style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ] else
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border:
+                          Border.all(color: const Color(0xFFE2E8F0), width: 3),
+                    ),
+                  ),
               ],
             ),
           ),

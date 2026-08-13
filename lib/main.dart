@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
+import 'screens/member_home_screen.dart';
 import 'services/hive_service.dart';
 
 /// Application entry point: boots Hive, then hands off to [TapVerifyApp].
@@ -27,16 +28,16 @@ class TapVerifyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF059669),
-          primary: const Color(0xFF059669),
-          secondary: const Color(0xFFF97316),
+          seedColor: const Color(0xFF0F4C3A),
+          primary: const Color(0xFF2D6A4F),
+          secondary: const Color(0xFFFF6B00),
           surface: Colors.white,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        scaffoldBackgroundColor: const Color(0xFFFAF7F2),
         textTheme: GoogleFonts.interTextTheme(),
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF059669),
+          backgroundColor: const Color(0xFF0F4C3A),
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: false,
@@ -51,12 +52,12 @@ class TapVerifyApp extends StatelessWidget {
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.grey.shade100),
+            side: BorderSide(color: Colors.grey.shade200),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF059669),
+            backgroundColor: const Color(0xFFFF6B00),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 28),
             shape:
@@ -79,7 +80,7 @@ class TapVerifyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF2D6A4F), width: 2),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -108,6 +109,13 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (snapshot.hasData && snapshot.data == true) {
+          if (HiveService.isMemberSession) {
+            final staff = HiveService.getStaff();
+            return MemberHomeScreen(
+              phone: staff?['phone']?.toString() ?? '',
+              name: staff?['name']?.toString() ?? 'Member',
+            );
+          }
           return const HomeShell();
         }
         return const LoginScreen();

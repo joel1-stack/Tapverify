@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,9 +27,11 @@ class _QrScanScreenState extends State<QrScanScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-    );
+    if (!kIsWeb) {
+      _controller = MobileScannerController(
+        detectionSpeed: DetectionSpeed.noDuplicates,
+      );
+    }
   }
 
   @override
@@ -100,12 +103,14 @@ class _QrScanScreenState extends State<QrScanScreen> {
       body: Column(
         children: [
           Expanded(
-            child: Stack(
-              children: [
-                MobileScanner(
-                  controller: _controller,
-                  onDetect: _onDetect,
-                ),
+            child: kIsWeb
+                ? _webManual()
+                : Stack(
+                    children: [
+                      MobileScanner(
+                        controller: _controller,
+                        onDetect: _onDetect,
+                      ),
                 // Scan overlay
                 Center(
                   child: Container(
@@ -148,7 +153,8 @@ class _QrScanScreenState extends State<QrScanScreen> {
             ),
           ),
           // Demo fallback
-          Container(
+          if (!kIsWeb)
+            Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             color: Colors.black,
@@ -183,6 +189,90 @@ class _QrScanScreenState extends State<QrScanScreen> {
         ],
       ),
     );
+  }
+
+  Widget _webManual() {
+    final controller = TextEditingController();
+    return Container(
+      color: const Color(0xFF0F172A),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.qr_code_2, color: Colors.white54, size: 64),
+          const SizedBox(height: 16),
+          Text('Camera scanning is not available on web',
+              style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15)),
+          const SizedBox(height: 6),
+          Text(
+              'Type a member code instead — e.g. TV001, or the member phone number.',
+              textAlign: TextAlign.center,
+              style:
+                  GoogleFonts.inter(color: Colors.white54, fontSize: 12)),
+          const SizedBox(height: 18),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            onSubmitted: (v) => _lookup(controller.text),
+            style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'TV001',
+              hintStyle: GoogleFonts.inter(color: Colors.white38),
+              filled: true,
+              fillColor: Colors.white10,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              onPressed: () => _lookup(controller.text),
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: Text('CONTINUE TO COLLECT',
+                  style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w800, fontSize: 13)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _lookup(String value) {
+    final member = _findByValue(value.trim());
+    if (member != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ConfirmScreen(member: member)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Member not found', style: GoogleFonts.inter()),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   void _showCodePicker() {

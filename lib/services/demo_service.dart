@@ -4,15 +4,21 @@ import 'contribution_service.dart';
 
 /// Offline demo data so the app is fully explorable without a connection.
 ///
-/// Seeds five workspaces (Umoja Chama, Mwema SACCO, Riverside Welfare, Sunrise
-/// Academy, Kipchoge Burial Group) with their member rosters and contribution
-/// campaigns. `seed()` is idempotent — repeated calls never duplicate
-/// campaigns (each is guarded by `_exists`). Also provides fallback stats and
-/// the demo auth profile for [ApiService].
+/// Seeds five workspaces (Umoja Burial Welfare, Mwema SACCO, Riverside Welfare,
+/// Sunrise Academy, Kipchoge Burial Group) with their member rosters and
+/// contribution campaigns. `seed()` is idempotent — repeated calls never
+/// duplicate campaigns (each is guarded by `_exists`). Also provides fallback
+/// stats and the demo auth profile for [ApiService].
 class DemoService {
   static const String demoPhone = '254712345678';
   static const String demoPin = '1234';
   static const String demoWorkspaceId = 'demo-ws-001';
+
+  /// Demo member used on the member-side login: Grace belongs to Umoja Burial
+  /// Welfare, Mwema SACCO, Sunrise Academy and Kipchoge Burial Group — the
+  /// "funeral + school + burial in one app" story.
+  static const String memberDemoName = 'Grace Wanjiku';
+  static const String memberDemoPhone = '254700111222';
 
   static Map<String, dynamic> _rawWorkspace(
       String id,
@@ -32,6 +38,8 @@ class DemoService {
       'till_number': till,
       'paybill_number': paybill,
       'account_number': account,
+      'rules': OrgRules.rulesFor(type),
+      'kyc_status': 'verified',
       'created_at': DateTime.now().toIso8601String(),
       'image': OrgRules.imageFor(type),
     };
@@ -41,8 +49,8 @@ class DemoService {
     return [
       _rawWorkspace(
         demoWorkspaceId,
-        'Umoja Chama',
-        'Chama',
+        'Umoja Burial Welfare',
+        'Burial Group',
         5000,
         {'loop': true, 'till': true, 'paybill': false, 'bank': false},
         '9415678',
@@ -146,15 +154,15 @@ class DemoService {
       ],
       'workspace': {
         'id': demoWorkspaceId,
-        'name': 'Umoja Chama',
-        'type': 'Chama',
+        'name': 'Umoja Burial Welfare',
+        'type': 'Burial Group',
       },
     };
   }
 
   /// Boots the demo: writes workspaces + members once, then seeds campaigns,
-  /// stores the demo auth session and switches to Umoja Chama. Safe to call
-  /// repeatedly (campaign seeds skip titles that already exist).
+  /// stores the demo auth session and switches to Umoja Burial Welfare. Safe to
+  /// call repeatedly (campaign seeds skip titles that already exist).
   static Future<void> seed() async {
     if (HiveService.getWorkspaces().isEmpty) {
       await HiveService.saveWorkspaces(demoWorkspaces());
@@ -176,7 +184,7 @@ class DemoService {
 
   static void _seedCampaigns() {
     final members = HiveService.getMembersForWorkspace(demoWorkspaceId);
-    const orgName = 'Umoja Chama';
+    const orgName = 'Umoja Burial Welfare';
 
     // Monthly contribution campaign — some paid full, some partial, some pending
     if (!_exists('August monthly contribution')) {
@@ -316,7 +324,7 @@ class DemoService {
         deadline:
             DateTime.now().add(const Duration(days: 20)).toIso8601String(),
         message:
-            'Umoja Chama loan repayment — Ksh 15,000 due this month for the loan taken by Peter Kamau. Repay before the deadline.',
+            'Umoja Burial Welfare loan repayment — Ksh 15,000 due this month for the loan taken by Peter Kamau. Repay before the deadline.',
         paymentMethod: {'rail': 'till', 'label': 'M-PESA Till 9415678'},
         allowPartial: true,
         minPartial: 2000,

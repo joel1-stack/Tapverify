@@ -4,15 +4,14 @@ import '../constants.dart';
 import '../models/member.dart';
 import '../services/api_service.dart';
 import '../services/hive_service.dart';
-import 'loop_demo_screen.dart';
 import 'success_screen.dart';
 
 /// Payment collection step — confirm a member's amount before payout.
 ///
 /// Pre-fills the workspace contribution default, lets the treasurer choose the
-/// event type (payment loop / cash / paybill etc.) and on confirm calls
-/// [ApiService.verifyMember], landing on [LoopDemoScreen] when the loop rail is
-/// selected or [SuccessScreen] with the receipt for direct rails.
+/// event type (loop / cash / till / paybill / attendance) and on confirm calls
+/// [ApiService.verifyMember] — the LOOP request-to-pay is fired by the backend
+/// via the live gateway — landing on [SuccessScreen] with the receipt.
 class ConfirmScreen extends StatefulWidget {
   final Member member;
   const ConfirmScreen({super.key, required this.member});
@@ -49,26 +48,6 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     }
 
     setState(() => _loading = true);
-
-    // Loop: run the live Request-to-Pay demo flow
-    if (_eventType == 'payment_loop') {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => LoopDemoScreen(
-              member: widget.member,
-              amount: amount,
-              eventType: _eventType,
-            ),
-            transitionsBuilder: (_, animation, __, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-          ),
-        );
-      }
-      return;
-    }
 
     final wsId = HiveService.activeWorkspaceId ?? '';
 

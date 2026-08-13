@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import '../models/member.dart';
 import '../services/hive_service.dart';
-import '../services/contribution_service.dart';
-import 'confirm_screen.dart';
-import 'create_contribution_screen.dart';
+import 'member_list_screen.dart';
 import 'payments_ledger_screen.dart';
-import 'member_payment_demo_screen.dart';
-import 'loop_demo_screen.dart';
 import 'disburse_screen.dart';
 
 /// The LOOP Matrix — a judge-facing map of the 8 selected LOOP APIs.
@@ -50,8 +45,8 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
               'POST {base}/gateway/mpesa-prompt/2.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "recipientMobileNo": "254712345678",\n    "amount": "500.00",\n    "purposeOfPayment": "TV-20260813-001",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'This is not a payment — it is a collection campaign. 200 members, one tap, 200 prompts.',
-          launchLabel: 'Play the STK demo',
-          launch: (ctx, ws) => _openLoopDemo(ctx),
+          launchLabel: 'Start a collection',
+          launch: (ctx, ws) => _openCollect(ctx),
         ),
         _ApiCard(
           id: 'Pay to M-Pesa Till',
@@ -66,8 +61,8 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
               'POST {base}/gateway/pay-to-paybill/1.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "merchantTill": "${_ws?['till_number'] ?? '9415678'}",\n    "recipientMobileNo": "254712345678",\n    "amount": "500.00",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'The Till is the door; TapVerify is the bookkeeper. Disrupting nobody, digitizing everything.',
-          launchLabel: 'Member payment flow',
-          launch: (ctx, ws) => _openMemberDemo(ctx),
+          launchLabel: 'Start a collection',
+          launch: (ctx, ws) => _openCollect(ctx),
         ),
         _ApiCard(
           id: 'Pay To Paybill',
@@ -82,8 +77,8 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
               'POST {base}/gateway/pay-to-paybill/1.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "paybillNumber": "${_ws?['paybill_number'] ?? '890123'}",\n    "accountNumber": "JOHN-047",\n    "amount": "10000.00",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'Regulated finance needs audit trails — not WhatsApp screenshots. Paybill gives SACCOs official reconciled records.',
-          launchLabel: 'Member payment flow',
-          launch: (ctx, ws) => _openMemberDemo(ctx),
+          launchLabel: 'Start a collection',
+          launch: (ctx, ws) => _openCollect(ctx),
         ),
         _ApiCard(
           id: 'Transaction Inquiry',
@@ -146,8 +141,8 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
               'POST {base}/gateway/mpesa-prompt/2.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "channel": "LOOP",\n    "recipientMobileNo": "254712345678",\n    "amount": "500.00",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'M-Pesa takes 1.5% per transaction — Ksh 4.5 billion a year. Loop internal is free. TapVerify is the bridge that brings chamas there.',
-          launchLabel: 'Play LOOP demo',
-          launch: (ctx, ws) => _openLoopDemo(ctx),
+          launchLabel: 'Start a collection',
+          launch: (ctx, ws) => _openCollect(ctx),
         ),
         _ApiCard(
           id: 'Send Money - Loop',
@@ -167,85 +162,10 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
         ),
       ];
 
-  void _openMemberDemo(BuildContext ctx) {
-    final campaigns = ContributionService.campaigns();
-    if (campaigns.isEmpty) {
-      _snack(ctx, 'Create a contribution first, then play the demo');
-      return;
-    }
-    final wsId = HiveService.activeWorkspaceId ?? '';
-    for (final c in campaigns.reversed) {
-      if (c['workspace_id'] != wsId) continue;
-      final members = HiveService.getMembersForWorkspace(wsId);
-      final payments = List<Map<String, dynamic>>.from(c['payments'] ?? []);
-      final amount = (c['amount'] as num? ?? 0).toDouble();
-      Member? unpaid;
-      for (final m in members) {
-        final paid = payments
-            .where((p) => p['member_id'] == m.id)
-            .fold<double>(0, (s, p) => s + (p['paid'] as num));
-        if (paid < amount) {
-          unpaid = m;
-          break;
-        }
-      }
-      final member = unpaid ?? (members.isNotEmpty ? members.first : null);
-      if (member == null) continue;
-      Navigator.push(
-        ctx,
-        MaterialPageRoute(
-          builder: (_) =>
-              MemberPaymentDemoScreen(campaign: c, member: member),
-        ),
-      );
-      return;
-    }
-    _snack(ctx, 'No members in this org yet');
-  }
-
-  void _openLoopDemo(BuildContext ctx) {
-    final campaigns = ContributionService.campaigns();
-    if (campaigns.isEmpty) {
-      _snack(ctx, 'Create a contribution first, then run the demo');
-      return;
-    }
-    final wsId = HiveService.activeWorkspaceId ?? '';
-    final members = HiveService.getMembersForWorkspace(wsId);
-    Member? member;
-    for (final c in campaigns.reversed) {
-      if (c['workspace_id'] != wsId) continue;
-      final payments = List<Map<String, dynamic>>.from(c['payments'] ?? []);
-      final amount = (c['amount'] as num? ?? 0).toDouble();
-      for (final m in members) {
-        final paid = payments
-            .where((p) => p['member_id'] == m.id)
-            .fold<double>(0, (s, p) => s + (p['paid'] as num));
-        if (paid < amount) {
-          member = m;
-          break;
-        }
-      }
-      if (member != null) break;
-    }
-    member ??= (members.isNotEmpty ? members.first : null);
-    if (member == null) {
-      _snack(ctx, 'No members to run the demo against');
-      return;
-    }
-    final amount = campaigns.cast<Map>().lastWhere(
-              (c) => c['workspace_id'] == wsId,
-              orElse: () => <String, dynamic>{},
-            )['amount'] as num? ??
-        500;
+  void _openCollect(BuildContext ctx) {
     Navigator.push(
       ctx,
-      MaterialPageRoute(
-        builder: (_) => LoopDemoScreen(
-          member: member!,
-          amount: amount.toDouble(),
-          eventType: 'payment_loop',
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => const MemberListScreen()),
     );
   }
 
@@ -260,17 +180,6 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
     Navigator.push(
       ctx,
       MaterialPageRoute(builder: (_) => const DisburseScreen()),
-    );
-  }
-
-  void _snack(BuildContext ctx, String msg) {
-    ScaffoldMessenger.of(ctx).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: GoogleFonts.inter()),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../services/hive_service.dart';
@@ -36,6 +37,24 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
   final _loopMerchantCtrl = TextEditingController();
   final _loopUrlCtrl = TextEditingController(
       text: 'https://sandbox.looponline.co.ke');
+  final _regNameCtrl = TextEditingController();
+  final _regNoCtrl = TextEditingController();
+
+  static const _kycDocTypes = [
+    'Business registration / CR12',
+    'National ID (founder)',
+    'KRA PIN certificate',
+  ];
+  String _kycDocType = 'Business registration / CR12';
+  bool _kycAttached = false;
+  String _kycDocName = '';
+
+  /// KYC pipeline: draft → pending_kyc → verified (or suspended/rejected).
+  static const kycPipeline = [
+    ('Draft', 'you\u2019re building the group'),
+    ('Pending KYC', 'docs under review'),
+    ('Verified', 'collections go live'),
+  ];
 
   final _types = OrgRules.orgTypes;
   String _type = 'Chama';
@@ -91,6 +110,8 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
     _loopKeyCtrl.dispose();
     _loopMerchantCtrl.dispose();
     _loopUrlCtrl.dispose();
+    _regNameCtrl.dispose();
+    _regNoCtrl.dispose();
     super.dispose();
   }
 
@@ -133,6 +154,20 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
       'created_at': DateTime.now().toIso8601String(),
       'created_by': HiveService.getStaff()?['name'] ?? 'Treasurer',
       'image': _coverFor(_type),
+      // KYC-gated org creation: org starts in DRAFT, moves to PENDING_KYC once
+      // the founder attaches identity docs, and only VERIFIED orgs can open
+      // for live collections (admin approval queue + fraud/dedup rules).
+      'kyc_status':
+          _kycAttached ? 'pending_kyc' : 'draft',
+      'kyc_docs': {
+        'name': _regNameCtrl.text.trim(),
+        'reg_no': _regNoCtrl.text.trim(),
+        'doc_type': _kycDocType,
+        'attached': _kycAttached,
+        'attached_name': _kycDocName,
+        'reviewed': false,
+        'admin_note': '',
+      },
     };
     await HiveService.addWorkspace(ws);
     await HiveService.grantWorkspaceAccess(id, role: 'treasurer');
@@ -338,7 +373,7 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
               TextFormField(
                 controller: _nameCtrl,
                 textCapitalization: TextCapitalization.words,
-                decoration: _input('e.g. Umoja Chama, Pamoja SACCO'),
+                decoration: _input('e.g. Kayole Burial Welfare, Pamoja SACCO'),
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? 'Enter organization name'
                     : null,
@@ -692,6 +727,217 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
                         fontStyle: FontStyle.italic)),
               const SizedBox(height: 24),
 
+              // ---- KYC verification (gate for going live) ----
+              Row(
+                children: [
+                  Icon(Icons.fact_check_rounded,
+                      size: 18, color: AppColors.gold),
+                  const SizedBox(width: 8),
+                  Text('Verify organization (KYC)', style: _sectionTitle()),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'TapVerify verifies who collects money. Your ${_type.toLowerCase()} starts in DRAFT — attach identity documents to move to PENDING KYC, and collections only go live once the admin queue approves.',
+                style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w400),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: kycPipeline.map((step) {
+                        final i = kycPipeline.indexOf(step);
+                        final active = _kycAttached
+                            ? i == 1 || i == 2
+                            : i == 0;
+                        return Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Icon(
+                                active
+                                    ? (i == 0
+                                        ? Icons.lens
+                                        : Icons.check_circle)
+                                    : Icons.radio_button_unchecked,
+                                size: 16,
+                                color: active
+                                    ? (i == 0
+                                        ? AppColors.warning
+                                        : AppColors.gold)
+                                    : AppColors.muted,
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  step.$1,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: active
+                                        ? AppColors.text
+                                        : AppColors.muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: _kycAttached ? 0.66 : 0.33,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [AppColors.warning, AppColors.gold],
+                            ),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              TextFormField(
+                controller: _regNameCtrl,
+                textCapitalization: TextCapitalization.words,
+                decoration: _input('Registered / official name (optional)'),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _regNoCtrl,
+                decoration: _input('Registration / ID number (optional)'),
+              ),
+              const SizedBox(height: 12),
+              Text('Document type',
+                  style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _kycDocTypes.map((d) {
+                  final active = _kycDocType == d;
+                  return ChoiceChip(
+                    label: Text(d,
+                        style: GoogleFonts.inter(
+                            fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    selected: active,
+                    selectedColor: AppColors.gold,
+                    labelStyle: TextStyle(
+                        color: active ? Colors.white : AppColors.text),
+                    backgroundColor: Colors.white,
+                    side: BorderSide(
+                        color: active ? AppColors.gold : AppColors.border),
+                    onSelected: (_) => setState(() => _kycDocType = d),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final result = await FilePicker.platform.pickFiles(
+                    type: FileType.any,
+                    withData: false,
+                  );
+                  if (result != null && result.files.isNotEmpty) {
+                    setState(() {
+                      _kycAttached = true;
+                      _kycDocName = result.files.single.name;
+                    });
+                  }
+                },
+                icon: Icon(
+                  _kycAttached ? Icons.upload_file_rounded : Icons.attach_file_rounded,
+                  size: 18,
+                  color: AppColors.gold,
+                ),
+                label: Text(
+                  _kycAttached ? _kycDocName : 'Attach document',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text),
+                ),
+                style: OutlinedButton.styleFrom(
+                  alignment: Alignment.centerLeft,
+                  side: BorderSide(
+                      color: _kycAttached ? AppColors.gold : AppColors.border),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (_kycAttached ? AppColors.gold : AppColors.warning)
+                      .withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color:
+                          (_kycAttached ? AppColors.gold : AppColors.warning)
+                              .withOpacity(0.25)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _kycAttached
+                          ? Icons.verified_user_rounded
+                          : Icons.timer_outlined,
+                      size: 18,
+                      color: _kycAttached ? AppColors.gold : AppColors.warning,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _kycAttached
+                            ? 'KYC docs attached — your org will be PENDING KYC for admin review. Approvals typically take 1 business day.'
+                            : 'No docs yet — your org stays in DRAFT and cannot collect until verified. You can attach docs later from org settings.',
+                        style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: _kycAttached
+                                ? AppColors.gold
+                                : AppColors.warning,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -709,7 +955,9 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
                       const SizedBox(width: 8),
                       Text(
                           widget.onboarding
-                              ? 'Create & add members'
+                              ? (_kycAttached
+                                  ? 'Submit for KYC & add members'
+                                  : 'Save draft & add members')
                               : 'Create organization',
                           style: GoogleFonts.inter(
                               fontWeight: FontWeight.w700, fontSize: 15)),

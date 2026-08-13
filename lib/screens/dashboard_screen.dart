@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import '../models/member.dart';
 import '../services/hive_service.dart';
 import '../services/api_service.dart';
 import '../services/contribution_service.dart';
 import 'member_list_screen.dart';
 import 'create_contribution_screen.dart';
 import 'campaign_detail_screen.dart';
-import 'member_payment_demo_screen.dart';
+import 'loan_eligibility_screen.dart';
 import 'payments_ledger_screen.dart';
 import 'loop_matrix_screen.dart';
 
@@ -16,8 +15,8 @@ import 'loop_matrix_screen.dart';
 ///
 /// Loads workspace stats (today / week collections, member count, expected
 /// monthly, outstanding balances) via [ApiService.fetchStats], renders stat
-/// cards, recent events, a Collect Payment CTA plus quick actions for the
-/// member payment demo and the payment export.
+/// cards, recent events, a Collect Payment CTA plus quick actions for loan
+/// eligibility, the payment export and the LOOP Matrix product map.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -273,6 +272,51 @@ class DashboardState extends State<DashboardScreen>
                   ),
                   const SizedBox(height: 12),
 
+                  // KYC verification gate banner
+                  if (_kycStatusBanner(ws) != null)
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _kycStatusBanner(ws)!.$2.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color:
+                                _kycStatusBanner(ws)!.$2.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(_kycStatusBanner(ws)!.$3,
+                              color: _kycStatusBanner(ws)!.$2, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _kycStatusBanner(ws)!.$1,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: _kycStatusBanner(ws)!.$2,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _kycStatusBanner(ws)!.$4,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11.5,
+                                    color: _kycStatusBanner(ws)!.$2,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+
                   // Stats Grid
                   Row(
                     children: [
@@ -417,17 +461,21 @@ class DashboardState extends State<DashboardScreen>
                   ),
                   const SizedBox(height: 28),
 
-                  // Demo & Ledger quick actions
+                  // Products & Ledger quick actions
                   Row(
                     children: [
                       Expanded(
                         child: _ActionTile(
-                          icon: Icons.sms_rounded,
-                          color: AppColors.accent,
-                          title: 'Member payment demo',
-                          subtitle: 'Watch this SMS → link → PIN → pay flow',
-                          badge: 'DEMO',
-                          onTap: _openDemo,
+                          icon: Icons.verified_user_rounded,
+                          color: const Color(0xFFC9A227),
+                          title: 'Loan eligibility',
+                          subtitle: '3x rule from 12 months of on-ledger payments',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    const LoanEligibilityScreen()),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -655,53 +703,21 @@ class DashboardState extends State<DashboardScreen>
           );
   }
 
-  void _openDemo() {
-    final campaigns = ContributionService.campaigns();
-    if (campaigns.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Create a contribution first, then play the demo',
-              style: GoogleFonts.inter()),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
-    final ws = HiveService.getActiveWorkspace();
-    final wsId = ws?['id'] ?? '';
-    for (final c in campaigns.reversed) {
-      if (c['workspace_id'] != wsId) continue;
-      final members = HiveService.getMembersForWorkspace(wsId);
-      final payments = List<Map<String, dynamic>>.from(c['payments'] ?? []);
-      final amount = (c['amount'] as num? ?? 0).toDouble();
-      Member? unpaid;
-      for (final m in members) {
-        final paid = payments
-            .where((p) => p['member_id'] == m.id)
-            .fold<double>(0, (s, p) => s + (p['paid'] as num));
-        if (paid < amount) {
-          unpaid = m;
-          break;
-        }
-      }
-      final member = unpaid ?? (members.isNotEmpty ? members.first : null);
-      if (member == null) continue;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MemberPaymentDemoScreen(campaign: c, member: member),
-        ),
-      );
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('No members in this org yet', style: GoogleFonts.inter()),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+  /// KYC banner details for the active org: (title, color, icon, body), or
+  /// null when the org is verified / has no KYC record.
+  (String, Color, IconData, String)? _kycStatusBanner(Map? ws) {
+    final status = ws?['kyc_status']?.toString();
+    if (status == null || status == 'verified') return null;
+    final isPending = status == 'pending_kyc';
+    return (
+      isPending
+          ? 'KYC review in progress'
+          : 'Organization in DRAFT — not verified yet',
+      isPending ? AppColors.gold : AppColors.warning,
+      isPending ? Icons.hourglass_top_rounded : Icons.fact_check_rounded,
+      isPending
+          ? '${ws?['name'] ?? 'This org'} docs are with the admin queue. Collections go live once approved — usually within 1 business day.'
+          : 'Attach your registration documents so ${ws?['name'] ?? 'this org'} can start collecting. No collections until verified.',
     );
   }
 
@@ -873,7 +889,6 @@ class _ActionTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  final String? badge;
 
   const _ActionTile({
     required this.icon,
@@ -881,7 +896,6 @@ class _ActionTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.badge,
   });
 
   @override
@@ -914,24 +928,6 @@ class _ActionTile extends StatelessWidget {
                       ),
                       child: Icon(icon, color: color, size: 20),
                     ),
-                    if (badge != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          badge!,
-                          style: GoogleFonts.inter(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w800,
-                            color: color,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: 10),

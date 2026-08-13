@@ -7,17 +7,22 @@ import '../services/hive_service.dart';
 import '../services/contribution_service.dart';
 import 'login_screen.dart';
 import 'payments_ledger_screen.dart';
-import 'member_payment_demo_screen.dart';
 import 'loop_matrix_screen.dart';
 import 'disburse_screen.dart';
+import 'loan_eligibility_screen.dart';
+import 'member_home_screen.dart';
+import 'member_payment_demo_screen.dart';
+import 'board_demo_screen.dart';
+import '../services/demo_service.dart';
 
 /// More tab — account + tools.
 ///
 /// Shows the active workspace profile (with its cover image), the payment
 /// rails available, and clearly separated sections:
-///  - **PAYMENTS & PROOF** — production tools (ledger, exports)
-///  - **DEMOS & EXPLORE** — the animated demos, clearly badged so they are
-///    never mistaken for real collection tooling
+///  - **LOOP INTEGRATION · 8 APIS** — product map, disbursement, member view
+///  - **PAYMENTS & PROOF** — production tools (ledger, loan, exports)
+///  - **DEMOS & WALKTHROUGHS** — self-contained demo journeys (member pays,
+///    treasurer creates an org through KYC)
 /// plus offline sync and logout. Checks rail status via
 /// [ApiService.getPaymentRailInfo].
 class MoreScreen extends StatefulWidget {
@@ -61,53 +66,78 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  void _openDemo() {
-    final campaigns = ContributionService.campaigns();
-    if (campaigns.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Create a contribution first, then play the demo',
-              style: GoogleFonts.inter()),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
-    final wsId = HiveService.activeWorkspaceId ?? '';
+  /// Seeds the demo org, picks a contribution with an unpaid member, and replays
+  /// the member payment journey — always works, even on a fresh install.
+  Future<void> _openMemberDemo() async {
+    await DemoService.seed();
+    if (!mounted) return;
+    final wsId = HiveService.activeWorkspaceId ?? DemoService.demoWorkspaceId;
+    final campaigns = ContributionService.campaigns()
+        .where((c) => c['workspace_id'] == wsId)
+        .toList();
+    Map? campaign;
+    // Lead with the burial / emergency levy — the "72-hour funeral collection"
+    // story — so the member demo opens in the funeral context.
     for (final c in campaigns.reversed) {
-      if (c['workspace_id'] != wsId) continue;
-      final members = HiveService.getMembersForWorkspace(wsId);
-      final payments = List<Map<String, dynamic>>.from(c['payments'] ?? []);
-      final amount = (c['amount'] as num? ?? 0).toDouble();
-      Member? unpaid;
-      for (final m in members) {
-        final paid = payments
-            .where((p) => p['member_id'] == m.id)
-            .fold<double>(0, (s, p) => s + (p['paid'] as num));
-        if (paid < amount) {
-          unpaid = m;
-          break;
-        }
+      final title = c['title']?.toString() ?? '';
+      final isEmergency = title.contains('burial') ||
+          title.contains('levy') ||
+          title.contains('Emergency');
+      if (isEmergency) {
+        campaign = c;
+        break;
       }
-      final member = unpaid ?? (members.isNotEmpty ? members.first : null);
-      if (member == null) continue;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MemberPaymentDemoScreen(campaign: c, member: member),
-        ),
+    }
+    campaign ??= campaigns.isNotEmpty ? campaigns.last : null;
+    if (campaign == null) {
+      campaign = ContributionService.create(
+        title: 'Monthly contribution',
+        contribType: 'Regular',
+        amount: 5000,
+        frequency: 'monthly',
+        deadline: DateTime.now().add(const Duration(days: 10)).toIso8601String(),
+        message: 'You have to pay Ksh 5000 this month.',
+        paymentMethod: {'rail': 'till', 'label': 'M-PESA Till 9415678'},
+        allowPartial: true,
+        minPartial: 1000,
+        workspaceId: wsId,
       );
+    }
+    final members = HiveService.getMembersForWorkspace(wsId);
+    Member? member;
+    final amount = (campaign['amount'] as num? ?? 0).toDouble();
+    final payments = List<Map<String, dynamic>>.from(campaign['payments'] ?? []);
+    for (final m in members) {
+      final paid = payments
+          .where((p) => p['member_id'] == m.id)
+          .fold<double>(0, (s, p) => s + (p['paid'] as num));
+      if (paid < amount) {
+        member = m;
+        break;
+      }
+    }
+    member ??= members.isNotEmpty ? members.first : null;
+    if (member == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Add a member first, then replay the demo',
+                style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('No members in this org yet', style: GoogleFonts.inter()),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            MemberPaymentDemoScreen(campaign: campaign!, member: member!),
       ),
     );
   }
@@ -529,6 +559,27 @@ class _MoreScreenState extends State<MoreScreen> {
                   MaterialPageRoute(builder: (_) => const DisburseScreen()),
                 ),
               ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              _moreTile(
+                icon: Icons.person_rounded,
+                color: const Color(0xFF2D6A4F),
+                title: 'Member side (two-user)',
+                subtitle:
+                    'See the app the way a member does — all their groups in one place, pay now, receipts, notifications.',
+                onTap: () async {
+                  await DemoService.seed();
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MemberHomeScreen(
+                        phone: DemoService.memberDemoPhone,
+                        name: DemoService.memberDemoName,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -551,7 +602,7 @@ class _MoreScreenState extends State<MoreScreen> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.grey.shade100),
           ),
-          child: _moreTile(
+child: _moreTile(
             icon: Icons.receipt_long_rounded,
             color: const Color(0xFF2563EB),
             title: 'Payments Ledger',
@@ -560,69 +611,26 @@ class _MoreScreenState extends State<MoreScreen> {
             onTap: _openLedger,
           ),
         ),
-        const SizedBox(height: 20),
-
-        // Demos & explore — clearly badged so they're never mistaken for tools
-        Row(
-          children: [
-            Text(
-              'DEMOS & EXPLORE',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.muted,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'DEMO',
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.accent,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
+      const SizedBox(height: 8),
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100),
         ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade100),
-          ),
-          child: Column(
-            children: [
-              _moreTile(
-                icon: Icons.sms_rounded,
-                color: AppColors.accent,
-                title: 'Member payment demo',
-                subtitle:
-                    'Watch the full SMS → payment link → PIN → rail → receipt journey.',
-                onTap: _openDemo,
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              _moreTile(
-                icon: Icons.school_rounded,
-                color: const Color(0xFF7C3AED),
-                title: 'Trip / fee paid list',
-                subtitle:
-                    'Parents can prove "I paid for this trip" — export the paid-members PDF.',
-                onTap: _openDemo,
-              ),
-            ],
+        child: _moreTile(
+          icon: Icons.savings_rounded,
+          color: const Color(0xFFC9A227),
+          title: 'Loan eligibility & disbursement',
+          subtitle:
+              '12-month transaction inquiry backs the 3× chama lending rule — eligible amount, history & certification.',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LoanEligibilityScreen()),
           ),
         ),
-        const SizedBox(height: 20),
+      ),
+      const SizedBox(height: 20),
 
         // Monthly reminder proof-point
         Container(
@@ -694,6 +702,50 @@ class _MoreScreenState extends State<MoreScreen> {
                     ],
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Demos & walkthroughs — self-contained, judge-facing
+        Text(
+          'DEMOS & WALKTHROUGHS',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.muted,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Column(
+            children: [
+              _moreTile(
+                icon: Icons.badge_rounded,
+                color: AppColors.deep,
+                title: 'Treasurer & KYC demo',
+                subtitle:
+                    'Create an organization, watch KYC get approved — or rejected — and start collecting for real.',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BoardDemoScreen()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              _moreTile(
+                icon: Icons.sms_rounded,
+                color: AppColors.accent,
+                title: 'Member payment demo',
+                subtitle:
+                    'Watch the member journey: SMS → payment link → PIN → rail → SMS receipt with ref.',
+                onTap: _openMemberDemo,
               ),
             ],
           ),

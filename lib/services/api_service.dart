@@ -254,15 +254,6 @@ class ApiService {
     return DemoService.stats();
   }
 
-  static Future<Map<String, dynamic>> createDemo() async {
-    final resp = await http.post(
-      Uri.parse('$baseUrl/api/v1/demo/setup/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': 'Demo Chama', 'phone': '254712345678'}),
-    );
-    return jsonDecode(resp.body);
-  }
-
   static Future<Map<String, dynamic>> createPaymentLink({
     required String workspaceId,
     required String memberId,

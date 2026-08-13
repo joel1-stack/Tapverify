@@ -31,11 +31,33 @@ class HiveService {
   // ---- Auth session ----
   static Future<void> saveAuth(String token, Map<String, dynamic> staff) async {
     await _settingsBox.put('auth_token', token);
+    await _settingsBox.put('auth_role', 'board');
     await _settingsBox.put('staff', staff);
   }
 
+  /// Member-side session: phone + OTP, no password/board profile. The member's
+  /// group memberships are resolved on demand from the [Member] cache, so all
+  /// they need here is identity.
+  static Future<void> saveMemberAuth(String phone, String name) async {
+    await _settingsBox.put('auth_token', 'member-otp-token');
+    await _settingsBox.put('auth_role', 'member');
+    await _settingsBox.put('staff', {
+      'name': name,
+      'phone': phone,
+      'role': 'member',
+      'otp_secret': null,
+    });
+  }
+
+  /// 'member' for the OTP flow, 'board' for the PIN flow.
+  static String get authRole =>
+      _settingsBox.get('auth_role', defaultValue: 'board') ?? 'board';
+
+  static bool get isMemberSession => authRole == 'member';
+
   static Future<void> clearAuth() async {
     await _settingsBox.delete('auth_token');
+    await _settingsBox.delete('auth_role');
     await _settingsBox.delete('staff');
     await _settingsBox.delete('org_selection_done');
   }

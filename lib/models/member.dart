@@ -27,6 +27,10 @@ class Member {
   @HiveField(5)
   final String workspaceId;
 
+  /// Lifecycle status: invited → active → suspended → reinstated / left / banned.
+  @HiveField(6)
+  final String status;
+
   Member({
     required this.id,
     required this.name,
@@ -34,7 +38,32 @@ class Member {
     required this.memberCode,
     required this.balanceDue,
     required this.workspaceId,
+    this.status = 'active',
   });
+
+  static const List<String> lifecycle = [
+    'invited',
+    'active',
+    'suspended',
+    'left',
+    'banned',
+  ];
+
+  bool get isActive => status == 'active';
+  bool get isSuspended => status == 'suspended';
+  bool get canContribute => isActive || status == 'invited';
+
+  Member copyWith({double? balanceDue, String? status}) {
+    return Member(
+      id: id,
+      name: name,
+      phone: phone,
+      memberCode: memberCode,
+      balanceDue: balanceDue ?? this.balanceDue,
+      workspaceId: workspaceId,
+      status: status ?? this.status,
+    );
+  }
 
   /// Rebuilds a [Member] from the API JSON shape (`member_code`, `balance_due`,
   /// `workspace`). Missing/absent keys safely fall back to defaults.
@@ -47,6 +76,7 @@ class Member {
       balanceDue:
           double.tryParse(json['balance_due']?.toString() ?? '0') ?? 0.0,
       workspaceId: json['workspace'] ?? '',
+      status: json['status'] ?? 'active',
     );
   }
 
@@ -57,5 +87,6 @@ class Member {
         'member_code': memberCode,
         'balance_due': balanceDue,
         'workspace': workspaceId,
+        'status': status,
       };
 }

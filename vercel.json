@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "installCommand": "",
+  "buildCommand": "bash -c 'export PATH=\"$PATH:$HOME/flutter/bin\" && if [ ! -d \"$HOME/flutter\" ]; then git clone --depth 1 -b stable https://github.com/flutter/flutter.git $HOME/flutter; fi && flutter config --no-analytics && flutter pub get && flutter build web --release'",
+  "outputDirectory": "build/web",
+  "framework": null
+}

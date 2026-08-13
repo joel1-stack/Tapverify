@@ -23,13 +23,14 @@ class MemberAdapter extends TypeAdapter<Member> {
       memberCode: fields[3] as String,
       balanceDue: fields[4] as double,
       workspaceId: fields[5] as String,
+      status: (fields[6] as String?) ?? 'active',
     );
   }
 
   @override
   void write(BinaryWriter writer, Member obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class MemberAdapter extends TypeAdapter<Member> {
       ..writeByte(4)
       ..write(obj.balanceDue)
       ..writeByte(5)
-      ..write(obj.workspaceId);
+      ..write(obj.workspaceId)
+      ..writeByte(6)
+      ..write(obj.status);
   }
 
   @override

@@ -44,10 +44,10 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           color: const Color(0xFF059669),
           status: 'HERO · LIVE',
           story:
-              'Treasurer taps a contribution → TapVerify fires an STK Push to every member. Their phone buzzes with the M-Pesa popup — no till number to memorize, no screenshot to send. Money moves, proof is born.',
-          flow: 'Create contribution → STK Push to member → enter PIN → IPN → SMS + green receipt',
+              'Treasurer taps a contribution → TapVerify fires the LOOP gateway M-Pesa Prompt to every member. Their phone buzzes with the M-Pesa popup — no till number to memorize, no screenshot to send. Money moves, proof is born.',
+          flow: 'Create contribution → POST /gateway/mpesa-prompt/2.0 → STK Push to member → PIN → IPN → SMS + green receipt',
           request:
-              'POST /sandbox/v1/mpesa/prompt\n{\n  "phoneNumber": "254712345678",\n  "amount": 500,\n  "currency": "KES",\n  "reference": "TV-20260813-001"\n}',
+              'POST {base}/gateway/mpesa-prompt/2.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "recipientMobileNo": "254712345678",\n    "amount": "500.00",\n    "purposeOfPayment": "TV-20260813-001",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'This is not a payment — it is a collection campaign. 200 members, one tap, 200 prompts.',
           launchLabel: 'Play the STK demo',
@@ -61,9 +61,9 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           status: 'LIVED IN APP',
           story:
               'The chama already has a Till. We don\'t change it — we embed it. Members pay the same Till they always have, and every payment is auto-matched to the member with a receipt.',
-          flow: 'Member picks "Pay via Till" → TapVerify POST /payments/till → money lands in the Till → IPN auto-matches → SMS',
+          flow: 'Member picks "Pay via Till" → POST /gateway/pay-to-paybill/1.0 → money lands in the Till → IPN auto-matches → SMS',
           request:
-              'POST /sandbox/v1/payments/till\n{\n  "tillNumber": "${_ws?['till_number'] ?? '9415678'}",\n  "phoneNumber": "254712345678",\n  "amount": 500,\n  "currency": "KES"\n}',
+              'POST {base}/gateway/pay-to-paybill/1.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "merchantTill": "${_ws?['till_number'] ?? '9415678'}",\n    "recipientMobileNo": "254712345678",\n    "amount": "500.00",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'The Till is the door; TapVerify is the bookkeeper. Disrupting nobody, digitizing everything.',
           launchLabel: 'Member payment flow',
@@ -79,7 +79,7 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
               'SACCOs and churches use Paybills with per-member account numbers. TapVerify pre-fills the Paybill and account — members just pay, and the IPN auto-matches to the right person.',
           flow: 'Treasurer sets Paybill + Acc in org → member pays pre-filled → IPN matched by account → SMS',
           request:
-              'POST /sandbox/v1/payments/paybill\n{\n  "paybillNumber": "${_ws?['paybill_number'] ?? '890123'}",\n  "accountNumber": "JOHN-047",\n  "amount": 10000,\n  "currency": "KES"\n}',
+              'POST {base}/gateway/pay-to-paybill/1.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "paybillNumber": "${_ws?['paybill_number'] ?? '890123'}",\n    "accountNumber": "JOHN-047",\n    "amount": "10000.00",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'Regulated finance needs audit trails — not WhatsApp screenshots. Paybill gives SACCOs official reconciled records.',
           launchLabel: 'Member payment flow',
@@ -92,10 +92,10 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           color: const Color(0xFF7C3AED),
           status: 'STATUS CHECK',
           story:
-              '"Did this payment complete?" The treasurer taps Check Status; TapVerify asks Loop what happened to the reference; the app shows green SUCCESS or red FAILED. No calling 200 people.',
-          flow: 'Open a contribution → Check Status → Loop replies SUCCESS / FAILED / PENDING → dashboard refreshes',
+              '"Did this payment complete?" The treasurer taps Check Status; TapVerify shows the synchronized loop response — green SUCCESS or red FAILED. No calling 200 people.',
+          flow: 'Open a contribution → Check Status → sync transaction status COMPLETED / FAILED → dashboard refreshes',
           request:
-              'GET /sandbox/v1/transactions/inquiry?reference=TV-20260813-001',
+              'GET {base}/gateway/send-money-mpesa/1.0\n→ statusCode 200 · serviceTransactionStatus COMPLETED · transferStatus "S"',
           vision:
               'The reconciliation layer. One tap instead of Sunday-evening phone calls. 10 hours saved per treasurer per week.',
           launchLabel: 'See reconciled ledger',
@@ -108,10 +108,10 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           color: const Color(0xFF059669),
           status: 'PDF + LEDGER',
           story:
-              'End of month, the chairman wants proof. TapVerify pulls the Loop transaction log and prints a PDF: who paid, every M-Pesa reference, every timestamp. The notebook is dead.',
-          flow: 'This month\'s report → GET /transactions/history → aggregate by member/channel → PDF for the chairman',
+              'End of month, the chairman wants proof. TapVerify pulls the reconciled loop transaction log and prints a PDF: who paid, every transfer order ID, every timestamp. The notebook is dead.',
+          flow: 'This month\'s report → aggregated ledger of sync loop responses → PDF for the chairman',
           request:
-              'GET /sandbox/v1/transactions/history?fromDate=2026-08-01&toDate=2026-08-31&limit=100',
+              'Aggregate ledger: transferStatus "S" · transferOrderId TAM… per member → PDF register',
           vision:
               'This is not a report — it is trust made visible. Dispute over, proof wins.',
           launchLabel: 'Export register / PDF',
@@ -124,10 +124,10 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           color: const Color(0xFFDC2626),
           status: 'DISBURSE',
           story:
-              'Funeral welfare pool of Ksh 400,000 — the family needs it tomorrow. The treasurer disbursees Ksh 350,000 to the recipient\'s M-Pesa in 30 seconds. Everything logged.',
-          flow: 'Send Money → recipient + amount + reason → POST /send-money/mpesa → money lands → SMS to recipient',
+              'Funeral welfare pool of Ksh 400,000 — the family needs it tomorrow. The treasurer disburses Ksh 350,000 to the recipient\'s M-Pesa in 30 seconds via Send Money. Everything logged.',
+          flow: 'Send Money → recipient + amount + reason → POST /gateway/send-money-mpesa/1.0 → money lands → SMS to recipient',
           request:
-              'POST /sandbox/v1/send-money/mpesa\n{\n  "phoneNumber": "254798765432",\n  "amount": 350000,\n  "currency": "KES",\n  "reason": "Funeral support - Mama Jane"\n}',
+              'POST {base}/gateway/send-money-mpesa/1.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "recipientMobileNo": "254798765432",\n    "amount": "350000.00",\n    "purposeOfPayment": "Funeral support - Mama Jane",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'Collection is half the story. Disbursement is the other half. Chamas don\'t just save — they support, they build.',
           launchLabel: 'Send disbursement',
@@ -141,9 +141,9 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           status: 'FUTURE RAIL',
           story:
               'Tomorrow the chama opens a Loop wallet. Members pay Loop-to-Loop in 2 seconds with zero fees. TapVerify records it the same way — because we are rail-agnostic.',
-          flow: 'Member taps "Pay via Loop" → POST /loop/prompt → Loop app confirm → instant settlement → IPN',
+          flow: 'Member taps "Pay via Loop" → POST /gateway/mpesa-prompt/2.0 (channel LOOP) → Loop app confirm → instant settlement → IPN',
           request:
-              'POST /sandbox/v1/loop/prompt\n{\n  "loopId": "LOOP-USER-12345",\n  "amount": 500,\n  "currency": "KES"\n}',
+              'POST {base}/gateway/mpesa-prompt/2.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "channel": "LOOP",\n    "recipientMobileNo": "254712345678",\n    "amount": "500.00",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'M-Pesa takes 1.5% per transaction — Ksh 4.5 billion a year. Loop internal is free. TapVerify is the bridge that brings chamas there.',
           launchLabel: 'Play LOOP demo',
@@ -156,10 +156,10 @@ class _LoopMatrixScreenState extends State<LoopMatrixScreen> {
           color: const Color(0xFF0F766E),
           status: 'INTERNAL',
           story:
-              'The chairman transfers Ksh 50,000 to the youth group\'s Loop ID — instant, free, both parties get SMS confirmation. Chamas become a financial network.',
-          flow: 'Admin → Transfer Between Groups → dest Loop ID + amount → POST /send-money/loop → instant → both SMS',
+              'The chairman transfers Ksh 50,000 to the youth group — instant, free, both parties get SMS confirmation. Chamas become a financial network.',
+          flow: 'Admin → Transfer Between Groups → dest Loop ID + amount → send-money rail → instant → both SMS',
           request:
-              'POST /sandbox/v1/send-money/loop\n{\n  "destinationLoopId": "LOOP-ORG-67890",\n  "amount": 50000,\n  "currency": "KES"\n}',
+              'POST {base}/gateway/send-money-mpesa/1.0/services/process-request\n{\n  "serviceCode": "MRCHNT_SENDMONEY",\n  "requestParameters": {\n    "recipientMobileNo": "254700000000",\n    "amount": "50000.00",\n    "purposeOfPayment": "Youth group transfer",\n    "signature": "hmac-sha256(till|ts|nonce)"\n  }\n}',
           vision:
               'This is where TapVerify stops being a tool and becomes infrastructure: chamas, churches, schools — all verified, all visible.',
           launchLabel: 'Send disbursement',

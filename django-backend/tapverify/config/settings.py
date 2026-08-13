@@ -103,10 +103,13 @@ AFRICASTALKING_SENDER_ID = config('AFRICASTALKING_SENDER_ID', default='TAPVERIFY
 # Active payment rail: 'loop' or 'payhero'
 ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='loop')
 
-# Loop API (primary rail for hackathon)
-LOOP_BASE_URL = config('LOOP_BASE_URL', default='https://sandbox.looponline.co.ke')
-LOOP_API_KEY = config('LOOP_API_KEY', default='')
-LOOP_MERCHANT_ID = config('LOOP_MERCHANT_ID', default='')
+# Loop API (primary rail) — LOOP Matrix gateway sandbox
+LOOP_BASE_URL = config('LOOP_BASE_URL', default='https://sandbox.loop.co.ke')
+LOOP_CONSUMER_KEY = config('LOOP_CONSUMER_KEY', default='')
+LOOP_CONSUMER_SECRET = config('LOOP_CONSUMER_SECRET', default='')
+LOOP_TOKEN_URL = config('LOOP_TOKEN_URL', default='')
+LOOP_TILL = config('LOOP_TILL', default='')
+LOOP_TILL_SECRET = config('LOOP_TILL_SECRET', default='')
 LOOP_IPN_SECRET = config('LOOP_IPN_SECRET', default='')
 
 # PayHero (legacy, secondary rail)

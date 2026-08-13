@@ -21,6 +21,20 @@ class OrgRules {
     'Tech Group',
   ];
 
+  /// Returns the rules saved on a workspace, merged over the org-type defaults.
+  ///
+  /// Every organization is allowed to run by its own rules ([CreateOrganizationScreen]
+  /// configures them), so the stored workspace `rules` map overrides the base
+  /// [rulesFor] preset for that type.
+  static Map<String, dynamic> rulesForWorkspace(Map? ws) {
+    final base = rulesFor(ws?['type']?.toString() ?? 'Chama');
+    final stored = ws?['rules'];
+    if (stored is Map) {
+      return {...base, ...Map<String, dynamic>.from(stored)};
+    }
+    return base;
+  }
+
   static Map<String, dynamic> rulesFor(String type) {
     switch (type) {
       case 'SACCO':

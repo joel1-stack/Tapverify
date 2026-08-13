@@ -11,9 +11,10 @@ import 'member_list_screen.dart';
 ///
 /// Collects name, type (from [OrgRules.orgTypes]), default contribution,
 /// payment rails (LOOP, till, paybill, bank) and the till/paybill/account
-/// details, then persists the workspace via [HiveService.addWorkspace] and
-/// drops the treasurer into the [MemberListScreen] embedded mode to add
-/// members.
+/// details, plus a per-org rules configurator (partial payments, minimum %,
+/// reminder days, loans, collection cycle) and a per-org LOOP (NCBA) sandbox
+/// connection. Persists via [HiveService.addWorkspace] and drops the treasurer
+/// into the [MemberListScreen] embedded mode to add members.
 class CreateOrganizationScreen extends StatefulWidget {
   const CreateOrganizationScreen({super.key, this.onboarding = false});
 
@@ -31,6 +32,10 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
   final _tillCtrl = TextEditingController();
   final _paybillCtrl = TextEditingController();
   final _accountCtrl = TextEditingController();
+  final _loopKeyCtrl = TextEditingController();
+  final _loopMerchantCtrl = TextEditingController();
+  final _loopUrlCtrl = TextEditingController(
+      text: 'https://sandbox.looponline.co.ke');
 
   final _types = OrgRules.orgTypes;
   String _type = 'Chama';
@@ -40,6 +45,29 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
   bool _paybill = false;
   bool _bank = false;
   bool _contribPerMonth = true;
+
+  // Per-org rules (configurable, not just type presets)
+  bool _rulePartial = true;
+  double _ruleMinPercent = 25;
+  int _ruleReminderDays = 3;
+  bool _ruleLoans = false;
+  String _ruleCycle = 'monthly';
+
+  @override
+  void initState() {
+    super.initState();
+    _applyTypeRules();
+  }
+
+  void _applyTypeRules() {
+    final rules = OrgRules.rulesFor(_type);
+    _rulePartial = rules['allow_partial'] == true;
+    _ruleMinPercent =
+        (rules['min_partial_percent'] as num?)?.toDouble() ?? 25;
+    _ruleReminderDays = (rules['reminder_days'] as num?)?.toInt() ?? 3;
+    _ruleLoans = rules['loan_tracking'] == true;
+    _ruleCycle = rules['frequency']?.toString() ?? 'monthly';
+  }
 
   static const _covers = [
     'https://images.pexels.com/photos/8613092/pexels-photo-8613092.jpeg?auto=compress&cs=tinysrgb&w=1200',
@@ -60,6 +88,9 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
     _tillCtrl.dispose();
     _paybillCtrl.dispose();
     _accountCtrl.dispose();
+    _loopKeyCtrl.dispose();
+    _loopMerchantCtrl.dispose();
+    _loopUrlCtrl.dispose();
     super.dispose();
   }
 
@@ -72,6 +103,21 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
       'paybill': _paybill,
       'bank': _bank,
     };
+    final rules = {
+      ...OrgRules.rulesFor(_type),
+      'allow_partial': _rulePartial,
+      'min_partial_percent': _ruleMinPercent,
+      'reminder_days': _ruleReminderDays,
+      'loan_tracking': _ruleLoans,
+      'frequency': _ruleCycle,
+    };
+    final loopConn = <String, dynamic>{
+      'connected': _loop && _loopKeyCtrl.text.trim().isNotEmpty,
+      'base_url': _loopUrlCtrl.text.trim(),
+      'api_key': _loopKeyCtrl.text.trim(),
+      'merchant_id': _loopMerchantCtrl.text.trim(),
+      'channel': 'sandbox',
+    };
     final ws = {
       'id': id,
       'name': _nameCtrl.text.trim(),
@@ -79,10 +125,11 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
       'contribution': int.tryParse(_contribCtrl.text.trim()) ?? 5000,
       'contribution_cycle': _contribPerMonth ? 'monthly' : 'one-off',
       'rails': rails,
+      'loop_connection': loopConn,
       'till_number': _tillCtrl.text.trim(),
       'paybill_number': _paybillCtrl.text.trim(),
       'account_number': _accountCtrl.text.trim(),
-      'rules': OrgRules.rulesFor(_type),
+      'rules': rules,
       'created_at': DateTime.now().toIso8601String(),
       'created_by': HiveService.getStaff()?['name'] ?? 'Treasurer',
       'image': _coverFor(_type),
@@ -253,7 +300,10 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
                     backgroundColor: Colors.white,
                     side: BorderSide(
                         color: active ? AppColors.primary : AppColors.border),
-                    onSelected: (_) => setState(() => _type = t),
+                    onSelected: (_) => setState(() {
+                      _type = t;
+                      _applyTypeRules();
+                    }),
                   );
                 }).toList(),
               ),
@@ -390,6 +440,258 @@ class _CreateOrganizationScreenState extends State<CreateOrganizationScreen> {
                 onChanged: (v) => setState(() => _bank = v),
               ),
               const SizedBox(height: 24),
+
+              // ---- Your organization's rules ----
+              Row(
+                children: [
+                  Icon(Icons.rule_rounded, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text('Your organization\'s rules', style: _sectionTitle()),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Every group runs differently. Set the rules that fit this ${_type.toLowerCase()} — they apply to all contributions you create here.',
+                style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w400),
+              ),
+              const SizedBox(height: 12),
+
+              // Rule: partial payments
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      title: Text('Members can pay in parts',
+                          style: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.text)),
+                      subtitle: Text(_rulePartial
+                          ? 'Partial payments allowed — good for schools & welfare'
+                          : 'Full amount required from every member',
+                          style: GoogleFonts.inter(
+                              fontSize: 11, color: AppColors.muted)),
+                      value: _rulePartial,
+                      activeTrackColor: AppColors.primary,
+                      onChanged: (v) => setState(() => _rulePartial = v),
+                    ),
+                    if (_rulePartial)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Minimum per partial: ${_ruleMinPercent.round()}% of the full amount',
+                              style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.text),
+                            ),
+                            const SizedBox(height: 6),
+                            Slider(
+                              value: _ruleMinPercent,
+                              min: 0,
+                              max: 100,
+                              divisions: 10,
+                              activeColor: AppColors.primary,
+                              onChanged: (v) =>
+                                  setState(() => _ruleMinPercent = v),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Rule: reminder days
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Remind members after',
+                        style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.text)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [1, 2, 3, 5, 7, 14, 30].map((d) {
+                        final active = _ruleReminderDays == d;
+                        return ChoiceChip(
+                          label: Text(d == 1
+                              ? '1 day'
+                              : '$d days',
+                              style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
+                          selected: active,
+                          selectedColor: AppColors.primary,
+                          labelStyle: TextStyle(
+                              color: active ? Colors.white : AppColors.text),
+                          backgroundColor: Colors.white,
+                          side: BorderSide(
+                              color: active
+                                  ? AppColors.primary
+                                  : AppColors.border),
+                          onSelected: (_) =>
+                              setState(() => _ruleReminderDays = d),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Rule: loans
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color:
+                          _ruleLoans ? AppColors.primary : AppColors.border),
+                ),
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  title: Text('Members can borrow loans',
+                      style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.text)),
+                  subtitle: Text(
+                      _ruleLoans
+                          ? 'Loan tracking on — members borrow & repay via contributions'
+                          : 'Savings only — members contribute but cannot borrow',
+                      style: GoogleFonts.inter(
+                          fontSize: 11, color: AppColors.muted)),
+                  value: _ruleLoans,
+                  activeTrackColor: AppColors.primary,
+                  onChanged: (v) => setState(() => _ruleLoans = v),
+                ),
+              ),
+
+              // Rule: collection cycle
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Collection cycle',
+                        style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.text)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        'daily',
+                        'weekly',
+                        'monthly',
+                        'termly',
+                        'per_event',
+                      ].map((c) {
+                        final active = _ruleCycle == c;
+                        return ChoiceChip(
+                          label: Text(c[0].toUpperCase() + c.substring(1),
+                              style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
+                          selected: active,
+                          selectedColor: AppColors.primary,
+                          labelStyle: TextStyle(
+                              color: active ? Colors.white : AppColors.text),
+                          backgroundColor: Colors.white,
+                          side: BorderSide(
+                              color: active
+                                  ? AppColors.primary
+                                  : AppColors.border),
+                          onSelected: (_) => setState(() => _ruleCycle = c),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // ---- Connect LOOP (NCBA) ----
+              Row(
+                children: [
+                  Icon(Icons.swap_vert_circle_rounded,
+                      size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text('Connect LOOP (NCBA)', style: _sectionTitle()),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Paste the sandbox credentials you get from the LOOP matrix dashboard. Each organization keeps its own connection.',
+                style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w400),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _loopUrlCtrl,
+                keyboardType: TextInputType.url,
+                decoration: _input('LOOP base URL'),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _loopKeyCtrl,
+                obscureText: true,
+                decoration: _input('LOOP API key'),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _loopMerchantCtrl,
+                decoration: _input('LOOP merchant / client ID'),
+              ),
+              const SizedBox(height: 8),
+              if (_loopKeyCtrl.text.isNotEmpty)
+                Text('LOOP connection ready (sandbox)',
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600))
+              else
+                Text(
+                    'No key yet? Start without one — the app runs the sandbox demo flow and you can connect later.',
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                        fontStyle: FontStyle.italic)),
+              const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
                 height: 54,

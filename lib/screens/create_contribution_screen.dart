@@ -10,7 +10,9 @@ import '../services/contribution_service.dart';
 /// Picks the contribution type (Regular / One-Time / Emergency / Trip /
 /// Project / Loan), amount, frequency, deadline, reminder SMS message, payment
 /// rail (LOOP / till / paybill / bank / cash) and partial-payment rules, then
-/// persists via [ContributionService.create].
+/// persists via [ContributionService.create]. Partial/cycle defaults come from
+/// the workspace's own rules ([OrgRules.rulesForWorkspace]) — not just the
+/// org-type preset — so every organization enforces what its treasurer set up.
 class CreateContributionScreen extends StatefulWidget {
   const CreateContributionScreen({super.key});
 
@@ -40,8 +42,7 @@ class _CreateContributionScreenState extends State<CreateContributionScreen> {
   void initState() {
     super.initState();
     final ws = HiveService.getActiveWorkspace();
-    final orgType = ws?['type']?.toString() ?? 'Chama';
-    final rules = OrgRules.rulesFor(orgType);
+    final rules = OrgRules.rulesForWorkspace(ws);
     final defaultLabel = (rules['labels'] as List).first;
     _titleCtrl.text = defaultLabel.toString();
     _amountCtrl.text = (ws?['contribution'] ?? 5000).toString();

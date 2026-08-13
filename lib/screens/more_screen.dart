@@ -8,6 +8,8 @@ import '../services/contribution_service.dart';
 import 'login_screen.dart';
 import 'payments_ledger_screen.dart';
 import 'member_payment_demo_screen.dart';
+import 'loop_matrix_screen.dart';
+import 'disburse_screen.dart';
 
 /// More tab — account + tools.
 ///
@@ -478,6 +480,53 @@ class _MoreScreenState extends State<MoreScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // LOOP integration — the 8 API products
+        Text(
+          'LOOP INTEGRATION · 8 APIS',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.muted,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Column(
+            children: [
+              _moreTile(
+                icon: Icons.developer_board_rounded,
+                color: const Color(0xFF059669),
+                title: 'LOOP Matrix — the 8 APIs',
+                subtitle:
+                    'Collect, reconcile, disburse. Every product mapped to the screen that uses it.',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoopMatrixScreen()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              _moreTile(
+                icon: Icons.send_rounded,
+                color: const Color(0xFFDC2626),
+                title: 'Send Money (disburse)',
+                subtitle:
+                    'Funeral payouts, refunds, welfare — M-Pesa or Loop, logged with proof.',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DisburseScreen()),
                 ),
               ),
             ],

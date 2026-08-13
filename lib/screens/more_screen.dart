@@ -11,9 +11,13 @@ import 'member_payment_demo_screen.dart';
 
 /// More tab — account + tools.
 ///
-/// Shows the active workspace profile, the payment rails available, sectioned
-/// links (contributions, payments & proof: ledger, member payment demo, paid
-/// list) and logout. Checks rail status via [ApiService.getPaymentRailInfo].
+/// Shows the active workspace profile (with its cover image), the payment
+/// rails available, and clearly separated sections:
+///  - **PAYMENTS & PROOF** — production tools (ledger, exports)
+///  - **DEMOS & EXPLORE** — the animated demos, clearly badged so they are
+///    never mistaken for real collection tooling
+/// plus offline sync and logout. Checks rail status via
+/// [ApiService.getPaymentRailInfo].
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 
@@ -138,6 +142,44 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
+  /// The active workspace's cover photo (Pexels), used to personalize the
+  /// profile card. Falls back to the logo asset if offline/unavailable.
+  Widget _orgCover({Map? ws, double size = 60}) {
+    final image = ws?['image']?.toString();
+    if (image == null || image.isEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
+      );
+    }
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+      ),
+      child: Image.network(
+        image,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: size,
+          height: size,
+          padding: const EdgeInsets.all(8),
+          color: Colors.white.withOpacity(0.2),
+          child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final staff = HiveService.getStaff();
@@ -179,18 +221,7 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
           child: Row(
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                      color: Colors.white.withOpacity(0.3), width: 2),
-                ),
-                child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
-              ),
+              _orgCover(ws: ws),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -454,7 +485,7 @@ class _MoreScreenState extends State<MoreScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Payments ledger entry
+        // Payments & proof — production tools
         Text(
           'PAYMENTS & PROOF',
           style: GoogleFonts.inter(
@@ -471,17 +502,57 @@ class _MoreScreenState extends State<MoreScreen> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.grey.shade100),
           ),
+          child: _moreTile(
+            icon: Icons.receipt_long_rounded,
+            color: const Color(0xFF2563EB),
+            title: 'Payments Ledger',
+            subtitle:
+                'Every payment with ref + PIN proof. Tap to verify, export PDF, share or print.',
+            onTap: _openLedger,
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Demos & explore — clearly badged so they're never mistaken for tools
+        Row(
+          children: [
+            Text(
+              'DEMOS & EXPLORE',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.muted,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'DEMO',
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.accent,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
           child: Column(
             children: [
-              _moreTile(
-                icon: Icons.receipt_long_rounded,
-                color: const Color(0xFF2563EB),
-                title: 'Payments Ledger',
-                subtitle:
-                    'Every payment with ref + PIN proof. Tap to verify, export PDF, share or print.',
-                onTap: _openLedger,
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
               _moreTile(
                 icon: Icons.sms_rounded,
                 color: AppColors.accent,

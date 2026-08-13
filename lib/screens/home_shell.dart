@@ -156,7 +156,7 @@ class _HomeShellState extends State<HomeShell> {
         ],
       ),
       drawer: _buildDrawer(context,
-          name: name, phone: phone, wsName: ws?['name'] ?? 'Group'),
+          name: name, phone: phone, wsName: ws?['name'] ?? 'Group', ws: ws),
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -202,7 +202,11 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _buildDrawer(BuildContext context,
-      {required String name, required String phone, required String wsName}) {
+      {required String name,
+      required String phone,
+      required String wsName,
+      Map? ws}) {
+    final wsCover = ws?['image']?.toString();
     return Drawer(
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(),
@@ -227,17 +231,32 @@ class _HomeShellState extends State<HomeShell> {
                   Container(
                     width: 60,
                     height: 60,
-                    padding: const EdgeInsets.all(6),
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
                           color: Colors.white.withOpacity(0.3), width: 2),
                     ),
-                    child: Image.asset(
-                      AppAssets.logoFull,
-                      fit: BoxFit.contain,
-                    ),
+                    child: wsCover == null || wsCover.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Image.asset(
+                              AppAssets.logoFull,
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Image.network(
+                            wsCover,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Image.asset(
+                                AppAssets.logoFull,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 16),
                   Text(

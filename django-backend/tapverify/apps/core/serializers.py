@@ -60,6 +60,7 @@ class VerifyRequestSerializer(serializers.Serializer):
     gps_lat = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     gps_lng = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     notes = serializers.CharField(required=False, allow_blank=True)
+    payment_link_token = serializers.CharField(required=False, allow_blank=True, max_length=64)
 
 
 class ReceiptSerializer(serializers.ModelSerializer):

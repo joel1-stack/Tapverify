@@ -27,13 +27,14 @@ class PendingEventAdapter extends TypeAdapter<PendingEvent> {
       notes: fields[7] as String?,
       createdAt: fields[8] as DateTime,
       synced: fields[9] as bool,
+      workspaceId: fields[10] as String? ?? '',
     );
   }
 
   @override
   void write(BinaryWriter writer, PendingEvent obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.memberId)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class PendingEventAdapter extends TypeAdapter<PendingEvent> {
       ..writeByte(8)
       ..write(obj.createdAt)
       ..writeByte(9)
-      ..write(obj.synced);
+      ..write(obj.synced)
+      ..writeByte(10)
+      ..write(obj.workspaceId);
   }
 
   @override

@@ -4,7 +4,18 @@ import 'package:geolocator/geolocator.dart';
 import '../models/member.dart';
 import '../models/pending_event.dart';
 import 'hive_service.dart';
+import 'demo_service.dart';
 
+/// Backend client for TapVerify (base: https://tverify.co.ke).
+///
+/// Every call is written to degrade gracefully offline:
+///  - [login] falls back to demo auth when the server rejects/absent demo creds
+///  - [fetchMembers] returns the Hive cache when the network fails
+///  - [verifyMember] attaches GPS, and when the POST fails it either simulates
+///    an approved receipt (demo mode) or queues a [PendingEvent] for later
+///    [syncPending] upload
+///
+/// Staff credentials + bearer token come from [HiveService].
 class ApiService {
   static const String baseUrl = 'https://tverify.co.ke';
 
@@ -16,15 +27,45 @@ class ApiService {
     };
   }
 
+  /// Authenticates the treasurer. On success expects `{success, token, staff}`.
+  /// Demo credentials (`254712345678` / `1234`) work either when the server
+  /// rejects them or when the device is offline — both paths seed demo data.
   static Future<Map<String, dynamic>> login(String phone, String pin) async {
-    final resp = await http.post(
-      Uri.parse('$baseUrl/api/v1/auth/login/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'phone': phone, 'pin': pin}),
-    );
-    return jsonDecode(resp.body);
+    try {
+      final resp = await http.post(
+        Uri.parse('$baseUrl/api/v1/auth/login/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phone': phone, 'pin': pin}),
+      );
+      final result = jsonDecode(resp.body);
+      if (result['success'] == true) {
+        return result;
+      }
+      // Fall back to demo auth if server is reachable but rejects demo creds
+      if (phone == DemoService.demoPhone && pin == DemoService.demoPin) {
+        await DemoService.seed();
+        return {
+          'success': true,
+          'token': 'demo-token',
+          'staff': DemoService.demoStaff()
+        };
+      }
+      return result;
+    } catch (e) {
+      // Offline: use demo credentials
+      if (phone == DemoService.demoPhone && pin == DemoService.demoPin) {
+        await DemoService.seed();
+        return {
+          'success': true,
+          'token': 'demo-token',
+          'staff': DemoService.demoStaff()
+        };
+      }
+      return {'success': false, 'error': 'Network error. Check connection.'};
+    }
   }
 
+  /// Fetches the member roster for a workspace and caches it. Offline → cached.
   static Future<List<Member>> fetchMembers(String workspaceId) async {
     try {
       final resp = await http.get(
@@ -35,15 +76,21 @@ class ApiService {
         final data = jsonDecode(resp.body);
         final List results = data is List ? data : (data['results'] ?? []);
         final members = results.map((j) => Member.fromJson(j)).toList();
-        await HiveService.cacheMembers(members);
+        await HiveService.cacheMembersForWorkspace(workspaceId, members);
         return members;
       }
     } catch (e) {
       // Return cached on error
     }
-    return HiveService.getCachedMembers();
+    return HiveService.getMembersForWorkspace(workspaceId);
   }
 
+  /// Verifies one member's payment against the backend.
+  ///
+  /// Captures optional GPS, then POSTs to `/api/v1/verify/`. On success returns
+  /// the server receipt. On failure: in demo mode it fabricates an approved
+  /// receipt (ref + pin + SMS sent); otherwise it queues the event for offline
+  /// sync and still hands back a local receipt object.
   static Future<Map<String, dynamic>> verifyMember({
     required String workspaceId,
     required String memberId,
@@ -87,6 +134,33 @@ class ApiService {
       }
       throw Exception('Server error: ${resp.statusCode}');
     } catch (e) {
+      final demoMode = HiveService.getToken() == 'demo-token';
+      final ref = 'TV${_randomRef()}';
+      final pin = _randomPin();
+      final ws = HiveService.getActiveWorkspace();
+      final name = ws?['name'] ?? 'Group';
+      final till = ws?['till_number']?.toString() ?? '';
+      final receipt = {
+        'reference': ref,
+        'pin': pin,
+        'url': 'https://tverify.co.ke/r/$ref?pin=$pin',
+        'group_name': name,
+        'organization': name,
+        if (till.isNotEmpty) 'till_number': till,
+        'sms': {'status': 'sent', 'phone': _memberPhone(memberId)},
+      };
+
+      if (demoMode) {
+        // Demo mode: simulate a fully approved payment + SMS sent
+        return {
+          'success': true,
+          'queued': false,
+          'message': 'Payment approved',
+          'sms': {'status': 'sent', 'phone': _memberPhone(memberId)},
+          'receipt': receipt,
+        };
+      }
+
       final pending = PendingEvent(
         memberId: memberId,
         memberCode: '',
@@ -97,14 +171,38 @@ class ApiService {
         gpsLng: position?.longitude,
         notes: notes,
         createdAt: DateTime.now(),
+        workspaceId: HiveService.activeWorkspaceId ?? '',
       );
       await HiveService.queueEvent(pending);
       return {
         'success': true,
         'queued': true,
         'message': 'Saved offline. Will sync when online.',
+        'receipt': receipt,
       };
     }
+  }
+
+  static String _memberPhone(String memberId) {
+    for (final m in HiveService.getCachedMembers()) {
+      if (m.id == memberId) return m.phone;
+    }
+    return '0712 345 678';
+  }
+
+  static String _randomRef() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rand = DateTime.now().millisecondsSinceEpoch;
+    final buf = StringBuffer('R');
+    for (int i = 0; i < 6; i++) {
+      buf.write(chars[(rand + i * 7) % chars.length]);
+    }
+    return buf.toString();
+  }
+
+  static String _randomPin() {
+    final rand = DateTime.now().millisecondsSinceEpoch % 10000;
+    return rand.toString().padLeft(4, '0');
   }
 
   static Future<int> syncPending() async {
@@ -114,7 +212,9 @@ class ApiService {
       final event = pending[i];
       try {
         final body = {
-          'workspace_id': HiveService.getStaff()?['workspace']?['id'] ?? '',
+          'workspace_id': event.workspaceId.isNotEmpty
+              ? event.workspaceId
+              : HiveService.activeWorkspaceId ?? '',
           'member_id': event.memberId,
           'amount': event.amount,
           'event_type': event.eventType,
@@ -140,14 +240,18 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> fetchStats(String workspaceId) async {
-    final resp = await http.get(
-      Uri.parse('$baseUrl/api/v1/stats/?workspace_id=$workspaceId'),
-      headers: _headers,
-    );
-    if (resp.statusCode == 200) {
-      return jsonDecode(resp.body);
+    try {
+      final resp = await http.get(
+        Uri.parse('$baseUrl/api/v1/stats/?workspace_id=$workspaceId'),
+        headers: _headers,
+      );
+      if (resp.statusCode == 200) {
+        return jsonDecode(resp.body);
+      }
+    } catch (e) {
+      // Offline: fall through to demo stats
     }
-    throw Exception('Failed to load stats');
+    return DemoService.stats();
   }
 
   static Future<Map<String, dynamic>> createDemo() async {
@@ -177,13 +281,21 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getPaymentRailInfo() async {
-    final resp = await http.get(
-      Uri.parse('$baseUrl/api/v1/rail/info/'),
-      headers: _headers,
-    );
-    if (resp.statusCode == 200) {
-      return jsonDecode(resp.body);
+    try {
+      final resp = await http.get(
+        Uri.parse('$baseUrl/api/v1/rail/info/'),
+        headers: _headers,
+      );
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body);
+        if (data['success'] == false && data['error'] != null) {
+          return {'rail': 'loop', 'status': 'active', 'mode': 'demo'};
+        }
+        return data;
+      }
+    } catch (e) {
+      // Offline: demo Loop rail is always active
     }
-    throw Exception('Failed to get rail info');
+    return {'rail': 'loop', 'status': 'active', 'mode': 'demo'};
   }
 }

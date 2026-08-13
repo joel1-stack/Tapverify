@@ -8,7 +8,13 @@ import 'member_list_screen.dart';
 import 'activity_screen.dart';
 import 'more_screen.dart';
 import 'login_screen.dart';
+import 'create_organization_screen.dart';
 
+/// Bottom-navigation shell holding the four main tabs.
+///
+/// Home / Members / Activity / More. Owns the offline-sync action (uploads the
+/// [PendingEvent] queue via [ApiService.syncPending]), shows the pending-count
+/// badge on the sync icon and handles logout.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -19,9 +25,10 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
   int _pendingCount = 0;
+  final _dashKey = GlobalKey<DashboardState>();
 
-  final _screens = [
-    const DashboardScreen(),
+  late final List<Widget> _screens = [
+    DashboardScreen(key: _dashKey),
     const MemberListScreen(embedded: true),
     const ActivityScreen(),
     const MoreScreen(),
@@ -55,7 +62,8 @@ class _HomeShellState extends State<HomeShell> {
           ),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -75,7 +83,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final staff = HiveService.getStaff();
-    final ws = staff?['workspace'];
+    final ws = HiveService.getActiveWorkspace();
     final name = staff?['name'] ?? 'Treasurer';
     final phone = staff?['phone'] ?? '';
 
@@ -121,7 +129,8 @@ class _HomeShellState extends State<HomeShell> {
               onTap: _sync,
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.accent,
                   borderRadius: BorderRadius.circular(20),
@@ -146,7 +155,8 @@ class _HomeShellState extends State<HomeShell> {
           const SizedBox(width: 4),
         ],
       ),
-      drawer: _buildDrawer(context, name: name, phone: phone, wsName: ws?['name'] ?? 'Group'),
+      drawer: _buildDrawer(context,
+          name: name, phone: phone, wsName: ws?['name'] ?? 'Group'),
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -163,22 +173,26 @@ class _HomeShellState extends State<HomeShell> {
           destinations: [
             NavigationDestination(
               icon: const Icon(Icons.home_outlined),
-              selectedIcon: const Icon(Icons.home_rounded, color: AppColors.primary),
+              selectedIcon:
+                  const Icon(Icons.home_rounded, color: AppColors.primary),
               label: 'Home',
             ),
             NavigationDestination(
               icon: const Icon(Icons.people_outline_rounded),
-              selectedIcon: const Icon(Icons.people_rounded, color: AppColors.primary),
+              selectedIcon:
+                  const Icon(Icons.people_rounded, color: AppColors.primary),
               label: 'Members',
             ),
             NavigationDestination(
               icon: const Icon(Icons.receipt_long_outlined),
-              selectedIcon: const Icon(Icons.receipt_long_rounded, color: AppColors.primary),
+              selectedIcon: const Icon(Icons.receipt_long_rounded,
+                  color: AppColors.primary),
               label: 'Activity',
             ),
             NavigationDestination(
               icon: const Icon(Icons.more_horiz_rounded),
-              selectedIcon: const Icon(Icons.more_horiz, color: AppColors.primary),
+              selectedIcon:
+                  const Icon(Icons.more_horiz, color: AppColors.primary),
               label: 'More',
             ),
           ],
@@ -187,7 +201,8 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  Widget _buildDrawer(BuildContext context, {required String name, required String phone, required String wsName}) {
+  Widget _buildDrawer(BuildContext context,
+      {required String name, required String phone, required String wsName}) {
     return Drawer(
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(),
@@ -212,12 +227,17 @@ class _HomeShellState extends State<HomeShell> {
                   Container(
                     width: 60,
                     height: 60,
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                      border: Border.all(
+                          color: Colors.white.withOpacity(0.3), width: 2),
                     ),
-                    child: const Icon(Icons.verified_rounded, color: Colors.white, size: 32),
+                    child: Image.asset(
+                      AppAssets.logoFull,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -238,7 +258,8 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -246,11 +267,15 @@ class _HomeShellState extends State<HomeShell> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.groups_rounded, size: 12, color: Colors.white),
+                        const Icon(Icons.groups_rounded,
+                            size: 12, color: Colors.white),
                         const SizedBox(width: 6),
                         Text(
                           wsName,
-                          style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -268,11 +293,13 @@ class _HomeShellState extends State<HomeShell> {
                   decoration: BoxDecoration(
                     color: AppColors.accent.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+                    border:
+                        Border.all(color: AppColors.accent.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.cloud_upload_rounded, color: AppColors.accent, size: 20),
+                      const Icon(Icons.cloud_upload_rounded,
+                          color: AppColors.accent, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -288,6 +315,97 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                 ),
               ),
+            // Organizations list
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'MY ORGANIZATIONS',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.muted,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...HiveService.getMyWorkspaces().map((w) {
+                    final active = w['id'] == HiveService.activeWorkspaceId;
+                    return ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.primary : Colors.white,
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(
+                              color: active
+                                  ? AppColors.primary
+                                  : AppColors.border),
+                        ),
+                        child: Icon(Icons.groups_rounded,
+                            size: 19,
+                            color: active ? Colors.white : AppColors.muted),
+                      ),
+                      title: Text(
+                        w['name'] ?? 'Unnamed',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: active ? AppColors.primary : AppColors.text,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${w['type'] ?? 'Group'} · Ksh ${w['contribution'] ?? 0}/mo',
+                        style: GoogleFonts.inter(
+                            fontSize: 10.5, color: AppColors.muted),
+                      ),
+                      trailing: active
+                          ? const Icon(Icons.check_circle_rounded,
+                              color: AppColors.primary, size: 18)
+                          : const Icon(Icons.chevron_right_rounded,
+                              size: 18, color: AppColors.muted),
+                      onTap: () => _switchWorkspace(w['id']),
+                    );
+                  }),
+                  const Divider(height: 1),
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Icon(Icons.add_business_rounded,
+                          color: AppColors.accent, size: 20),
+                    ),
+                    title: Text(
+                      'Create new organization',
+                      style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accent),
+                    ),
+                    onTap: _createOrganization,
+                  ),
+                ],
+              ),
+            ),
             // Menu items
             Expanded(
               child: ListView(
@@ -325,14 +443,44 @@ class _HomeShellState extends State<HomeShell> {
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                'TapVerify v1.0.0\nProof of Payment',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.muted,
-                  height: 1.5,
-                ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Image.asset(AppAssets.logoFull,
+                            fit: BoxFit.contain),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'TapVerify v1.0.0',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.deep,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Proof of Payment \u00b7 Made for Kenya\u2019s groups',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -346,17 +494,52 @@ class _HomeShellState extends State<HomeShell> {
     setState(() => _index = index);
   }
 
+  Future<void> _switchWorkspace(String id) async {
+    Navigator.pop(context);
+    await HiveService.setActiveWorkspace(id);
+    if (mounted) setState(() {});
+    _dashKey.currentState?.reload();
+  }
+
+  void _createOrganization() {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateOrganizationScreen()),
+    ).then((_) {
+      if (mounted) setState(() {});
+      _dashKey.currentState?.reload();
+    });
+  }
+
   Widget _drawerItem({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
     Color color = AppColors.text,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: color)),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.border),
-      onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color == AppColors.danger
+                ? AppColors.danger.withOpacity(0.08)
+                : AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        title: Text(label,
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600, fontSize: 14, color: color)),
+        trailing: Icon(Icons.chevron_right_rounded,
+            size: 18, color: color.withOpacity(0.3)),
+        onTap: onTap,
+      ),
     );
   }
 }

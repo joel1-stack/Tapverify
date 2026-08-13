@@ -147,7 +147,19 @@ class VerifyMemberView(generics.GenericAPIView):
             verified_at=timezone.now()
         )
 
-        if data.get('event_type') in ('payment_cash', 'payment_mpesa'):
+        # Loop Request-to-Pay: fire the M-Pesa prompt to the member's phone
+        loop_result = None
+        if data.get('event_type') == 'payment_loop' and data.get('payment_link_token'):
+            rail = get_payment_rail()
+            loop_result = rail.initiate_payment(
+                phone=member.phone,
+                amount=data['amount'],
+                reference=data['payment_link_token'],
+                description=f'{workspace.name} - {member.name}',
+            )
+            event.notes = f"{event.notes} Loop: {loop_result.get('message') or 'initiated'}".strip()
+
+        if data.get('event_type') in ('payment_cash', 'payment_mpesa', 'payment_loop'):
             member.balance_due = max(0, member.balance_due - data['amount'])
             member.last_paid_at = timezone.now()
             member.save()
@@ -394,7 +406,17 @@ def loop_webhook(request):
     Flow: verify signature → find PaymentLink by reference → create VerificationEvent → send SMS → return 200
     """
     rail = get_payment_rail('loop')
-    parsed = rail.verify_webhook(request.data, request.headers)
+
+    # Pass the raw body through so the signature can be checked
+    headers = request.headers.copy()
+    try:
+        raw = request.body.decode('utf-8')
+        if raw:
+            headers['raw_body'] = raw
+    except Exception:
+        pass
+
+    parsed = rail.verify_webhook(request.data, headers)
 
     if not parsed.get('valid'):
         logger.warning("Invalid Loop IPN received")

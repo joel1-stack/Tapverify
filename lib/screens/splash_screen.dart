@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../constants.dart';
 import 'login_screen.dart';
 import 'home_shell.dart';
+import 'org_select_screen.dart';
 import '../services/hive_service.dart';
 
+/// Branded splash — animated logo intro and auth routing.
+///
+/// Plays a scale/fade entrance, then routes: logged-in single-org treasurers
+/// straight to [HomeShell], multi-org ones to [OrgSelectScreen], and new users
+/// to [LoginScreen], using a cross-fade page transition.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -11,7 +18,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -38,10 +46,18 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (!mounted) return;
       final loggedIn = await HiveService.isLoggedIn();
       if (!mounted) return;
+      Widget target;
+      if (loggedIn) {
+        final orgs = HiveService.getAccessibleWorkspaces();
+        final needsSelect = orgs.length > 1 && !HiveService.orgSelectionDone;
+        target = needsSelect ? const OrgSelectScreen() : const HomeShell();
+      } else {
+        target = const LoginScreen();
+      }
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => loggedIn ? const HomeShell() : const LoginScreen(),
+          pageBuilder: (_, __, ___) => target,
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -80,34 +96,30 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   child: Opacity(
                     opacity: _fadeAnimation.value,
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 190,
+                      height: 190,
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.verified_rounded,
                         color: Colors.white,
-                        size: 60,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        AppAssets.logoFull,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 32),
-            Text(
-              'TapVerify',
-              style: GoogleFonts.inter(
-                fontSize: 36,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
             Text(
               'Proof of Payment',
               style: GoogleFonts.inter(

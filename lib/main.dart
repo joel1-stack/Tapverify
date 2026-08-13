@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'constants.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
 import 'services/hive_service.dart';
 
+/// Application entry point: boots Hive, then hands off to [TapVerifyApp].
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -14,6 +14,8 @@ void main() async {
   runApp(const TapVerifyApp());
 }
 
+/// Root widget. Applies the global TapVerify Material 3 theme (emerald seed,
+/// Inter font, custom button/input/card styling) and starts at [SplashScreen].
 class TapVerifyApp extends StatelessWidget {
   const TapVerifyApp({super.key});
 
@@ -57,8 +59,10 @@ class TapVerifyApp extends StatelessWidget {
             backgroundColor: const Color(0xFF059669),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            textStyle:
+                GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
             elevation: 0,
           ),
         ),
@@ -77,7 +81,8 @@ class TapVerifyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
       home: const SplashScreen(),
@@ -85,6 +90,9 @@ class TapVerifyApp extends StatelessWidget {
   }
 }
 
+/// Route guard: checks the persisted login token and shows [HomeShell] for
+/// logged-in treasurers, otherwise the [LoginScreen]. Renders a small loading
+/// spinner while the token check is pending.
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -95,7 +103,8 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator(color: Color(0xFF059669))),
+            body: Center(
+                child: CircularProgressIndicator(color: Color(0xFF059669))),
           );
         }
         if (snapshot.hasData && snapshot.data == true) {

@@ -4,27 +4,37 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import 'home_shell.dart';
 
+/// Animated success screen shown after a payment is verified.
+///
+/// Confetti-ish scale/fade entrance, displays the member, amount and printable
+/// receipt (url + pin) with copy-to-clipboard, and navigates home when done.
+/// `queued`/`smsSent` flag whether the verification is synced or offline.
 class SuccessScreen extends StatefulWidget {
   final String memberName;
+  final String memberPhone;
   final double amount;
   final String receiptUrl;
   final String pin;
   final bool queued;
+  final bool smsSent;
 
   const SuccessScreen({
     super.key,
     required this.memberName,
+    required this.memberPhone,
     required this.amount,
     required this.receiptUrl,
     required this.pin,
     this.queued = false,
+    this.smsSent = false,
   });
 
   @override
   State<SuccessScreen> createState() => _SuccessScreenState();
 }
 
-class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProviderStateMixin {
+class _SuccessScreenState extends State<SuccessScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -40,7 +50,9 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
       CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 1.0, curve: Curves.easeIn)),
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.3, 1.0, curve: Curves.easeIn)),
     );
     _controller.forward();
   }
@@ -65,7 +77,8 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
           ),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -101,8 +114,8 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                       child: Image.network(
                         // queued (offline saved) vs approved (payment)
                         widget.queued
-                          ? 'https://images.pexels.com/photos/7413888/pexels-photo-7413888.jpeg?auto=compress&cs=tinysrgb&w=800'
-                          : 'https://images.pexels.com/photos/8348627/pexels-photo-8348627.jpeg?auto=compress&cs=tinysrgb&w=800',
+                            ? 'https://images.pexels.com/photos/7413888/pexels-photo-7413888.jpeg?auto=compress&cs=tinysrgb&w=800'
+                            : 'https://images.pexels.com/photos/8348627/pexels-photo-8348627.jpeg?auto=compress&cs=tinysrgb&w=800',
                         width: 200,
                         height: 160,
                         fit: BoxFit.cover,
@@ -113,15 +126,23 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: widget.queued
-                                  ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
-                                  : [AppColors.primary, const Color(0xFF047857)],
+                                    ? [
+                                        const Color(0xFFF59E0B),
+                                        const Color(0xFFD97706)
+                                      ]
+                                    : [
+                                        AppColors.primary,
+                                        const Color(0xFF047857)
+                                      ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: Icon(
-                              widget.queued ? Icons.cloud_upload_rounded : Icons.check_rounded,
+                              widget.queued
+                                  ? Icons.cloud_upload_rounded
+                                  : Icons.check_rounded,
                               color: Colors.white,
                               size: 50,
                             ),
@@ -166,6 +187,57 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                AnimatedBuilder(
+                  animation: _fadeAnimation,
+                  builder: (context, child) {
+                    return Opacity(opacity: _fadeAnimation.value, child: child);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: widget.queued
+                          ? const Color(0xFFFFFBEB)
+                          : AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.queued
+                            ? const Color(0xFFFDE68A)
+                            : AppColors.primary.withOpacity(0.25),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          widget.queued
+                              ? Icons.cloud_upload_rounded
+                              : Icons.sms_rounded,
+                          size: 16,
+                          color: widget.queued
+                              ? const Color(0xFFB45309)
+                              : AppColors.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.queued
+                              ? 'Saved offline. SMS will send on sync.'
+                              : 'SMS receipt sent to ${widget.memberPhone}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: widget.queued
+                                ? const Color(0xFF92400E)
+                                : AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
                 if (!widget.queued) ...[
                   const SizedBox(height: 32),
@@ -174,7 +246,8 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                   AnimatedBuilder(
                     animation: _fadeAnimation,
                     builder: (context, child) {
-                      return Opacity(opacity: _fadeAnimation.value, child: child);
+                      return Opacity(
+                          opacity: _fadeAnimation.value, child: child);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(24),
@@ -225,15 +298,20 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                                   borderRadius: BorderRadius.circular(12),
                                   onTap: _copyLink,
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.copy_rounded, size: 18, color: AppColors.primary),
+                                        const Icon(Icons.copy_rounded,
+                                            size: 18, color: AppColors.primary),
                                         const SizedBox(width: 8),
                                         Text(
                                           'Copy Receipt Link',
-                                          style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.primary),
+                                          style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.primary),
                                         ),
                                       ],
                                     ),
@@ -278,7 +356,8 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                         PageRouteBuilder(
                           pageBuilder: (_, __, ___) => const HomeShell(),
                           transitionsBuilder: (_, animation, __, child) {
-                            return FadeTransition(opacity: animation, child: child);
+                            return FadeTransition(
+                                opacity: animation, child: child);
                           },
                         ),
                         (route) => false,

@@ -1,19 +1,16 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import 'login_screen.dart';
 import 'home_shell.dart';
 import 'org_select_screen.dart';
-import 'landing_screen.dart';
 import '../services/hive_service.dart';
 
 /// Branded splash — animated logo intro and auth routing.
 ///
 /// Plays a scale/fade entrance, then routes: logged-in single-org treasurers
-/// straight to [HomeShell], multi-org ones to [OrgSelectScreen], new users to
-/// [LoginScreen], and first-time desktop web visitors to the [LandingScreen]
-/// pitch page, using a cross-fade page transition.
+/// straight to [HomeShell], multi-org ones to [OrgSelectScreen], and new users
+/// to [LoginScreen], using a cross-fade page transition.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -55,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
         final needsSelect = orgs.length > 1 && !HiveService.orgSelectionDone;
         target = needsSelect ? const OrgSelectScreen() : const HomeShell();
       } else {
-        target = kIsWeb ? const LandingScreen() : const LoginScreen();
+        target = const LoginScreen();
       }
       Navigator.pushReplacement(
         context,

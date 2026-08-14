@@ -268,7 +268,7 @@ class _OrgSelectScreenState extends State<OrgSelectScreen> {
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
+                        foregroundColor: AppColors.accent,
                         side: BorderSide(
                             color: AppColors.primary.withOpacity(0.5)),
                         shape: RoundedRectangleBorder(
@@ -435,7 +435,7 @@ class _NewOrgSheetState extends State<_NewOrgSheet> {
             height: 52,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.accent,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),

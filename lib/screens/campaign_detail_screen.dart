@@ -116,7 +116,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 height: 52,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.accent,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -169,7 +169,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         SnackBar(
           content: Text('Synced — SMS receipts sent to paid members',
               style: GoogleFonts.inter()),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -212,7 +212,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 height: 48,
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.accent,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -287,7 +287,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         content: Text(
             'Reminder with payment link sent to ${names.isEmpty ? count : names}$more',
             style: GoogleFonts.inter(fontSize: 13)),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
@@ -420,7 +420,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                               fontSize: 13,
                               color: AppColors.primary)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
+                        foregroundColor: AppColors.accent,
                         side: BorderSide(
                             color: AppColors.primary.withOpacity(0.5)),
                         shape: RoundedRectangleBorder(

@@ -1,6 +1,8 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../constants.dart';
 import '../services/api_service.dart';
 import '../services/demo_service.dart';
@@ -113,8 +115,8 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           backgroundColor: AppColors.deep,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -303,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           Text(
-                            "Kenya's chamas & groups",
+                            "Kenya's organized money",
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.92),
@@ -311,7 +313,6 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           const SizedBox(height: 26),
-
                           Container(
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(
@@ -391,7 +392,6 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           const SizedBox(height: 18),
-
                           if (isMember)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -405,8 +405,7 @@ class _LoginScreenState extends State<LoginScreen>
                               child: Row(
                                 children: [
                                   const Icon(Icons.group_add_rounded,
-                                      color: Color(0xFFFFB066),
-                                      size: 18),
+                                      color: Color(0xFFFFB066), size: 18),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
@@ -422,7 +421,6 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             ),
                           const SizedBox(height: 26),
-
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Column(
@@ -568,8 +566,8 @@ class _LoginScreenState extends State<LoginScreen>
               foregroundColor: Colors.white,
               elevation: 4,
               shadowColor: AppColors.accent,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
             child: _loading
                 ? const SizedBox(
@@ -611,8 +609,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: AppColors.accent, width: 1.6),
+              borderSide: const BorderSide(color: AppColors.accent, width: 1.6),
             ),
           ),
         ),
@@ -654,8 +651,8 @@ class _LoginScreenState extends State<LoginScreen>
               foregroundColor: Colors.white,
               elevation: 4,
               shadowColor: AppColors.accent,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
             child: _loading
                 ? const SizedBox(
@@ -678,7 +675,8 @@ class _LoginScreenState extends State<LoginScreen>
               _otpSeconds > 0
                   ? 'Resend in ${_otpSeconds}s'
                   : 'Didn\u2019t get it?',
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
+              style:
+                  GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade500),
             ),
             if (_otpSeconds == 0)
               TextButton(
@@ -755,8 +753,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide:
-                const BorderSide(color: AppColors.accent, width: 1.6),
+            borderSide: const BorderSide(color: AppColors.accent, width: 1.6),
           ),
         ),
       ),
@@ -786,8 +783,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide:
-                const BorderSide(color: AppColors.accent, width: 1.6),
+            borderSide: const BorderSide(color: AppColors.accent, width: 1.6),
           ),
         ),
       ),
@@ -833,13 +829,12 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline,
-                color: AppColors.danger, size: 18),
+            const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Text(_error!,
-                  style: GoogleFonts.inter(
-                      color: AppColors.danger, fontSize: 13)),
+                  style:
+                      GoogleFonts.inter(color: AppColors.danger, fontSize: 13)),
             ),
           ],
         ),

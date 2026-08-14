@@ -208,7 +208,7 @@ class _ImportMembersScreenState extends State<ImportMembersScreen> {
                   style: GoogleFonts.inter()),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -289,7 +289,7 @@ class _ImportMembersScreenState extends State<ImportMembersScreen> {
                     fontWeight: FontWeight.w700, fontSize: 15),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
@@ -440,7 +440,7 @@ class _ImportMembersScreenState extends State<ImportMembersScreen> {
                       letterSpacing: 0.5),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),

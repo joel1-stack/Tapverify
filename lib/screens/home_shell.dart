@@ -60,7 +60,7 @@ class _HomeShellState extends State<HomeShell> {
               Text('$synced payments synced', style: GoogleFonts.inter()),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -71,7 +71,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               Text('$synced payments synced', style: GoogleFonts.inter()),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -219,7 +219,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     style: GoogleFonts.inter(fontSize: 12.5)),
               ],
             ),
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

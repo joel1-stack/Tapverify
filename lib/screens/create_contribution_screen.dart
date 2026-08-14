@@ -127,7 +127,7 @@ class _CreateContributionScreenState extends State<CreateContributionScreen> {
           'Notification sent to ${HiveService.getMembersForWorkspace(ws?['id'] ?? '').length} members',
           style: GoogleFonts.inter(),
         ),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -420,7 +420,7 @@ class _CreateContributionScreenState extends State<CreateContributionScreen> {
                 height: 54,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.accent,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),

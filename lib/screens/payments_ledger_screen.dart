@@ -91,7 +91,7 @@ class _PaymentsLedgerScreenState extends State<PaymentsLedgerScreen> {
             ),
           ],
         ),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -110,7 +110,7 @@ class _PaymentsLedgerScreenState extends State<PaymentsLedgerScreen> {
             Text('Copied', style: GoogleFonts.inter()),
           ],
         ),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -137,7 +137,7 @@ class _PaymentsLedgerScreenState extends State<PaymentsLedgerScreen> {
               ),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -689,7 +689,7 @@ class _PaymentsLedgerScreenState extends State<PaymentsLedgerScreen> {
                   height: 48,
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.accent,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
                     ),
@@ -709,8 +709,8 @@ class _PaymentsLedgerScreenState extends State<PaymentsLedgerScreen> {
                 height: 46,
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                    foregroundColor: AppColors.accent,
+                    side: BorderSide(color: AppColors.accent.withOpacity(0.5)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),

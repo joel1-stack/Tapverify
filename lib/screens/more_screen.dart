@@ -74,7 +74,7 @@ class _MoreScreenState extends State<MoreScreen> {
         SnackBar(
           content: Text('Add a member first, then replay the demo',
               style: GoogleFonts.inter()),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -316,7 +316,7 @@ class _MoreScreenState extends State<MoreScreen> {
                       SnackBar(
                         content: Text('$synced payments synced',
                             style: GoogleFonts.inter()),
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppColors.accent,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -626,7 +626,7 @@ child: _moreTile(
                       content: Text(
                           'Reminder sent to ${HiveService.getMembersForWorkspace(ws?['id'] ?? '').length} members',
                           style: GoogleFonts.inter()),
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.accent,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),

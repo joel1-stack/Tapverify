@@ -75,7 +75,7 @@ class _SuccessScreenState extends State<SuccessScreen>
               Text('Receipt link copied', style: GoogleFonts.inter()),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

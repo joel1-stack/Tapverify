@@ -567,8 +567,8 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
                     label: Text('Request reinstatement',
                         style: GoogleFonts.inter(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.accent,
+                      side: const BorderSide(color: AppColors.accent),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),

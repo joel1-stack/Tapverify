@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import '../models/member.dart';
 import '../services/api_service.dart';
 import '../services/hive_service.dart';
-import '../services/contribution_service.dart';
 import 'login_screen.dart';
 import 'payments_ledger_screen.dart';
 import 'loop_matrix_screen.dart';
@@ -66,78 +64,31 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  /// Seeds the demo org, picks a contribution with an unpaid member, and replays
-  /// the member payment journey — always works, even on a fresh install.
+  /// Replays the member payment journey on the funeral/levy campaign — always
+  /// works, even on a fresh install.
   Future<void> _openMemberDemo() async {
-    await DemoService.seed();
+    final target = await DemoService.memberDemo();
     if (!mounted) return;
-    final wsId = HiveService.activeWorkspaceId ?? DemoService.demoWorkspaceId;
-    final campaigns = ContributionService.campaigns()
-        .where((c) => c['workspace_id'] == wsId)
-        .toList();
-    Map? campaign;
-    // Lead with the burial / emergency levy — the "72-hour funeral collection"
-    // story — so the member demo opens in the funeral context.
-    for (final c in campaigns.reversed) {
-      final title = c['title']?.toString() ?? '';
-      final isEmergency = title.contains('burial') ||
-          title.contains('levy') ||
-          title.contains('Emergency');
-      if (isEmergency) {
-        campaign = c;
-        break;
-      }
-    }
-    campaign ??= campaigns.isNotEmpty ? campaigns.last : null;
-    if (campaign == null) {
-      campaign = ContributionService.create(
-        title: 'Monthly contribution',
-        contribType: 'Regular',
-        amount: 5000,
-        frequency: 'monthly',
-        deadline: DateTime.now().add(const Duration(days: 10)).toIso8601String(),
-        message: 'You have to pay Ksh 5000 this month.',
-        paymentMethod: {'rail': 'till', 'label': 'M-PESA Till 9415678'},
-        allowPartial: true,
-        minPartial: 1000,
-        workspaceId: wsId,
+    if (target == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Add a member first, then replay the demo',
+              style: GoogleFonts.inter()),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
-    }
-    final members = HiveService.getMembersForWorkspace(wsId);
-    Member? member;
-    final amount = (campaign['amount'] as num? ?? 0).toDouble();
-    final payments = List<Map<String, dynamic>>.from(campaign['payments'] ?? []);
-    for (final m in members) {
-      final paid = payments
-          .where((p) => p['member_id'] == m.id)
-          .fold<double>(0, (s, p) => s + (p['paid'] as num));
-      if (paid < amount) {
-        member = m;
-        break;
-      }
-    }
-    member ??= members.isNotEmpty ? members.first : null;
-    if (member == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Add a member first, then replay the demo',
-                style: GoogleFonts.inter()),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
       return;
     }
-    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            MemberPaymentDemoScreen(campaign: campaign!, member: member!),
+        builder: (_) => MemberPaymentDemoScreen(
+          campaign: target.campaign,
+          member: target.member,
+        ),
       ),
     );
   }

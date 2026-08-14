@@ -182,6 +182,61 @@ class DemoService {
   static bool _exists(String title) =>
       HiveService.getCampaigns().any((c) => c['title'] == title);
 
+  /// Seeds the demo and returns a ready (campaign, unpaid member) pair for the
+  /// member-payment replay, leading with the burial / levy / emergency
+  /// contribution so the demo opens in the "72-hour funeral collection" story.
+  /// Returns null if there is no member to play as.
+  static Future<({Map campaign, Member member})?> memberDemo() async {
+    await seed();
+    final wsId = HiveService.activeWorkspaceId ?? demoWorkspaceId;
+    final campaigns = ContributionService.campaigns()
+        .where((c) => c['workspace_id'] == wsId)
+        .toList();
+    Map? campaign;
+    for (final c in campaigns.reversed) {
+      final title = c['title']?.toString() ?? '';
+      final isEmergency = title.contains('burial') ||
+          title.contains('levy') ||
+          title.contains('Emergency');
+      if (isEmergency) {
+        campaign = c;
+        break;
+      }
+    }
+    campaign ??= campaigns.isNotEmpty ? campaigns.last : null;
+    if (campaign == null) {
+      campaign = ContributionService.create(
+        title: 'Monthly contribution',
+        contribType: 'Regular',
+        amount: 5000,
+        frequency: 'monthly',
+        deadline: DateTime.now().add(const Duration(days: 10)).toIso8601String(),
+        message: 'You have to pay Ksh 5000 this month.',
+        paymentMethod: {'rail': 'till', 'label': 'M-PESA Till 9415678'},
+        allowPartial: true,
+        minPartial: 1000,
+        workspaceId: wsId,
+      );
+    }
+    final members = HiveService.getMembersForWorkspace(wsId);
+    Member? member;
+    final amount = (campaign['amount'] as num? ?? 0).toDouble();
+    final payments =
+        List<Map<String, dynamic>>.from(campaign['payments'] ?? []);
+    for (final m in members) {
+      final paid = payments
+          .where((p) => p['member_id'] == m.id)
+          .fold<double>(0, (s, p) => s + (p['paid'] as num));
+      if (paid < amount) {
+        member = m;
+        break;
+      }
+    }
+    member ??= members.isNotEmpty ? members.first : null;
+    if (member == null) return null;
+    return (campaign: campaign, member: member);
+  }
+
   static void _seedCampaigns() {
     final members = HiveService.getMembersForWorkspace(demoWorkspaceId);
     const orgName = 'Umoja Burial Welfare';

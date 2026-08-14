@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../services/demo_service.dart';
 import '../services/hive_service.dart';
-import 'home_shell.dart';
-import 'member_home_screen.dart';
+import 'board_demo_screen.dart';
+import 'member_payment_demo_screen.dart';
 import 'login_screen.dart';
 
 /// Web landing page shown when a desktop visitor is not logged in.
@@ -40,7 +40,7 @@ class _LandingScreenState extends State<LandingScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const HomeShell(),
+        pageBuilder: (_, __, ___) => const BoardDemoScreen(),
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -50,18 +50,22 @@ class _LandingScreenState extends State<LandingScreen> {
 
   Future<void> _enterMember() async {
     setState(() => _busy = true);
-    await DemoService.seed();
+    final target = await DemoService.memberDemo();
     await HiveService.saveMemberAuth(
       DemoService.memberDemoPhone,
       DemoService.memberDemoName,
     );
     if (!mounted) return;
+    if (target == null) {
+      _goLogin();
+      return;
+    }
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => MemberHomeScreen(
-          phone: DemoService.memberDemoPhone,
-          name: DemoService.memberDemoName,
+        pageBuilder: (_, __, ___) => MemberPaymentDemoScreen(
+          campaign: target.campaign,
+          member: target.member,
         ),
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);

@@ -9,8 +9,8 @@ class AppColors {
   static const Color primary = Color(0xFF2D6A4F);
   static const Color deep = Color(0xFF0F4C3A);
   static const Color primaryLight = Color(0xFF52B788);
-  static const Color accent = Color(0xFFF15A24);
-  static const Color loop = Color(0xFFF15A24);
+  static const Color accent = Color(0xFFFF6B00);
+  static const Color loop = Color(0xFFFF6B00);
   static const Color gold = Color(0xFFC9A227);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFDC2626);

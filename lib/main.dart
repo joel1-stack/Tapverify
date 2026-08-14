@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/member_home_screen.dart';
 import 'services/hive_service.dart';
+import 'constants.dart';
 
 /// Application entry point: boots Hive, then hands off to [TapVerifyApp].
 void main() async {
@@ -62,7 +63,7 @@ class TapVerifyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0F4C3A),
           primary: const Color(0xFF2D6A4F),
-          secondary: const Color(0xFFF15A24),
+          secondary: AppColors.accent,
           surface: Colors.white,
           brightness: Brightness.light,
         ),
@@ -89,7 +90,7 @@ class TapVerifyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF15A24),
+            backgroundColor: AppColors.accent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 28),
             shape:

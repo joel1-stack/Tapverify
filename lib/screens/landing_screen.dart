@@ -107,7 +107,7 @@ class _LandingScreenState extends State<LandingScreen> {
             Container(
               color: Colors.black26,
               alignment: Alignment.center,
-              child: const CircularProgressIndicator(color: AppColors.primary),
+              child: const CircularProgressIndicator(color: AppColors.accent),
             ),
         ],
       ),
@@ -125,7 +125,7 @@ class _LandingScreenState extends State<LandingScreen> {
             height: 34,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.deep,
+              color: const Color(0xFF1E1E1E),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
@@ -135,13 +135,13 @@ class _LandingScreenState extends State<LandingScreen> {
               style: GoogleFonts.inter(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.deep)),
+                  color: const Color(0xFF1E1E1E))),
           const Spacer(),
           TextButton(
             onPressed: _busy ? null : _goLogin,
             child: Text('Log in',
                 style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    fontWeight: FontWeight.w700, color: AppColors.accent)),
           ),
         ],
       ),
@@ -153,7 +153,7 @@ class _LandingScreenState extends State<LandingScreen> {
       padding: const EdgeInsets.fromLTRB(24, 48, 24, 40),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF064E3B), Color(0xFF059669)],
+          colors: [Color(0xFF3A1700), Color(0xFF1B1B1B)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -164,16 +164,16 @@ class _LandingScreenState extends State<LandingScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: AppColors.accent.withOpacity(0.16),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.25)),
+              border: Border.all(color: AppColors.accent.withOpacity(0.55)),
             ),
             child: Text('LOOP HACKATHON · 8 APIs LIVE · OFFLINE-FIRST',
                 style: GoogleFonts.inter(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.8,
-                    color: Colors.white)),
+                    color: AppColors.accent)),
           ),
           const SizedBox(height: 22),
           Text(
@@ -188,10 +188,10 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            'TapVerify turns funeral levies, church collections and chama savings into digital proof — receipts, ledgers and loan history nobody can dispute.',
+            'When Mama Jane died, her burial group had 72 hours to raise Ksh 400,000. TapVerify turns funeral levies, chama savings and church collections into digital proof — receipts, ledgers and loan history nobody can dispute.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-                fontSize: 15, height: 1.5, color: Colors.white.withOpacity(0.9)),
+                fontSize: 15, height: 1.5, color: Colors.white.withOpacity(0.92)),
           ),
           const SizedBox(height: 26),
           Wrap(
@@ -239,6 +239,14 @@ class _LandingScreenState extends State<LandingScreen> {
             'One-tap demo · runs fully offline · no app to install',
             style: GoogleFonts.inter(fontSize: 11.5, color: Colors.white70),
           ),
+          const SizedBox(height: 6),
+          Text(
+            'Trusted by 200+ members in Kayole · Pilot starts September 2026',
+            style: GoogleFonts.inter(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accent),
+          ),
         ],
       ),
     );
@@ -277,7 +285,7 @@ class _LandingScreenState extends State<LandingScreen> {
         '03 · TAPVERIFY',
         'SMS prompts replace phone calls. Every shilling lands on a ledger with a PIN-protected receipt.',
         Icons.bolt_rounded,
-        AppColors.primary,
+        AppColors.accent,
       ),
       (
         '04 · LOANS',
@@ -357,7 +365,7 @@ class _LandingScreenState extends State<LandingScreen> {
               Expanded(
                 child: _sideCard(
                   icon: Icons.dashboard_customize_rounded,
-                  color: AppColors.primary,
+                  color: const Color(0xFF1E1E1E),
                   title: 'Board & Treasurer',
                   lines: [
                     'Create a verified organization (KYC)',
@@ -511,7 +519,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 height: 22,
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: AppColors.deep,
+                  color: const Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
@@ -519,14 +527,24 @@ class _LandingScreenState extends State<LandingScreen> {
               const SizedBox(width: 8),
               Text('TapVerify',
                   style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w800, color: AppColors.deep)),
+                      fontWeight: FontWeight.w800, color: const Color(0xFF1E1E1E))),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'Proof of payment for Kenya\'s groups · 200+ member pilots in Kayole · Ksh 1,000–5,000/mo per org',
+            'Trust infrastructure for Kenya\'s groups — burial welfare, chamas, SACCOs, churches — and for Africa\'s informal economy.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted),
+            style: GoogleFonts.inter(
+                fontSize: 11.5, height: 1.45, color: AppColors.muted),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Pilot: 200-member funeral group in Kayole · September 2026 · 8 LOOP APIs live',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accent),
           ),
         ],
       ),

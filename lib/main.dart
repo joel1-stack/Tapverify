@@ -62,7 +62,7 @@ class TapVerifyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0F4C3A),
           primary: const Color(0xFF2D6A4F),
-          secondary: const Color(0xFFFF6B00),
+          secondary: const Color(0xFFF15A24),
           surface: Colors.white,
           brightness: Brightness.light,
         ),
@@ -89,7 +89,7 @@ class TapVerifyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF6B00),
+            backgroundColor: const Color(0xFFF15A24),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 28),
             shape:

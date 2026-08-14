@@ -86,9 +86,9 @@ class _OrgSelectScreenState extends State<OrgSelectScreen> {
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF064E3B),
-                    Color(0xFF059669),
-                    Color(0xFF10B981)
+                    Color(0xFF7C2D12),
+                    AppColors.accent,
+                    AppColors.primaryLight
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

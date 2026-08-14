@@ -127,14 +127,14 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF064E3B), Color(0xFF059669)],
+                  colors: [Color(0xFF7C2D12), AppColors.accent],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF059669).withOpacity(0.3),
+                    color: AppColors.accent.withOpacity(0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -313,7 +313,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                         style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF059669))),
+                            color: AppColors.accent)),
                   ),
                   prefixIconConstraints:
                       const BoxConstraints(minWidth: 0, minHeight: 0),
@@ -405,14 +405,14 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
               height: 56,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF059669), Color(0xFF047857)],
+                  colors: [AppColors.accent, Color(0xFFC2410C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF059669).withOpacity(0.35),
+                    color: AppColors.accent.withOpacity(0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -483,7 +483,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF059669),
+              color: AppColors.accent,
             ),
           ),
         ),
@@ -494,7 +494,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   Widget _typeChip(String value, String label, IconData icon) {
     final selected = _eventType == value;
     return Material(
-      color: selected ? const Color(0xFF059669) : Colors.white,
+      color: selected ? AppColors.accent : Colors.white,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -505,7 +505,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color:
-                  selected ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
+                  selected ? AppColors.accent : const Color(0xFFE2E8F0),
             ),
           ),
           child: Row(
@@ -521,7 +521,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
               const SizedBox(width: 6),
               Icon(icon,
                   size: 16,
-                  color: selected ? Colors.white : const Color(0xFF059669)),
+                  color: selected ? Colors.white : AppColors.accent),
               const SizedBox(width: 6),
               Text(
                 label,

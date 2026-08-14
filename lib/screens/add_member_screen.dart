@@ -107,7 +107,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF064E3B), Color(0xFF059669)],
+                  colors: [Color(0xFF7C2D12), AppColors.accent],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),

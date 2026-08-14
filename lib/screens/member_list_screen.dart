@@ -240,7 +240,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
           ),
           backgroundColor: status == 'banned'
               ? const Color(0xFFDC2626)
-              : const Color(0xFF0F4C3A),
+              : AppColors.deep,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -430,7 +430,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide:
-                    const BorderSide(color: Color(0xFF059669), width: 2),
+                    const BorderSide(color: AppColors.accent, width: 2),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

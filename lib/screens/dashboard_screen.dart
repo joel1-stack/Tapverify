@@ -73,7 +73,7 @@ class DashboardState extends State<DashboardScreen>
             child: CircularProgressIndicator(color: AppColors.primary))
         : RefreshIndicator(
             onRefresh: _loadData,
-            color: const Color(0xFF059669),
+            color: AppColors.accent,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
@@ -370,7 +370,7 @@ class DashboardState extends State<DashboardScreen>
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.primary, Color(0xFF047857)],
+                          colors: [AppColors.primary, Color(0xFFC2410C)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),

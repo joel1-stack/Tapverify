@@ -712,19 +712,19 @@ class _TreasurerPhone extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFFD1FAE5),
+            color: const Color(0xFFFFEDD5),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
               const Icon(Icons.description_rounded,
-                  size: 13, color: Color(0xFF047857)),
+                  size: 13, color: AppColors.accent),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                     'Certificate of registration · KRA PIN · Contact person — attached',
                     style: GoogleFonts.inter(
-                        fontSize: 8, color: const Color(0xFF065F46))),
+                        fontSize: 8, color: const Color(0xFF9A3412))),
               ),
             ],
           ),
@@ -814,18 +814,18 @@ class _TreasurerPhone extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFFD1FAE5),
+            color: const Color(0xFFFFEDD5),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              const Icon(Icons.bolt_rounded, size: 13, color: Color(0xFF047857)),
+              const Icon(Icons.bolt_rounded, size: 13, color: AppColors.accent),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                     'Rails enabled: LOOP · M-Pesa Till · Paybill — receipts for every payment.',
                     style: GoogleFonts.inter(
-                        fontSize: 8, color: const Color(0xFF065F46))),
+                        fontSize: 8, color: const Color(0xFF9A3412))),
               ),
             ],
           ),

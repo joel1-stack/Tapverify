@@ -477,7 +477,7 @@ class _PhoneMockup extends StatelessWidget {
           const Spacer(),
           const Center(
             child: Icon(Icons.check_circle_rounded,
-                color: Color(0xFF059669), size: 44),
+                color: AppColors.accent, size: 44),
           ),
           const SizedBox(height: 10),
           Center(
@@ -485,13 +485,13 @@ class _PhoneMockup extends StatelessWidget {
                 style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF065F46))),
+                    color: const Color(0xFF9A3412))),
           ),
           const SizedBox(height: 4),
           Center(
             child: Text('Ksh ${_fmt(amount)} · via ${rail.split(' ').first}',
                 style: GoogleFonts.inter(
-                    fontSize: 11, color: const Color(0xFF047857))),
+                    fontSize: 11, color: AppColors.accent)),
           ),
           const SizedBox(height: 16),
           _receiptRow('Ref', ref),
@@ -502,19 +502,19 @@ class _PhoneMockup extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1FAE5),
+              color: const Color(0xFFFFEDD5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
                 const Icon(Icons.sms_rounded,
-                    size: 13, color: Color(0xFF047857)),
+                    size: 13, color: AppColors.accent),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                       'SMS: TapVerify — ${member.name.split(' ').first} paid Ksh ${_fmt(amount)} to $orgName. Ref $ref.',
                       style: GoogleFonts.inter(
-                          fontSize: 8.5, color: const Color(0xFF065F46))),
+                          fontSize: 8.5, color: const Color(0xFF9A3412))),
                 ),
               ],
             ),
@@ -867,18 +867,18 @@ class _PhoneMockup extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFD1FAE5),
+            color: const Color(0xFFFFEDD5),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.sms_rounded, size: 12, color: Color(0xFF047857)),
+              const Icon(Icons.sms_rounded, size: 12, color: AppColors.accent),
               const SizedBox(width: 4),
               Text('SMS receipt will be sent instantly',
                   style: GoogleFonts.inter(
                       fontSize: 8.5,
-                      color: const Color(0xFF065F46),
+                      color: const Color(0xFF9A3412),
                       fontWeight: FontWeight.w600)),
             ],
           ),

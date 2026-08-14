@@ -216,13 +216,13 @@ class _DisburseScreenState extends State<DisburseScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.check_circle_rounded,
-                        color: Color(0xFF059669), size: 22),
+                        color: AppColors.accent, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(_result!,
                           style: GoogleFonts.inter(
                               fontSize: 12.5,
-                              color: const Color(0xFF065F46),
+                              color: const Color(0xFF9A3412),
                               fontWeight: FontWeight.w600)),
                     ),
                   ],

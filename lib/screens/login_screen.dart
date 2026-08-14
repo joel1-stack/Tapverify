@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen>
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF0F4C3A), Color(0xFF2D6A4F)],
+                colors: [AppColors.deep, AppColors.primary],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),

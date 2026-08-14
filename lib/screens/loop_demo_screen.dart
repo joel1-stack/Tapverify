@@ -199,7 +199,7 @@ class _LoopDemoScreenState extends State<LoopDemoScreen> {
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.w700,
                                   color: done
-                                      ? const Color(0xFF047857)
+                                      ? AppColors.accent
                                       : const Color(0xFFB45309),
                                 ),
                               ),

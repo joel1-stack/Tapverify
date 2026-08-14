@@ -53,7 +53,7 @@ class PaymentReportService {
                       style: pw.TextStyle(
                           fontSize: 18,
                           fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.green800)),
+                          color: PdfColors.orange800)),
                   pw.Text('Proof of payment for Kenya\'s groups',
                       style:
                           pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
@@ -76,7 +76,7 @@ class PaymentReportService {
           pw.Container(
             padding: const pw.EdgeInsets.all(16),
             decoration: pw.BoxDecoration(
-              color: PdfColors.green50,
+              color: PdfColors.orange50,
               borderRadius: pw.BorderRadius.circular(8),
             ),
             child: pw.Row(
@@ -100,7 +100,7 @@ class PaymentReportService {
                         style: pw.TextStyle(
                             fontSize: 20,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.green800)),
+                            color: PdfColors.orange800)),
                     pw.Text('TOTAL COLLECTED',
                         style: pw.TextStyle(
                             fontSize: 9, color: PdfColors.grey600)),
@@ -156,7 +156,7 @@ class PaymentReportService {
                 fontSize: 8,
                 fontWeight: pw.FontWeight.bold,
                 color: PdfColors.white),
-            headerDecoration: pw.BoxDecoration(color: PdfColors.green800),
+            headerDecoration: pw.BoxDecoration(color: PdfColors.orange800),
             cellAlignments: {
               0: pw.Alignment.centerLeft,
               1: pw.Alignment.centerLeft,
@@ -464,7 +464,7 @@ class PaymentReportService {
                     style: pw.TextStyle(
                         fontSize: 16,
                         fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.green800)),
+                        color: PdfColors.orange800)),
                 pw.Text(
                     'Generated ${DateTime.now().toString().substring(0, 10)}',
                     style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
@@ -486,7 +486,7 @@ class PaymentReportService {
             padding: const pw.EdgeInsets.all(18),
             decoration: pw.BoxDecoration(
               gradient: pw.LinearGradient(
-                colors: [PdfColors.green800, PdfColors.green600],
+                colors: [PdfColors.orange800, PdfColors.orange600],
               ),
               borderRadius: pw.BorderRadius.circular(10),
             ),
@@ -504,7 +504,7 @@ class PaymentReportService {
                     pw.SizedBox(height: 2),
                     pw.Text('$orgType · Contributions & Repayments Register',
                         style: pw.TextStyle(
-                            fontSize: 11, color: PdfColors.green100)),
+                            fontSize: 11, color: PdfColors.orange100)),
                   ],
                 ),
                 pw.Column(
@@ -517,7 +517,7 @@ class PaymentReportService {
                             color: PdfColors.white)),
                     pw.Text('CONTRIBUTIONS',
                         style: pw.TextStyle(
-                            fontSize: 9, color: PdfColors.green100)),
+                            fontSize: 9, color: PdfColors.orange100)),
                   ],
                 ),
               ],
@@ -528,7 +528,7 @@ class PaymentReportService {
           // Summary strip
           pw.Row(
             children: [
-              _summaryBox(PdfColors.green700, 'TOTAL COLLECTED',
+              _summaryBox(PdfColors.orange700, 'TOTAL COLLECTED',
                   'Ksh ${_fmt(totalCollected)}'),
               pw.SizedBox(width: 10),
               _summaryBox(
@@ -576,7 +576,7 @@ class PaymentReportService {
   static pw.Widget _contributionSection(Map<String, dynamic> c) {
     final type = c['contrib_type']?.toString() ?? 'Regular';
     final isLoan = type.toLowerCase() == 'loan';
-    final accent = isLoan ? PdfColors.amber800 : PdfColors.green800;
+    final accent = isLoan ? PdfColors.amber800 : PdfColors.orange800;
     final collected = (c['collected'] as num?)?.toDouble() ?? 0;
     final target = (c['target'] as num?)?.toDouble() ?? 0;
     final members = (c['members'] as List?) ?? <Map<String, dynamic>>[];

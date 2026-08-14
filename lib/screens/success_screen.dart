@@ -132,7 +132,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                                       ]
                                     : [
                                         AppColors.primary,
-                                        const Color(0xFF047857)
+                                        AppColors.accent
                                       ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -334,7 +334,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                   height: 56,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [AppColors.primary, Color(0xFF047857)],
+                      colors: [AppColors.primary, AppColors.accent],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),

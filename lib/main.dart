@@ -35,7 +35,7 @@ class TapVerifyApp extends StatelessWidget {
             if (child == null) return const SizedBox.shrink();
             if (constraints.maxWidth <= 1000) return child;
             return ColoredBox(
-              color: const Color(0xFF0C3D30),
+              color: AppColors.deep,
               child: Center(
                 child: SizedBox(
                   width: 960,
@@ -61,8 +61,8 @@ class TapVerifyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0F4C3A),
-          primary: const Color(0xFF2D6A4F),
+          seedColor: AppColors.loop,
+          primary: AppColors.primary,
           secondary: AppColors.accent,
           surface: Colors.white,
           brightness: Brightness.light,
@@ -70,7 +70,7 @@ class TapVerifyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFFAF7F2),
         textTheme: GoogleFonts.interTextTheme(),
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF0F4C3A),
+          backgroundColor: AppColors.deep,
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: false,
@@ -113,7 +113,7 @@ class TapVerifyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF2D6A4F), width: 2),
+            borderSide: const BorderSide(color: AppColors.accent, width: 2),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -138,7 +138,7 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
-                child: CircularProgressIndicator(color: Color(0xFF059669))),
+                child: CircularProgressIndicator(color: AppColors.accent)),
           );
         }
         if (snapshot.hasData && snapshot.data == true) {

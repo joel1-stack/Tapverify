@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 /// Central design tokens for TapVerify.
 ///
-/// Brand palette: LOOP orange ([accent]/[loop]) for actions & CTAs, TapVerify
-/// green ([deep]/[primary]) for trust & success, warm cream backgrounds and
-/// [gold] for premium highlights. Screens never hard-code hex values.
+/// Brand palette: LOOP orange everywhere — [accent]/[loop] for actions & CTAs,
+/// [primary]/[deep]/[primaryLight] for the same orange expressed at deeper and
+/// lighter densities for gradients, app bars and trusted accents.
+/// Warm cream backgrounds and [gold] for premium highlights.
 class AppColors {
-  static const Color primary = Color(0xFF2D6A4F);
-  static const Color deep = Color(0xFF0F4C3A);
-  static const Color primaryLight = Color(0xFF52B788);
+  static const Color primary = Color(0xFFEA580C);
+  static const Color deep = Color(0xFF9A3412);
+  static const Color primaryLight = Color(0xFFFFB27A);
   static const Color accent = Color(0xFFFF6B00);
   static const Color loop = Color(0xFFFF6B00);
   static const Color gold = Color(0xFFC9A227);

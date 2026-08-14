@@ -32,6 +32,53 @@ class MoreScreen extends StatefulWidget {
 class _MoreScreenState extends State<MoreScreen> {
   bool _loading = true;
 
+  /// Real LOOP gateway responses captured during the sandbox run with the
+  /// TapVerify keys. HTTP + transferOrderId are from the live responses.
+  static const _snapshots = <Map<String, Object>>[
+    {
+      'title': 'LOOP M-Pesa Prompt',
+      'path': 'POST mpesa-prompt/2.0/services/process-request',
+      'status': 'COMPLETED',
+      'txn': 'TAM202608141181682087',
+      'http': '200',
+    },
+    {
+      'title': 'Pay to M-Pesa Till',
+      'path': 'POST pay-to-mpesa-till/1.0/services/process-request',
+      'status': 'COMPLETED',
+      'txn': 'TAM202608144850275747',
+      'http': '200',
+    },
+    {
+      'title': 'Pay to M-Pesa Paybill',
+      'path': 'POST pay-to-paybill/1.0/services/process-request',
+      'status': 'COMPLETED',
+      'txn': 'TAM202608146269208749',
+      'http': '200',
+    },
+    {
+      'title': 'Send Money - M-Pesa',
+      'path': 'POST send-money-mpesa/1.0/services/process-request',
+      'status': 'COMPLETED',
+      'txn': 'TAM202608148129060470',
+      'http': '200',
+    },
+    {
+      'title': 'Send Money - Loop',
+      'path': 'POST send-money-loop/1.0/services/process-request',
+      'status': '404',
+      'txn': 'sandbox stub (not provisioned)',
+      'http': '404',
+    },
+    {
+      'title': 'Send Money - Pesalink',
+      'path': 'POST send-money-pesalink/1.0/services/process-request',
+      'status': '403',
+      'txn': 'not subscribed',
+      'http': '403',
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -88,6 +135,70 @@ class _MoreScreenState extends State<MoreScreen> {
           campaign: target.campaign,
           member: target.member,
         ),
+      ),
+    );
+  }
+
+  /// Snapshot entry used by the TECHNICAL SNAPSHOTS section.
+  Widget _snapshotTile(Map<String, Object> s) {
+    final status = s['status']! as String;
+    final ok = status == 'COMPLETED';
+    final color = ok ? AppColors.accent : AppColors.danger;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3E8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.accent.withOpacity(0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bolt_rounded, color: color, size: 16),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  s['title']! as String,
+                  style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                      color: AppColors.text),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  status,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            s['path']! as String,
+            style: GoogleFonts.inter(
+                fontSize: 11, color: AppColors.muted, height: 1.4),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'transferOrderId: ${s['txn']}  ·  HTTP ${s['http']}',
+            style: GoogleFonts.inter(
+                fontSize: 10.5, color: AppColors.text, height: 1.4),
+          ),
+        ],
       ),
     );
   }
@@ -500,7 +611,7 @@ class _MoreScreenState extends State<MoreScreen> {
               const Divider(height: 1, indent: 16, endIndent: 16),
               _moreTile(
                 icon: Icons.person_rounded,
-                color: const Color(0xFF2D6A4F),
+                color: AppColors.accent,
                 title: 'Member side (two-user)',
                 subtitle:
                     'See the app the way a member does — all their groups in one place, pay now, receipts, notifications.',
@@ -518,6 +629,53 @@ class _MoreScreenState extends State<MoreScreen> {
                   );
                 },
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Technical snapshots — live LOOP gateway responses
+        Text(
+          'TECHNICAL SNAPSHOTS · LIVE LOOP CALLS',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.muted,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.terminal_rounded,
+                      color: AppColors.accent, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Real gateway responses captured with the TapVerify LOOP keys (OAuth2 bearer + HMAC till signature).',
+                      style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: AppColors.muted,
+                          height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              for (final s in _snapshots) ...[
+                _snapshotTile(s),
+                const SizedBox(height: 8),
+              ],
             ],
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../services/hive_service.dart';
+import '../widgets/loop_value_strip.dart';
 import 'member_list_screen.dart';
 
 /// Animated demo of the board/treasurer journey — creating an organization and
@@ -236,6 +237,8 @@ class _BoardDemoScreenState extends State<BoardDemoScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const LoopValueStrip(),
                     const SizedBox(height: 8),
                   ],
                 ),

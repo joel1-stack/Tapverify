@@ -5,7 +5,6 @@ import '../services/api_service.dart';
 import '../services/hive_service.dart';
 import 'login_screen.dart';
 import 'payments_ledger_screen.dart';
-import 'loop_matrix_screen.dart';
 import 'disburse_screen.dart';
 import 'loan_eligibility_screen.dart';
 import 'member_home_screen.dart';
@@ -487,18 +486,6 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
           child: Column(
             children: [
-              _moreTile(
-                icon: Icons.developer_board_rounded,
-                color: const Color(0xFF059669),
-                title: 'LOOP Matrix — the 8 APIs',
-                subtitle:
-                    'Collect, reconcile, disburse. Every product mapped to the screen that uses it.',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoopMatrixScreen()),
-                ),
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
               _moreTile(
                 icon: Icons.send_rounded,
                 color: const Color(0xFFDC2626),

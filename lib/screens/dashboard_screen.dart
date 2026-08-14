@@ -9,7 +9,6 @@ import 'create_contribution_screen.dart';
 import 'campaign_detail_screen.dart';
 import 'loan_eligibility_screen.dart';
 import 'payments_ledger_screen.dart';
-import 'loop_matrix_screen.dart';
 
 /// Home tab — treasurer's landing page.
 ///
@@ -496,62 +495,6 @@ class DashboardState extends State<DashboardScreen>
                   ),
                   const SizedBox(height: 28),
 
-                  // LOOP Matrix — the 8 API products
-                  Material(
-                    color: const Color(0xFF064E3B),
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const LoopMatrixScreen()),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.developer_board_rounded,
-                                  color: Colors.white, size: 22),
-                            ),
-                            const SizedBox(width: 14),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'LOOP Matrix · the 8 APIs',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  SizedBox(height: 3),
-                                  Text(
-                                    'Collect · reconcile · disburse · future rail',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.arrow_forward_ios_rounded,
-                                color: Colors.white70, size: 18),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 28),
 
                   // Contributions / Collections section

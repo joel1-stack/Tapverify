@@ -297,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Column(
                         children: [
                           Text(
-                            'Proof of payment for',
+                            'The trust layer for',
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.92),
@@ -305,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           Text(
-                            "Kenya's organized money",
+                            'group payments.',
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.92),

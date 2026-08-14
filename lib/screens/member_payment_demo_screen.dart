@@ -6,6 +6,7 @@ import '../constants.dart';
 import '../models/member.dart';
 import '../services/contribution_service.dart';
 import '../services/hive_service.dart';
+import '../widgets/loop_value_strip.dart';
 import 'success_screen.dart';
 
 /// Animated demo of a member's payment journey, mirroring the LOOP demo style:
@@ -169,6 +170,42 @@ class _MemberPaymentDemoScreenState extends State<MemberPaymentDemoScreen> {
     return '${d.day}/${d.month}/${d.year}';
   }
 
+  /// The LOOP product powering the currently selected payment rail.
+  String _railApi() {
+    final r = _rail;
+    if (r.contains('LOOP')) return 'LOOP Prompt';
+    if (r.contains('Paybill')) return 'Pay to Paybill';
+    if (r.contains('Till')) return 'Pay to M-Pesa Till';
+    if (r.contains('Bank')) return 'Send Money · M-Pesa';
+    return 'Mpesa Prompt';
+  }
+
+  Widget _apiChip() {
+    final api = _railApi();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bolt_rounded, size: 14, color: AppColors.accent),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text('LOOP API IN ACTION · $api',
+                style: GoogleFonts.inter(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.accent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final orgName =
@@ -223,7 +260,10 @@ class _MemberPaymentDemoScreenState extends State<MemberPaymentDemoScreen> {
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List.generate(_steps.length, (i) {
+                          children: [
+                            _apiChip(),
+                            const SizedBox(height: 10),
+                            ...List.generate(_steps.length, (i) {
                             final done =
                                 _recorded ? i < _steps.length : i < _step;
                             final active = !_recorded && i == _step;
@@ -263,6 +303,7 @@ class _MemberPaymentDemoScreenState extends State<MemberPaymentDemoScreen> {
                               ),
                             );
                           }),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -293,6 +334,8 @@ class _MemberPaymentDemoScreenState extends State<MemberPaymentDemoScreen> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      const LoopValueStrip(title: 'HOW THIS PAYMENT USES LOOP'),
                       const SizedBox(height: 8),
                     ],
                   ),

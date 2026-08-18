@@ -16,7 +16,7 @@ void main() async {
   runApp(const TapVerifyApp());
 }
 
-/// Root widget. Applies the global TapVerify Material 3 theme (emerald seed,
+/// Root widget. Applies the global TapVerify Material 3 theme (Trust Teal seed,
 /// Inter font, custom button/input/card styling) and starts at [SplashScreen].
 class TapVerifyApp extends StatelessWidget {
   const TapVerifyApp({super.key});
@@ -41,7 +41,7 @@ class TapVerifyApp extends StatelessWidget {
                   width: 960,
                   child: DecoratedBox(
                     decoration: const BoxDecoration(
-                      color: Color(0xFFFAF7F2),
+                      color: Color(0xFFF8FAFC),
                       boxShadow: [
                         BoxShadow(
                           color: Color(0x66000000),
@@ -67,7 +67,7 @@ class TapVerifyApp extends StatelessWidget {
           surface: Colors.white,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFFAF7F2),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         textTheme: GoogleFonts.interTextTheme(),
         appBarTheme: AppBarTheme(
           backgroundColor: AppColors.deep,
@@ -90,7 +90,7 @@ class TapVerifyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 28),
             shape:
@@ -113,7 +113,7 @@ class TapVerifyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.accent, width: 2),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

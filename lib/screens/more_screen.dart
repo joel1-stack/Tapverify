@@ -8,9 +8,9 @@ import 'payments_ledger_screen.dart';
 import 'disburse_screen.dart';
 import 'loan_eligibility_screen.dart';
 import 'member_home_screen.dart';
-import 'member_payment_demo_screen.dart';
-import 'board_demo_screen.dart';
 import '../services/demo_service.dart';
+import '../workforce/workforce_login_screen.dart';
+import '../workforce/web_demo_screen.dart' show WebDemoScreen;
 
 /// More tab — account + tools.
 ///
@@ -107,35 +107,6 @@ class _MoreScreenState extends State<MoreScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const PaymentsLedgerScreen()),
-    );
-  }
-
-  /// Replays the member payment journey on the funeral/levy campaign — always
-  /// works, even on a fresh install.
-  Future<void> _openMemberDemo() async {
-    final target = await DemoService.memberDemo();
-    if (!mounted) return;
-    if (target == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Add a member first, then replay the demo',
-              style: GoogleFonts.inter()),
-          backgroundColor: AppColors.accent,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MemberPaymentDemoScreen(
-          campaign: target.campaign,
-          member: target.member,
-        ),
-      ),
     );
   }
 
@@ -578,6 +549,67 @@ class _MoreScreenState extends State<MoreScreen> {
         ),
         const SizedBox(height: 20),
 
+        // TapVerify Workforce — the flagship product
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const WorkforceLoginScreen()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.deep, AppColors.primary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TapVerify Workforce',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'OBLIGATION · PAYMENT · PROOF — the factory collection product. 47 workers, multi-rail, live proof.',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: Colors.white.withOpacity(0.82),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_rounded,
+                    color: Colors.white, size: 22),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+
         // LOOP integration — the 8 API products
         Text(
           'LOOP INTEGRATION · 8 APIS',
@@ -804,9 +836,9 @@ child: _moreTile(
         ),
         const SizedBox(height: 20),
 
-        // Demos & walkthroughs — self-contained, judge-facing
+        // Workforce demo — the flagship walkthrough replaces the old demos
         Text(
-          'DEMOS & WALKTHROUGHS',
+          'WORKFORCE PRODUCT',
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -824,24 +856,15 @@ child: _moreTile(
           child: Column(
             children: [
               _moreTile(
-                icon: Icons.badge_rounded,
-                color: AppColors.deep,
-                title: 'Treasurer & KYC demo',
+                icon: Icons.play_circle_fill_rounded,
+                color: AppColors.accent,
+                title: 'Web demo — what the app serves',
                 subtitle:
-                    'Create an organization, watch KYC get approved — or rejected — and start collecting for real.',
+                    'Auto-plays the factory story: raise, notify, pay, prove, reward.',
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BoardDemoScreen()),
+                  MaterialPageRoute(builder: (_) => const WebDemoScreen()),
                 ),
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              _moreTile(
-                icon: Icons.sms_rounded,
-                color: AppColors.accent,
-                title: 'Member payment demo',
-                subtitle:
-                    'Watch the member journey: SMS → payment link → PIN → rail → SMS receipt with ref.',
-                onTap: _openMemberDemo,
               ),
             ],
           ),

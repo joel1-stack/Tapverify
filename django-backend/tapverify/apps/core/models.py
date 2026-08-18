@@ -236,3 +236,100 @@ class PaymentLink(models.Model):
         if self.expires_at:
             return timezone.now() > self.expires_at
         return False
+
+
+class Collection(models.Model):
+    """An obligation raised by a foreman against the whole workforce.
+
+    Mirrors the mobile `WfCollection`: every worker gets a PaymentTask that
+    moves through the 9-state lifecycle below.
+    """
+
+    COLLECTION_TYPES = [
+        ('welfare', 'Welfare'),
+        ('medical', 'Medical'),
+        ('emergency', 'Emergency'),
+        ('trip', 'Trip'),
+    ]
+    RAIL_CHOICES = [
+        ('loop-prompt', 'LOOP M-Pesa Prompt'),
+        ('loop-till', 'LOOP Pay to Till'),
+        ('loop-paybill', 'LOOP Pay to Paybill'),
+        ('sasapay', 'SasaPay Checkout link'),
+        ('till', 'M-PESA Till'),
+        ('paybill', 'M-PESA Paybill'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='collections')
+    title = models.CharField(max_length=200)
+    type = models.CharField(max_length=20, choices=COLLECTION_TYPES, default='welfare')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    due = models.DateTimeField()
+    rail = models.CharField(max_length=20, choices=RAIL_CHOICES, default='loop-prompt')
+    message = models.TextField(blank=True)
+    sms_sent = models.BooleanField(default=False)
+    closed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'collections'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.workspace.name})"
+
+    @property
+    def paid_count(self):
+        return self.tasks.filter(state__in=['completed', 'verified', 'streak', 'badge', 'reward']).count()
+
+
+class PaymentTask(models.Model):
+    """One worker's task inside a Collection — the 9-state lifecycle.
+
+    CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED → STREAK → BADGE →
+    REWARD → ARCHIVED. `rail` + `txn_ref` are the evidence of how money moved.
+    """
+
+    STATE_CHOICES = [
+        ('created', 'CREATED'),
+        ('notified', 'NOTIFIED'),
+        ('pending', 'PENDING'),
+        ('completed', 'COMPLETED'),
+        ('verified', 'VERIFIED'),
+        ('streak', 'STREAK'),
+        ('badge', 'BADGE'),
+        ('reward', 'REWARD'),
+        ('archived', 'ARCHIVED'),
+    ]
+    LIFECYCLE = ['created', 'notified', 'pending', 'completed',
+                 'verified', 'streak', 'badge', 'reward', 'archived']
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='tasks')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payment_tasks')
+    state = models.CharField(max_length=20, choices=STATE_CHOICES, default='created')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    rail = models.CharField(max_length=20, blank=True, default='')
+    txn_ref = models.CharField(max_length=100, blank=True, default='')
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payment_tasks'
+        unique_together = ['collection', 'member']
+
+    def __str__(self):
+        return f"{self.member.name} — {self.collection.title} ({self.state})"
+
+    def advance(self, to_state):
+        """Move the task through the lifecycle (validating order)."""
+        if to_state not in self.LIFECYCLE:
+            raise ValueError(f"Unknown state: {to_state}")
+        if self.state and self.LIFECYCLE.index(to_state) < self.LIFECYCLE.index(self.state):
+            raise ValueError(f"Cannot move back from {self.state} to {to_state}")
+        self.state = to_state
+        if to_state in ('completed', 'verified', 'streak', 'badge', 'reward') and not self.paid_at:
+            self.paid_at = timezone.now()
+        self.save(update_fields=['state', 'paid_at'])
+        return self

@@ -1,246 +1,160 @@
-# TapVerify — LOOP Hackathon 2026 Submission
+# TapVerify Workforce
 
 **Team:** TapVerify
-**Product:** Proof of payment for Kenya's chamas, mchangos, and small businesses
-**Built on:** LOOP (NCBA)
+**Product:** Obligation · Payment · Proof — the coordination layer for factory
+collections, running on LOOP, SasaPay, Africa's Talking and (optionally) Avalanche.
+**Built for:** the Africa's Talking Hackathon (Aug 27, 2026) and the Avalanche
+Team1 Kenya Mini Hack (Aug 28–30, 2026).
 
-> The trust layer for group payments.
+> A foreman raises an obligation. Every worker is notified and pays from their
+> phone. The foreman watches proof land in real time — with streaks, badges and
+> rewards on top.
+
+The **mobile app is the real product** (foreman + worker). The **web build is the
+demo** — an auto-playing story of what the mobile app serves.
 
 ---
 
-## 1. Platform Architecture (V2)
+## 1. Product: Obligation → Payment → Proof
 
-TapVerify is a two-app, multi-organization trust infrastructure with KYC, member
-lifecycle, and LOOP payment integration.
+TapVerify Workforce turns a factory's welfare / medical / emergency / trip
+collections into trackable obligations with unforgeable proof.
 
-### 1.1 The Two-User System
+### 1.1 The two-user system
 
-From the login screen, the app splits into two entry points sharing one backend:
-
-| | Board App (staff) | Member App |
+| | Foreman (Board) | Worker |
 |---|---|---|
-| **Who** | Chairman, Treasurer, Assistant, Secretary | Anyone added to an org — parent, chama member, SACCO shareholder |
-| **Login** | Phone + PIN | Phone + OTP — no password to remember |
-| **Sees** | One dashboard per org they manage, with role-limited actions | All their organizations in one list, regardless of type |
+| **Who** | Juma Kamau, factory foreman | Any of the 47 workers (e.g. Ochieng Odhiambo) |
+| **Login** | Phone + PIN | Phone + PIN (same demo PIN `1234`) |
+| **Sees** | Dashboard, collections, who-paid grid, workers roster, evidence console | Due obligations, paid history, streak, badges |
+| **Acts** | Raise collection, remind, simulate/verify a payment, archive | Pay now → proof receipt |
 
-A member can belong to unlimited organizations (school + burial group + chama)
-under one phone number — the app shows all of them, but each organization only
-sees that member within its own boundary.
+### 1.2 The 9-state transaction lifecycle
 
-### 1.2 KYC-Gated Organization Creation
+Every payment task moves through the full lifecycle and every state transition
+is evidence the foreman can audit:
 
-An organization cannot collect a single shilling until verified. This stops the
-platform being used to scam strangers.
+```
+CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED → STREAK → BADGE → REWARD → ARCHIVED
+```
 
-| Status | Org can… |
-|---|---|
-| **Draft** | Fill in details, upload a member CSV (members marked pending) — cannot collect |
-| **Pending KYC** | Waiting on document review — cannot collect |
-| **Verified** | Full access: create contributions, connect payment channels, disburse, export |
-| **Suspended / Rejected** | Read-only, or frozen entirely if fraud is flagged |
+- **CREATED** the obligation exists
+- **NOTIFIED** the worker got the SMS / STK prompt / checkout link
+- **PENDING** awaiting payment
+- **COMPLETED** the rail confirmed the money moved (transferOrderId / txn ref)
+- **VERIFIED** proof checked (signed webhook; Avalanche attestation optional)
+- **STREAK → BADGE → REWARD** on-time behaviour is rewarded (3/6/12-month streaks)
+- **ARCHIVED** the collection closes and stays as an auditable record
 
-Required documents scale with org type: a chama needs the chairman's ID + a
-bank/M-Pesa statement; a SACCO needs its SASRA certificate, KRA PIN, and a signed
-board resolution; a school needs Ministry of Education registration. An admin
-reviews and approves/rejects from one queue.
+### 1.3 Multi-rail payment architecture
 
-### 1.3 Organization Types Share One Engine
+`payments/router.py` (`PaymentRouter.charge(task, method='auto')`) is the moat —
+"everything else is UI". Rails are pluggable and tested:
 
-Same database, same APIs — the rules engine changes what each org type sees and does:
-
-| Type | What's different |
-|---|---|
-| **Chama / Burial** | Simple contributions, merry-go-round or emergency mode, plain SMS receipt |
-| **SACCO** | Share tracking, loan management, dividend calculation, credit scoring |
-| **School** | Parents linked to students; announcements, trip consent, fee balances |
-| **Church** | Tithes, pledges, project funds, optional anonymous giving |
-
-### 1.4 Member Lifecycle
-
-Members are not permanent. The system tracks the full path:
-**invited → active → (suspended or left) → reinstated or banned**.
-
-| Event | What Happens |
-|---|---|
-| **Invited** | Treasurer uploads CSV → member gets SMS/WhatsApp invite → claims identity via OTP, becomes Active |
-| **Leaves voluntarily** | Stops all notifications; keeps read-only access to past receipts; cannot pay going forward |
-| **Suspended by treasurer** | E.g. for non-payment — stops receiving prompts; can request reinstatement with a message |
-| **Reinstatement** | Treasurer reviews and Approves (back to Active) or Denies (moves to Banned, permanent unless staff override) |
-
-### 1.5 Transparency & Statements
-
-Every organization sets its own visibility rules — total balance, who's paid, who
-hasn't, whether members can see each other's balances. A member can request a
-personal statement (auto-approved or treasurer-approved, org's choice); it
-generates as a signed PDF they can print or share to WhatsApp, and expires after
-7 days.
-
-### 1.6 Loan Eligibility via LOOP Transaction Inquiry
-
-For SACCOs, a member's own payment history becomes their credit file. When they
-apply for a loan, TapVerify pulls 12 months of local payment records and
-cross-checks them against LOOP's Transaction Inquiry/History APIs — if the two
-match, the treasurer gets a verified, tamper-checked eligibility report (total
-contributed, on-time rate, consistency score, recommended loan ceiling) before
-approving.
-
-### 1.7 The 8 LOOP APIs, Mapped
-
-| # | API | Used For |
+| Rail | Status | What it does |
 |---|---|---|
-| 1 | Mpesa Prompt | Member pays a contribution or loan repayment (STK Push) |
-| 2 | Pay to Till | In-person or manual collection, routed to the org's till |
-| 3 | Pay to Paybill | Orgs using a Paybill + account number instead of a till |
-| 4 | Transaction Inquiry | Check a single payment's status; verify one member's history for a loan |
-| 5 | Transaction History | Monthly reconciliation, annual/SASRA reports, loan eligibility reports |
-| 6 | Send Money – M-Pesa | Loan disbursement, refunds, emergency payouts to a bereaved family |
-| 7 | Loop Prompt | Zero-fee collection for members who already hold a Loop wallet |
-| 8 | Send Money – Loop | Internal transfers — SACCO to member, org to vendor |
+| **LOOP (NCBA)** | **LIVE — proven on sandbox** | M-Pesa Prompt, Pay to Till, Pay to Paybill, Send Money — all 4 products returned `200 COMPLETED` with real `TAM…` transferOrderIds |
+| **SasaPay** | READY — keys pending | OAuth token + Checkout link + webhook signed `X-SasaPay-Signature` (HMAC-SHA512) |
+| **Africa's Talking** | READY — keys pending | SMS delivery of prompts/links, USSD for feature phones, airtime rewards |
+| **Avalanche** | PLANNED | Optional attestation of badges/streaks (proof layer, **not** payment) |
 
-### 1.8 Out of Scope (Cut From Earlier Draft)
+SasaPay contract (implemented in `services/sasapay.py`):
 
-AI-based fraud pattern detection, government ID cross-checking, and the
-funeral-vendor payment integration — ideas worth revisiting once the core
-platform (KYC, lifecycle, LOOP rails) is live and used by real organizations.
+```
+GET https://sandbox.sasapay.app/oauth/v1/generate?grant_type=client_credentials
+Authorization: Basic base64(CLIENT_ID:SECRET)
+→ create checkout → { CheckoutRequestID, CheckoutUrl }
+callback signed: X-SasaPay-Signature = HMAC-SHA512(
+    transaction_code-merchant_code-account_number-payment_reference-amount)
+```
 
----
+Credentials live only in the backend (`.env`), never in the Flutter app.
 
-## 2. Problem Statement
+### 1.4 Registration, KYC and onboarding
 
-Kenya's group money runs on trust that keeps breaking down.
+The foreman registers a factory in four steps:
 
-Every day chamas, funeral mchangos, hospital-bill harambees, wedding kitties, and
-small-business tills move billions of shillings on M-PESA. The "proof" that
-anyone paid is a screenshot of an M-PESA SMS pasted into a WhatsApp group.
-Screenshots get edited. Reference numbers get typed wrong. Members claim they
-paid when they haven't. Treasurers are accused of skimming when they didn't. A
-single cycle of a 20-person chama costs the treasurer 30–60 minutes of
-reconciling WhatsApp screenshots against SMS threads and a paper book.
+1. **Factory details** — name, type, phone, monthly contribution
+2. **KYC documents** — upload ID / business registration / utility bill
+   (collections stay locked until admin review approves — uploads staged locally
+   in the demo, review queue wired before launch)
+3. **Members** — CSV import (`name, phone, department`) via `file_picker`; every
+   row becomes a worker with a code and a QR card. No CSV → 47 seeded demo workers
+4. **Payment QR** — the factory's QR card, generated with `qr_flutter`; workers
+   scan to pay once live
 
-The same trust gap hits small businesses. A shopkeeper with 30 customers on
-account cannot tell in real time who has actually paid — the till confirmation
-lives on one phone, and the customer's screenshot is what everybody argues over.
+### 1.5 Demo story (web)
 
-The result: disputes, delayed payouts, and money that moved on Kenyan rails a day
-ago still sitting in reconciliation limbo. This is the everyday, high-frequency
-version of a problem that a bank's back office solves with a core banking system
-— and that a chama or shopkeeper solves with a screenshot.
-
-## 3. Solution Summary
-
-TapVerify is a proof-of-payment layer that sits on top of LOOP and M-PESA rails.
-Every inbound payment becomes a verified, uneditable record the whole group can see.
-
-1. **Register once.** A group — chama, mchango committee, or small business — is
-   set up in TapVerify. Every member or customer is tied to a phone number.
-   Contribution cycles and targets are configured (e.g. "Funeral mchango, target
-   KES 80,000 by Sunday").
-2. **Pay through LOOP.** A member pays via LOOP Prompt (request-to-pay to their
-   wallet) or directly to the group's LOOP till. TapVerify catches the callback,
-   verifies the HMAC signature, matches the transaction to the right cycle, and
-   updates the live group feed.
-3. **Trusted communication channels.** Every verified payment fires trusted
-   communication channels to the officials of the organisation, providing instant
-   record and reducing the window within which monetary mishaps tend to happen.
-   The record is TapVerify's, not a forgeable screenshot. When someone claims
-   they paid, the group opens TapVerify and sees the truth.
-
-The primary use case is common, everyday occurrences that tend to arrive
-unannounced — the funeral mchango, the hospital-bill harambee, the wedding kitty
-— where trust matters most and forgery is easiest. Chamas are the recurring use
-case. Small business cash-flow verification is the natural extension (same
-primitives, different UI).
-
-We are not another chama-digitising app. Products already exist for that (M-PESA
-Chama, Chamasoft, KCB Mobi Chama). What none of them solve is the easy, automated
-proof systems that go beyond manual, error-prone methods that currently erode
-trust within financial providers and customers.
-
-## 4. Target Market
-
-**Primary — social payments where trust breaks**
-
-- **Chamas:** the Kenya Association of Investment Groups estimates ~300,000
-  registered chamas holding around KES 300 billion in assets, most of which are
-  operated within manual, error-prone methods such as WhatsApp screenshots and
-  M-Pesa statement sending.
-- **Mchangos and harambees:** funerals, hospital bills, weddings, school fees.
-  Every Kenyan household participates in several a year. Trust is highest-stakes
-  here — grieving families, medical emergencies — and forgery is easiest.
-- **The everyday reality:** WhatsApp is already the coordination layer. What's
-  missing is the verified and automated record-keeping layer above it. TapVerify
-  slots in there.
-
-**Secondary — small business cash-flow verification**
-
-- Shopkeepers, kibandas, service providers with 20+ customers who pay to till,
-  more often simply personal phone accounts.
-- Today's tool: "check the phone" and argue over pasted screenshots.
-- TapVerify turns the till into a live, per-customer ledger without changing how
-  the customer pays.
-
-**Signals from the current market**
-
-- Existing tools (M-PESA Chama, Chamasoft, KCB Mobi Chama, Chamasoft PLUS)
-  digitise the "who" of a chama — membership, contributions, minutes. None of
-  them close the proof gap — the moment where a member claims to have paid and
-  the group has to trust or disbelieve a screenshot.
-- Manual, low-proof methods remaining the receipt of record is the gap.
-- CBK's Kenya National Payments Strategy 2022–2025 explicitly targets richer
-  digital audit trails on informal flows. TapVerify is that audit trail at the
-  group level.
-
-**Route to bank pilots**
-
-Tier-1 Kenyan banks (NCBA, KCB, Equity, Coop, ABSA, Stanbic) already run chama
-account products and merchant till books. TapVerify slots on top:
-
-- The bank keeps the rail — deposits, floats, KYC, custody.
-- TapVerify adds the trust layer — verified payment record, live group feed, one
-  trusted SMS.
-- Distribution happens through the bank's existing merchant and chama-officer
-  network, which is faster than direct-to-consumer.
+Kamau Metalworks, 47 workers. The foreman raises the August welfare levy
+(Ksh 200). Every worker is notified, Ochieng pays from his phone, the foreman
+watches the who-paid grid fill in real time, and streaks/badges start building.
 
 ---
 
-## 5. Project Structure
+## 2. Brand
+
+Trust Teal system + partner tints, so the four rails read without a rainbow:
+
+| Token | Hex | Use |
+|---|---|---|
+| `primary` (Trust Teal) | `#0D9488` | Main buttons, progress, paid/verified emphasis |
+| `deep` / `primaryLight` | `#0F766E` / `#14B8A6` | Gradients, headers |
+| `accent` (Avalanche Red) | `#E84142` | Raise collection, simulate payment, badges, streaks |
+| `secondary` (SasaPay Blue) | `#1E40AF` | Payment rails, checkout links |
+| `success` / `warning` / `danger` | `#16A34A` / `#D97706` / `#DC2626` | Lifecycle semantics |
+| neutrals | `#F8FAFC` / `#E2E8F0` / `#0F172A` / `#64748B` | Background, borders, text |
+
+Most important action → Avalanche Red. Navigation & progress → Trust Teal.
+Payment rails → SasaPay Blue. Everything else → neutrals.
+
+---
+
+## 3. Project Structure
 
 ```
 tapverify/
 ├── django-backend/              # Django REST API
 │   ├── manage.py
 │   ├── requirements.txt
-│   ├── .env.example             # LOOP_* + Africa's Talking keys
+│   ├── .env.example             # LOOP_*, SASAPAY_*, AT_* keys
 │   └── tapverify/
 │       ├── config/              # settings, urls, wsgi
 │       └── apps/core/
-│           ├── models.py        # Workspace, Staff, Member, VerificationEvent,
-│           │                      MpesaTransaction, PaymentReminder, PaymentLink
-│           ├── views.py         # Login, members, verify, stats, reminders, webhooks
-│           ├── urls.py          # All API routes + receipt + payment link portals
-│           ├── services/
-│           │   ├── loop/client.py   # Verified LOOP gateway contract
-│           │   ├── sms.py           # Africa's Talking SMS integration
-│           │   └── payment_rail.py  # Payment rail abstraction (Loop + PayHero)
-│           └── templates/core/      # receipt_pin, receipt, payment_link portals
-├── lib/                         # Flutter app (web + Android + iOS)
-│   ├── main.dart                # LOOP-orange theme
-│   ├── constants.dart           # AppColors palette
-│   ├── screens/                 # dashboard, more, board_demo, member_demo, …
-│   ├── widgets/loop_value_strip.dart  # 8-API value panel
-│   ├── services/                # api_service, hive_service, demo_service
-│   └── models/                  # member, pending_event (Hive)
+│           ├── models.py        # Workspace, Staff, Member, Collection, PaymentTask
+│           │                      (9-state lifecycle), VerificationEvent, PaymentLink…
+│           ├── views.py / urls.py / serializers.py / admin.py
+│           └── services/
+│               ├── loop/client.py    # Verified LOOP gateway contract
+│               ├── sasapay.py        # SasaPay OAuth + checkout + HMAC-SHA512 webhook
+│               ├── sms.py            # Africa's Talking SMS
+│               └── payment_rail.py   # PaymentRail facade (loop / sasapay / payhero)
+├── lib/                         # Flutter app (mobile product + web demo)
+│   ├── main.dart                # Trust Teal theme
+│   ├── constants.dart           # AppColors brand + rail tints
+│   ├── screens/                 # legacy treasurer app (dashboard, members, more…)
+│   └── workforce/               # ★ the product
+│       ├── workforce_models.dart        # WfWorker, WfCollection, WfPaymentTask, WfBadge
+│       ├── workforce_service.dart       # seeded Kamau Metalworks data + queries
+│       ├── workforce_login_screen.dart  # role gate (foreman / worker)
+│       ├── workforce_register_screen.dart  # KYC + CSV + QR onboarding
+│       ├── foreman_home_shell.dart      # dashboard / collections / workers / more
+│       ├── foreman_dashboard_screen.dart
+│       ├── collections_screen.dart
+│       ├── collection_detail_screen.dart  # who-paid grid + 9-state lifecycle
+│       ├── create_collection_screen.dart  # obligation + rail selector
+│       ├── workers_screen.dart
+│       ├── worker_home_screen.dart        # due/past, streak, badges
+│       ├── worker_payment_flow_screen.dart# pay → proof receipt
+│       ├── workforce_more_screen.dart     # evidence console, rails, pricing
+│       └── web_demo_screen.dart           # auto-playing web demo
 ├── tools/                       # Terminal testers + review tooling
-│   ├── loop_api_test.py         # OAuth2 + HMAC sandbox tester
-│   ├── loop_matrix.py           # Full 8-product matrix vs live gateway
-│   ├── loop_probe*.py           # Gateway route discovery
-│   ├── loop_discover.py         # JWT scope + WSO2 store probing
+│   ├── loop_api_test.py / loop_matrix.py / loop_probe*.py / loop_discover.py
 │   ├── recon.py                 # TLS, headers, exposed-path review
 │   └── loop_security_review.md  # Public-surface security findings
 └── pubspec.yaml
 ```
 
-## 6. LOOP Gateway Integration (verified on sandbox)
+## 4. LOOP Gateway Integration (verified on sandbox)
 
 - **Base**: `https://sandbox.loop.co.ke`
 - **Auth**: OAuth2 `client_credentials` at `/oauth2/token` (consumer key/secret)
@@ -248,7 +162,7 @@ tapverify/
 - **Call**: `POST /gateway/{product}/{version}/services/process-request`
 - **Envelope**: `{ "serviceCode": "MRCHNT_SENDMONEY", "txnReference", "requestParameters" }`
 
-Confirmed live products (all return HTTP 200 `COMPLETED`):
+Confirmed live products (all HTTP 200 `COMPLETED`):
 
 | Product | Gateway path | Result |
 |---|---|---|
@@ -260,14 +174,14 @@ Confirmed live products (all return HTTP 200 `COMPLETED`):
 Note: the sandbox **simulates** M-Pesa rails (instant `COMPLETED`, no real STK).
 Send Money – Loop is stubbed (`404`), Pesalink returns `403` unless subscribed.
 
-## 7. Backend Setup
+## 5. Backend Setup
 
 ```bash
 cd django-backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # fill LOOP_* + Africa's Talking keys
+cp .env.example .env        # fill LOOP_*, SASAPAY_*, AT_* keys
 
 createdb tapverify
 python manage.py migrate
@@ -275,36 +189,53 @@ python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000
 ```
 
-## 8. Flutter App Setup
+## 6. Flutter App Setup
 
 ```bash
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
-flutter run -d <device>     # Android/iOS
-flutter run -d chrome       # web
+flutter run -d <device>     # Android/iOS — the real product
+flutter run -d chrome       # web — the demo
 ```
 
-## 9. API Endpoints
+Entry points: More screen → **TapVerify Workforce** tile, or the login screen's
+"New factory? Register with KYC".
+
+## 7. API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/v1/auth/login/` | POST | Staff login (phone + PIN) |
 | `/api/v1/members/` | GET | List workspace members |
+| `/api/v1/collections/` | GET/POST | Obligations (with PaymentTasks) |
+| `/api/v1/collections/<id>/tasks/` | GET | Who-paid grid per collection |
+| `/api/v1/tasks/<id>/advance/` | POST | Move a task through the 9-state lifecycle |
 | `/api/v1/verify/` | POST | Verify payment + send SMS |
 | `/api/v1/stats/` | GET | Dashboard statistics |
 | `/api/v1/reminders/send/` | POST | Bulk payment reminders |
 | `/api/v1/payment-link/create/` | POST | Create member payment link |
 | `/api/v1/rail/info/` | GET | Active payment rail info |
 | `/api/v1/webhooks/loop/` | POST | LOOP IPN webhook |
-| `/api/v1/webhooks/mpesa/` | POST | M-Pesa callback (PayHero) |
+| `/api/v1/webhooks/sasapay/` | POST | SasaPay signed callback |
 | `/api/v1/demo/setup/` | POST | Create demo workspace |
 | `/r/<token>/` | GET/POST | PIN-protected receipt portal |
 | `/p/<token>/` | GET | Member payment link page |
 
-## 10. Tech Stack
+## 8. Tech Stack
 
 - **Backend**: Django 4.2, Django REST Framework, PostgreSQL
-- **Payments**: LOOP (NCBA) — OAuth2 + HMAC-signed gateway (primary)
-- **SMS**: Africa's Talking API
-- **Mobile**: Flutter 3.x, Hive offline storage → web + Android + iOS
+- **Payments**: LOOP (NCBA) verified; SasaPay Checkout ready; PayHero legacy
+- **SMS**: Africa's Talking (SMS / USSD / Airtime)
+- **Mobile**: Flutter 3.x → web + Android + iOS; Hive offline storage
+- **Proof**: signed webhooks + optional Avalanche attestation for badges
 - **Receipts**: PIN-protected web portal with GPS verification, signed PDFs
+
+## 9. Pricing
+
+| Tier | Price | Includes |
+|---|---|---|
+| Starter | KES 1,500/mo | Up to 50 workers · SMS · one rail |
+| Growth | KES 3,500–5,000/mo | Up to 200 workers · all rails · API |
+| Business | Custom | Unlimited · on-prem proof · onboarding |
+
+Optional 2% platform fee on collected value; SMS costs passed through.

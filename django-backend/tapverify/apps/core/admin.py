@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder, PaymentLink
+from .models import (Workspace, Staff, Member, VerificationEvent, MpesaTransaction,
+                     PaymentReminder, PaymentLink, Collection, PaymentTask)
 
 @admin.register(Workspace)
 class WorkspaceAdmin(admin.ModelAdmin):
@@ -49,3 +50,15 @@ class PaymentLinkAdmin(admin.ModelAdmin):
     list_filter = ['status', 'rail_used']
     search_fields = ['member__name', 'token']
     readonly_fields = ['token', 'created_at']
+
+@admin.register(Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'workspace', 'type', 'amount', 'due', 'rail', 'paid_count', 'closed', 'created_at']
+    list_filter = ['type', 'rail', 'closed', 'workspace']
+    search_fields = ['title', 'workspace__name']
+
+@admin.register(PaymentTask)
+class PaymentTaskAdmin(admin.ModelAdmin):
+    list_display = ['member', 'collection', 'state', 'amount', 'rail', 'txn_ref', 'paid_at']
+    list_filter = ['state', 'rail', 'collection__workspace']
+    search_fields = ['member__name', 'txn_ref']

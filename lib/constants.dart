@@ -31,10 +31,43 @@ class AppColors {
   static const Color border = Color(0xFFE2E8F0);
   static const Color gold = Color(0xFFC9A227);
 
+  // Bright, welcoming accents for auth/hero gradients.
+  static const Color emerald = Color(0xFF34D399);
+  static const Color mint = Color(0xFF10B981);
+  static const Color sky = Color(0xFF0EA5E9);
+  static const Color violet = Color(0xFF8B5CF6);
+  static const Color amber = Color(0xFFFBBF24);
+  static const Color orange = Color(0xFFFB923C);
+
   static const Color loop = Color(0xFF0D9488);
   static const Color sasapay = Color(0xFF1E40AF);
   static const Color avalanche = Color(0xFFE84142);
   static const Color africasTalking = Color(0xFF0F766E);
+}
+
+/// Online imagery for backgrounds. Africa-first: real people in workshops,
+/// markets, farms and boardrooms — the audience TapVerify serves. Every URL is
+/// a verified Unsplash image; the UI always falls back to a gradient when
+/// offline so screens never break.
+class AppImages {
+  static const String teamMeeting =
+      'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&q=70';
+  static const String africanTech =
+      'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&q=70';
+  static const String africanBusinessWoman =
+      'https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=1200&q=70';
+  static const String africanCraft =
+      'https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=1200&q=70';
+  static const String warehouseWorker =
+      'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1200&q=70';
+  static const String industry =
+      'https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=1200&q=70';
+  static const String boardroom =
+      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1200&q=70';
+  static const String engineer =
+      'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=70';
+  static const String portraitWoman =
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=70';
 }
 
 class AppAssets {

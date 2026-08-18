@@ -95,75 +95,99 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
 
   Widget _header() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.deep, AppColors.primary, AppColors.primaryLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Image.network(
+            AppImages.industry,
+            height: 150,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              height: 150,
+              color: AppColors.deep,
+            ),
+          ),
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xF20F766E),
+                  Color(0xE60D9488),
+                  Color(0x990EA5E9),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Text(
-                  'Welcome back,',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.7),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  WorkforceService.demoForemanName,
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.16),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.bolt_rounded, size: 13, color: Colors.white),
-                      const SizedBox(width: 5),
                       Text(
-                        'OBLIGATION · PAYMENT · PROOF',
+                        'Welcome back,',
                         style: GoogleFonts.inter(
-                          fontSize: 10.5,
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        WorkforceService.demoForemanName,
+                        style: GoogleFonts.inter(
+                          fontSize: 19,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.bolt_rounded,
+                                size: 13, color: Colors.white),
+                            const SizedBox(width: 5),
+                            Text(
+                              'OBLIGATION · PAYMENT · PROOF',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
+                SizedBox(
+                  width: 92,
+                  child: Image.asset(AppAssets.logoFull,
+                      fit: BoxFit.contain),
+                ),
               ],
             ),
-          ),
-          Container(
-            width: 74,
-            height: 74,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
           ),
         ],
       ),

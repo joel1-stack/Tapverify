@@ -6,6 +6,7 @@ import 'foreman_home_shell.dart';
 import 'worker_home_screen.dart';
 import 'workforce_register_screen.dart';
 import '../workforce/workforce_service.dart';
+import 'app_background.dart';
 
 /// Workforce role gate. Two-user system: a Foreman runs the factory; a Worker
 /// pays. Demo PIN is 1234 for both roles.
@@ -65,141 +66,143 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: AppBackground(
+        image: AppImages.africanTech,
+        overlay: const [
+          Color(0xE60F766E),
+          Color(0xE60D9488),
+          Color(0xD90EA5E9),
+        ],
+        child: SafeArea(
+          child: AuthCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 130,
+                      child: Image.asset(AppAssets.logoFull,
+                          fit: BoxFit.contain),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'TapVerify Workforce',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  WorkforceService.orgName,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 22),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
                     children: [
-                      SizedBox(
-                        width: 120,
-                        child: Image.asset(AppAssets.logoFull,
-                            fit: BoxFit.contain),
+                      Expanded(
+                        child: _roleButton(
+                          active: _isForeman,
+                          icon: Icons.supervisor_account_rounded,
+                          label: 'Foreman',
+                          onTap: () => _roleTap(true),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _roleButton(
+                          active: !_isForeman,
+                          icon: Icons.badge_rounded,
+                          label: 'Worker',
+                          onTap: () => _roleTap(false),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'TapVerify Workforce',
-                    textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(12),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Phone (254...)',
+                    prefixIcon: Icon(Icons.phone_iphone_rounded),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _pin,
+                  obscureText: _obscure,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [LengthLimitingTextInputFormatter(4)],
+                  decoration: InputDecoration(
+                    labelText: 'PIN',
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                BrightButton(
+                  label: _isForeman
+                      ? 'Sign in as Foreman'
+                      : 'Sign in as Worker',
+                  icon: Icons.login_rounded,
+                  onPressed: _login,
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Demo PIN 1234 · Payments rails are simulated here; real keys are wired server-side before launch.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.muted,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const WorkforceRegisterScreen()),
+                  ),
+                  child: Text(
+                    'New factory? Register with KYC',
                     style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.text,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    WorkforceService.orgName,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 28),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _roleButton(
-                            active: _isForeman,
-                            icon: Icons.supervisor_account_rounded,
-                            label: 'Foreman',
-                            onTap: () => _roleTap(true),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _roleButton(
-                            active: !_isForeman,
-                            icon: Icons.badge_rounded,
-                            label: 'Worker',
-                            onTap: () => _roleTap(false),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _phone,
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(12),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'Phone (254...)',
-                      prefixIcon: Icon(Icons.phone_iphone_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _pin,
-                    obscureText: _obscure,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [LengthLimitingTextInputFormatter(4)],
-                    decoration: InputDecoration(
-                      labelText: 'PIN',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscure
-                            ? Icons.visibility_off_rounded
-                            : Icons.visibility_rounded),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _login,
-                    icon: const Icon(Icons.login_rounded),
-                    label: Text(_isForeman
-                        ? 'Sign in as Foreman'
-                        : 'Sign in as Worker'),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Demo PIN 1234 · Payments rails are simulated here; real keys are wired server-side before launch.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.muted,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const WorkforceRegisterScreen()),
-                    ),
-                    child: Text(
-                      'New factory? Register with KYC',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

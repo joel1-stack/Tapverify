@@ -19,19 +19,23 @@ class ForemanHomeShell extends StatefulWidget {
 class _ForemanHomeShellState extends State<ForemanHomeShell> {
   int _index = 0;
   final _dashKey = GlobalKey<ForemanDashboardState>();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: AppColors.text,
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          tooltip: 'Open menu',
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            tooltip: 'Open menu',
+          ),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,60 +143,87 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.deep, AppColors.primary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 120,
-                    child: Image.asset(AppAssets.logoFull,
-                        fit: BoxFit.contain),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    WorkforceService.demoForemanName,
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                  Image.network(
+                    AppImages.warehouseWorker,
+                    height: 190,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 190,
+                      color: AppColors.deep,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    WorkforceService.demoForemanPhone,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                    height: 190,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xE60F766E),
+                          Color(0xCC0D9488),
+                          Color(0x330D9488),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.verified_rounded,
-                            size: 12, color: Colors.white),
-                        const SizedBox(width: 6),
+                        SizedBox(
+                          width: 110,
+                          child:
+                              Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
+                        ),
+                        const SizedBox(height: 12),
                         Text(
-                          'Foreman · ${WorkforceService.orgName}',
+                          WorkforceService.demoForemanName,
                           style: GoogleFonts.inter(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          WorkforceService.demoForemanPhone,
+                          style: GoogleFonts.inter(
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.verified_rounded,
+                                  size: 12, color: Colors.white),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Foreman · ${WorkforceService.orgName}',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -203,27 +234,53 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 children: [
                   _item(Icons.dashboard_rounded, 'Dashboard', 0),
                   _item(Icons.receipt_long_rounded, 'Collections', 1),
                   _item(Icons.people_rounded, 'Workers', 2),
                   _item(Icons.settings_rounded, 'More / Settings', 3),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  _item(Icons.logout_rounded, 'Sign out', -1,
-                      color: AppColors.danger),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'TapVerify Workforce v2.0.0',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.deep,
-                ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _signOut(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.danger,
+                        elevation: 0,
+                        side: const BorderSide(color: AppColors.danger),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.logout_rounded, size: 18),
+                      label: Text(
+                        'Sign out',
+                        style: GoogleFonts.inter(
+                            fontSize: 14, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'TapVerify Workforce v2.0.0',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -232,39 +289,52 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
     );
   }
 
-  Widget _item(IconData icon, String label, int index, {Color? color}) {
-    final c = color ?? AppColors.text;
+  void _signOut() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WorkforceLoginScreen()),
+      (route) => false,
+    );
+  }
+
+  Widget _item(IconData icon, String label, int index) {
+    final active = _index == index;
+    final c = active ? AppColors.primary : AppColors.text;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        tileColor: active ? AppColors.primary.withOpacity(0.08) : null,
         leading: Container(
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: c == AppColors.danger
-                ? AppColors.danger.withOpacity(0.08)
-                : AppColors.primary.withOpacity(0.1),
+            color: active
+                ? AppColors.primary.withOpacity(0.12)
+                : AppColors.primary.withOpacity(0.06),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: c, size: 22),
+          child: Icon(icon,
+              color: active ? AppColors.primary : AppColors.muted, size: 21),
         ),
         title: Text(label,
             style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600, fontSize: 14, color: c)),
-        trailing: Icon(Icons.chevron_right_rounded,
-            size: 18, color: c.withOpacity(0.3)),
+                fontWeight: FontWeight.w700, fontSize: 14, color: c)),
+        trailing: active
+            ? Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              )
+            : Icon(Icons.chevron_right_rounded,
+                size: 18, color: AppColors.muted.withOpacity(0.4)),
         onTap: () {
           Navigator.pop(context);
-          if (index < 0) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const WorkforceLoginScreen()),
-              (route) => false,
-            );
-          } else {
-            setState(() => _index = index);
-          }
+          setState(() => _index = index);
         },
       ),
     );

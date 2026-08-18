@@ -7,6 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../constants.dart';
 import '../workforce/workforce_service.dart';
 import 'foreman_home_shell.dart';
+import 'app_background.dart';
 
 /// Workforce registration — factory details → KYC document upload → members
 /// CSV import → payment QR. This is the onboarding a foreman goes through
@@ -147,22 +148,62 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: AppColors.text,
-        title: Text(
-          'Register your factory',
-          style: GoogleFonts.inter(
-              fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: AppBackground(
+        image: AppImages.africanCraft,
+        overlay: const [
+          Color(0xE60F766E),
+          Color(0xE60D9488),
+          Color(0xCC8B5CF6),
+        ],
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                child: Row(
+                  children: [
+                    Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () => Navigator.pop(context),
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(Icons.arrow_back_rounded,
+                              color: AppColors.primary, size: 22),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Register your factory',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 84,
+                      child: Image.asset(AppAssets.logoFull,
+                          fit: BoxFit.contain),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Expanded(
+              child: AuthCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
             _step('1', 'Factory details', Icons.factory_rounded),
             const SizedBox(height: 10),
             TextField(
@@ -386,6 +427,10 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
               textAlign: TextAlign.center,
               style:
                   GoogleFonts.inter(fontSize: 11, color: AppColors.muted, height: 1.4),
+            ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

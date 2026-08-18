@@ -149,12 +149,7 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AppBackground(
-        image: AppImages.africanCraft,
-        overlay: const [
-          Color(0xE60F766E),
-          Color(0xE60D9488),
-          Color(0xCC8B5CF6),
-        ],
+        image: AppImages.africanMarket,
         child: Column(
           children: [
             SafeArea(
@@ -185,6 +180,10 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
+                          shadows: const [
+                            Shadow(color: Colors.black54, blurRadius: 8),
+                            Shadow(color: Colors.black38, offset: Offset(0, 2)),
+                          ],
                         ),
                       ),
                     ),

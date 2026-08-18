@@ -68,6 +68,23 @@ class AppImages {
       'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=70';
   static const String portraitWoman =
       'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=70';
+
+  // Chama & SACCO — Kenyan savings groups, market days and community money
+  // circles. These run on the login/register backgrounds and the worker banner.
+  static const String chamaWomen =
+      'https://images.unsplash.com/photo-1523821741446-edb2b68bb7a0?w=1200&q=70';
+  static const String chamaMeeting =
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=70';
+  static const String chamaFriends =
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=70';
+  static const String saccoGroup =
+      'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=70';
+  static const String africanMarket =
+      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=1200&q=70';
+  static const String marketStall =
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&q=70';
+  static const String handshake =
+      'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=1200&q=70';
 }
 
 class AppAssets {

@@ -67,12 +67,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AppBackground(
-        image: AppImages.africanTech,
-        overlay: const [
-          Color(0xE60F766E),
-          Color(0xE60D9488),
-          Color(0xD90EA5E9),
-        ],
+        image: AppImages.chamaWomen,
         child: SafeArea(
           child: AuthCard(
             child: Column(

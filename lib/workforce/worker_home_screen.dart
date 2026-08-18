@@ -16,6 +16,7 @@ class WorkerHomeScreen extends StatefulWidget {
 
 class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
   late WfWorker _worker;
+  bool _showAllPaid = false;
 
   @override
   void initState() {
@@ -56,6 +57,8 @@ class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
+            _banner(),
+            const SizedBox(height: 16),
             _profileCard(),
             const SizedBox(height: 16),
             if (due.isNotEmpty) ...[
@@ -124,14 +127,107 @@ class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              for (final e in paid.reversed.take(4)) ...[
-                _paidCard(e.collection, e.task),
-                const SizedBox(height: 8),
-              ],
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => setState(() => _showAllPaid = !_showAllPaid),
+                  icon: Icon(
+                    _showAllPaid
+                        ? Icons.expand_less_rounded
+                        : Icons.history_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                    _showAllPaid
+                        ? 'Hide existing payments'
+                        : 'View existing payments · ${paid.length}',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.secondary,
+                    side: const BorderSide(color: AppColors.secondary),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    textStyle: GoogleFonts.inter(
+                        fontSize: 13.5, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              for (final e in (_showAllPaid ? paid.reversed : paid.reversed.take(4)))
+                ...[
+                  _paidCard(e.collection, e.task),
+                  const SizedBox(height: 8),
+                ],
             ],
             const SizedBox(height: 12),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _banner() {
+    return Container(
+      height: 140,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            AppImages.chamaFriends,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.deep, AppColors.primary, AppColors.sky],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'My chama & SACCO savings',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      shadows: const [
+                        Shadow(color: Colors.black54, blurRadius: 8),
+                        Shadow(color: Colors.black38, offset: Offset(0, 2)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Obligation · Payment · Proof',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      shadows: const [
+                        Shadow(color: Colors.black54, blurRadius: 6),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

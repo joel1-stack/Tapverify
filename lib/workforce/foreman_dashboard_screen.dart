@@ -102,28 +102,13 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
       child: Stack(
         children: [
           Image.network(
-            AppImages.industry,
+            AppImages.saccoGroup,
             height: 150,
             width: double.infinity,
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
               height: 150,
               color: AppColors.deep,
-            ),
-          ),
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xF20F766E),
-                  Color(0xE60D9488),
-                  Color(0x990EA5E9),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
             ),
           ),
           Padding(
@@ -139,8 +124,11 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                         'Welcome back,',
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.8),
-                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          shadows: const [
+                            Shadow(color: Colors.black54, blurRadius: 6),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -150,6 +138,10 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
+                          shadows: const [
+                            Shadow(color: Colors.black54, blurRadius: 8),
+                            Shadow(color: Colors.black38, offset: Offset(0, 2)),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -157,7 +149,7 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.black38,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(

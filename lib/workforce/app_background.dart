@@ -2,74 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 
-/// Full-bleed online background with a bright gradient scrim so content stays
-/// readable. Falls back to a pure gradient when offline or the image fails —
-/// screens never render blank.
+/// Full-bleed online background. Images stay CLEAR — no dimming overlays — and
+/// fade in gently when loaded. Content sits on opaque cards so text always
+/// stays readable. Falls back to a bright gradient when offline.
 class AppBackground extends StatelessWidget {
   const AppBackground({
     super.key,
     required this.image,
     required this.child,
-    this.overlay = const [
-      Color(0xE60F766E),
-      Color(0xE60D9488),
-      Color(0xD914B8A6),
+    this.fallback = const [
+      Color(0xFF0F766E),
+      Color(0xFF0D9488),
+      Color(0xFF14B8A6),
     ],
-    this.scrim = const [Color(0x99000000), Color(0x00000000)],
   });
 
   final String image;
   final Widget child;
-  final List<Color> overlay;
-  final List<Color> scrim;
+  final List<Color> fallback;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: overlay,
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: fallback,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
         ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.network(
-            image,
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, progress) {
-              if (progress == null) return child;
-              return const Center(
-                child: CircularProgressIndicator(color: Colors.white54),
-              );
-            },
-            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: overlay,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: const SizedBox.expand(),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: scrim,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: const SizedBox.expand(),
-          ),
-          child,
-        ],
-      ),
+        Image.network(
+          image,
+          fit: BoxFit.cover,
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) return child;
+            return AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOut,
+              child: child,
+            );
+          },
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        ),
+        child,
+      ],
     );
   }
 }

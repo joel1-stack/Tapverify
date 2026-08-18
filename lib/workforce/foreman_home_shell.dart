@@ -150,28 +150,13 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
               child: Stack(
                 children: [
                   Image.network(
-                    AppImages.warehouseWorker,
+                    AppImages.chamaMeeting,
                     height: 190,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       height: 190,
                       color: AppColors.deep,
-                    ),
-                  ),
-                  Container(
-                    height: 190,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xE60F766E),
-                          Color(0xCC0D9488),
-                          Color(0x330D9488),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
                     ),
                   ),
                   Padding(
@@ -191,6 +176,12 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
+                            shadows: [
+                              const Shadow(
+                                  color: Colors.black54, blurRadius: 8),
+                              const Shadow(
+                                  color: Colors.black38, offset: Offset(0, 2)),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -198,7 +189,11 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                           WorkforceService.demoForemanPhone,
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            shadows: const [
+                              Shadow(color: Colors.black54, blurRadius: 6),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -206,7 +201,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.black38,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(

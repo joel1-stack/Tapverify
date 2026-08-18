@@ -151,21 +151,10 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Container(
-                    width: 60,
-                    height: 60,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.3), width: 2),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6),
-                      child:
-                          Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
-                    ),
+                  SizedBox(
+                    width: 120,
+                    child: Image.asset(AppAssets.logoFull,
+                        fit: BoxFit.contain),
                   ),
                   const SizedBox(height: 16),
                   Text(

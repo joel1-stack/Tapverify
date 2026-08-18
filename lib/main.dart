@@ -13,6 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await HiveService.init();
+  await HiveService.clearLegacyDemo();
   runApp(const TapVerifyApp());
 }
 

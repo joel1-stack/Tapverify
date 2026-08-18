@@ -78,27 +78,22 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      SizedBox(
+                        width: 120,
                         child: Image.asset(AppAssets.logoFull,
                             fit: BoxFit.contain),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'TapVerify Workforce',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text,
-                        ),
-                      ),
                     ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'TapVerify Workforce',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -39,6 +39,5 @@ class AppColors {
 
 class AppAssets {
   static const String appIcon = 'assets/images/icon_adaptive_foreground.png';
-  static const String logoFull =
-      'assets/images/logo text sms web app screens splash .png';
+  static const String logoFull = 'assets/images/logo_transparent.png';
 }

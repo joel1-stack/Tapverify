@@ -62,6 +62,15 @@ class HiveService {
     await _settingsBox.delete('org_selection_done');
   }
 
+  /// Wipes every legacy demo record (workspaces, campaigns, auth, roster,
+  /// pending queue) so the app boots clean into the Workforce product and never
+  /// replays stale hackathon demo data. Called once at startup.
+  static Future<void> clearLegacyDemo() async {
+    await _settingsBox.clear();
+    await _membersBox.clear();
+    await _pendingBox.clear();
+  }
+
   static bool get orgSelectionDone =>
       _settingsBox.get('org_selection_done', defaultValue: false) == true;
 

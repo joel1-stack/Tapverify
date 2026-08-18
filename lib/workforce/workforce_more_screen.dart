@@ -71,16 +71,10 @@ class WorkforceMoreScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Image.asset(AppAssets.logoFull,
-                        fit: BoxFit.contain),
+                  SizedBox(
+                    width: 96,
+                    child:
+                        Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

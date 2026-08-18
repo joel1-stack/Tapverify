@@ -567,14 +567,8 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
             child: Row(
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                SizedBox(
+                  width: 110,
                   child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
                 ),
                 const SizedBox(width: 14),
@@ -891,15 +885,8 @@ child: _moreTile(
           ),
           child: Row(
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
+              SizedBox(
+                width: 96,
                 child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
               ),
               const SizedBox(width: 16),

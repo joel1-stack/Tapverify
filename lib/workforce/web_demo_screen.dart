@@ -52,21 +52,16 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
         child: Column(
           children: [
             // Top bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 90,
+                      child: Image.asset(AppAssets.logoFull,
+                          fit: BoxFit.contain),
                     ),
-                    child: Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
-                  ),
-                  const SizedBox(width: 10),
+                    const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'TapVerify Workforce — demo',

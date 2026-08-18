@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import 'login_screen.dart';
-import 'home_shell.dart';
-import 'org_select_screen.dart';
-import '../services/hive_service.dart';
+import '../workforce/workforce_login_screen.dart';
 
-/// Branded splash — animated logo intro and auth routing.
-///
-/// Plays a scale/fade entrance, then routes: logged-in single-org treasurers
-/// straight to [HomeShell], multi-org ones to [OrgSelectScreen], and new users
-/// to [LoginScreen], using a cross-fade page transition.
+/// Branded splash — animated logo entrance (logo alone, no white box), then
+/// hands off to the Workforce role login. Legacy demo routing was removed with
+/// the hackathon pivot: this app now opens straight into TapVerify Workforce.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -42,26 +37,16 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 2), () async {
+    Future.delayed(const Duration(milliseconds: 1900), () {
       if (!mounted) return;
-      final loggedIn = await HiveService.isLoggedIn();
-      if (!mounted) return;
-      Widget target;
-      if (loggedIn) {
-        final orgs = HiveService.getAccessibleWorkspaces();
-        final needsSelect = orgs.length > 1 && !HiveService.orgSelectionDone;
-        target = needsSelect ? const OrgSelectScreen() : const HomeShell();
-      } else {
-        target = const LoginScreen();
-      }
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => target,
+          pageBuilder: (_, __, ___) => const WorkforceLoginScreen(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },
-          transitionDuration: const Duration(milliseconds: 600),
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
     });
@@ -80,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF7C2D12), AppColors.accent, AppColors.primaryLight],
+            colors: [AppColors.deep, AppColors.primary, AppColors.primaryLight],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -95,25 +80,10 @@ class _SplashScreenState extends State<SplashScreen>
                   scale: _scaleAnimation.value,
                   child: Opacity(
                     opacity: _fadeAnimation.value,
-                    child: Container(
-                      width: 190,
-                      height: 190,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        AppAssets.logoFull,
-                        fit: BoxFit.contain,
-                      ),
+                    child: Image.asset(
+                      AppAssets.logoFull,
+                      width: 240,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 );
@@ -121,12 +91,12 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'Proof of Payment',
+              'Obligation \u00b7 Payment \u00b7 Proof',
               style: GoogleFonts.inter(
-                fontSize: 16,
-                color: Colors.white.withOpacity(0.8),
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
+                fontSize: 15,
+                color: Colors.white.withOpacity(0.85),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
               ),
             ),
             const SizedBox(height: 48),

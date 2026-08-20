@@ -133,7 +133,8 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        WorkforceService.demoForemanName,
+                        WorkforceService.currentUser?.name ??
+                            WorkforceService.demoForemanName,
                         style: GoogleFonts.inter(
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
@@ -144,7 +145,7 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
@@ -155,16 +156,16 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.bolt_rounded,
+                            const Icon(Icons.verified_rounded,
                                 size: 13, color: Colors.white),
                             const SizedBox(width: 5),
                             Text(
-                              'OBLIGATION · PAYMENT · PROOF',
+                              '${WorkforceService.currentUser?.position ?? 'Foreman'} · ${WorkforceService.currentUser?.orgName ?? WorkforceService.orgName}',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
-                                letterSpacing: 0.4,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],

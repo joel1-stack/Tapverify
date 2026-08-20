@@ -4,11 +4,14 @@ import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 import 'worker_payment_flow_screen.dart';
+import 'notification_bell.dart';
 
-/// Worker side — what the app serves each factory worker: due obligations,
-/// paid history, streak and badges. This is the experience the web demo plays.
+/// Worker side — what the app serves each payer: due obligations, paid
+/// history, streak and badges.
 class WorkerHomeScreen extends StatefulWidget {
-  const WorkerHomeScreen({super.key});
+  const WorkerHomeScreen({super.key, this.user});
+
+  final TapVerifyUser? user;
 
   @override
   State<WorkerHomeScreen> createState() => _WorkerHomeScreenState();
@@ -17,6 +20,8 @@ class WorkerHomeScreen extends StatefulWidget {
 class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
   late WfWorker _worker;
   bool _showAllPaid = false;
+
+  TapVerifyUser? get user => widget.user ?? WorkforceService.currentUser;
 
   @override
   void initState() {
@@ -45,10 +50,13 @@ class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
         elevation: 0,
         foregroundColor: AppColors.text,
         title: Text(
-          'Worker',
+          user != null
+              ? 'Hi, ${user!.name.split(' ').first}'
+              : 'Worker',
           style: GoogleFonts.inter(
               fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
+        actions: const [NotificationBell()],
       ),
       body: RefreshIndicator(
         onRefresh: () async => _refresh(),
@@ -268,7 +276,7 @@ class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _worker.name,
+                  user?.name ?? _worker.name,
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
@@ -277,7 +285,9 @@ class _WorkerHomeScreenState extends State<WorkerHomeScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${_worker.code} · ${_worker.department} · ${WorkforceService.orgName}',
+                  user != null
+                      ? '${user!.position} · ${user!.orgName}'
+                      : '${_worker.code} · ${_worker.department} · ${WorkforceService.orgName}',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: Colors.white.withOpacity(0.75),

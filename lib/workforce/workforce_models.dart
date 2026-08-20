@@ -126,6 +126,84 @@ class WfCollection {
           (t.state.index >= WfPaymentState.completed.index ? t.amount : 0));
 }
 
+/// Every collector is a person — a factory foreman, a SACCO treasurer, a
+/// church secretary, a school bursar or an individual running one collection
+/// (e.g. a family appeal). The app greets each by name and position.
+enum UserKind { organization, individual }
+
+class TapVerifyUser {
+  TapVerifyUser({
+    required this.id,
+    required this.name,
+    required this.phone,
+    required this.pin,
+    required this.position,
+    required this.kind,
+    required this.orgName,
+    this.kycApproved = false,
+    this.termsAccepted = false,
+  });
+
+  final String id;
+  final String name;
+  final String phone;
+  final String pin;
+  final String position;
+  final UserKind kind;
+  final String orgName;
+  bool kycApproved;
+  bool termsAccepted;
+
+  bool get isCollector => kind == UserKind.individual || !isWorker;
+  bool get isWorker => position.toLowerCase().contains('worker');
+
+  String get roleLabel => isCollector ? 'Collector · $position' : position;
+}
+
+/// How the collector actually receives money. Members pay into THESE account
+/// details — the collector never touches cash directly. Partner APIs (Loop,
+/// SasaPay, PayHero) take the Till/Paybill/Bank rails in production.
+class RailsConfig {
+  RailsConfig({
+    this.till = '9415678',
+    this.paybill = '522033',
+    this.paybillAccount = 'TV01',
+    this.bankName = '',
+    this.bankAccount = '',
+    this.sasapayMerchant = '',
+    this.sasapayAccount = '',
+  });
+
+  String till;
+  String paybill;
+  String paybillAccount;
+  String bankName;
+  String bankAccount;
+  String sasapayMerchant;
+  String sasapayAccount;
+
+  int get configuredCount => [
+        till.isNotEmpty,
+        paybill.isNotEmpty,
+        bankAccount.isNotEmpty,
+        sasapayMerchant.isNotEmpty,
+      ].where((b) => b).length;
+}
+
+/// A purchased plan (Pay & go). Once active, the collector can raise and run
+/// collections; they can log in later, edit the description and raise again.
+class ActivePlan {
+  ActivePlan({
+    required this.name,
+    required this.price,
+    required this.activatedAt,
+  });
+
+  final String name;
+  final String price;
+  final DateTime activatedAt;
+}
+
 /// A recognition badge (Avalanche attestation is the optional proof layer for
 /// these in production; in the app they are local for now).
 class WfBadge {

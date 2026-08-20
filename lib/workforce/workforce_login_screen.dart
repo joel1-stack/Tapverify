@@ -7,10 +7,13 @@ import 'worker_home_screen.dart';
 import 'workforce_register_screen.dart';
 import '../workforce/workforce_service.dart';
 import 'app_background.dart';
+import 'notification_center.dart';
 import '../pay/payment_links_screen.dart';
 
-/// Workforce role gate. Two-user system: a Foreman runs the factory; a Worker
-/// pays. Demo PIN is 1234 for both roles.
+/// Universal login. One form for everyone — a factory foreman, a SACCO
+/// treasurer, a church secretary, a school bursar, a worker or an individual
+/// collecting for one appeal. The app reads the phone + PIN, resolves the
+/// person, then greets them by name and position.
 class WorkforceLoginScreen extends StatefulWidget {
   const WorkforceLoginScreen({super.key});
 
@@ -19,10 +22,19 @@ class WorkforceLoginScreen extends StatefulWidget {
 }
 
 class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
-  bool _isForeman = true;
   final _phone = TextEditingController(text: WorkforceService.demoForemanPhone);
   final _pin = TextEditingController();
   bool _obscure = true;
+
+  static const _samples = [
+    ('Foreman', 'u-foreman', Icons.factory_rounded, AppColors.primary),
+    ('Worker', 'u-worker', Icons.handyman_rounded, AppColors.success),
+    ('SACCO Treasurer', 'u-treasurer', Icons.account_balance_rounded,
+        AppColors.sasapay),
+    ('Church', 'u-church', Icons.church_rounded, AppColors.accent),
+    ('School Bursar', 'u-school', Icons.school_rounded, AppColors.sky),
+    ('Individual', 'u-individual', Icons.person_rounded, AppColors.gold),
+  ];
 
   @override
   void dispose() {
@@ -31,34 +43,44 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
     super.dispose();
   }
 
-  void _roleTap(bool foreman) {
-    setState(() {
-      _isForeman = foreman;
-      _phone.text = foreman
-          ? WorkforceService.demoForemanPhone
-          : WorkforceService.demoWorkerPhone;
-    });
+  void _fillSample(String id) {
+    for (final u in WorkforceService.users) {
+      if (u.id == id) {
+        setState(() => _phone.text = u.phone);
+        return;
+      }
+    }
   }
 
   void _login() {
-    final pin = _pin.text.trim();
-    if (pin != '1234') {
+    final user = WorkforceService.login(_phone.text, _pin.text);
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Use the PIN 1234', style: GoogleFonts.inter()),
+          content: Text(
+            'No account for this phone. Use PIN 1234 or pick a sample below.',
+            style: GoogleFonts.inter(),
+          ),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
     }
+    NotificationCenter.instance.notify(
+      title: 'Welcome back, ${user.name.split(' ').first}',
+      body: 'Signed in as ${user.position} · ${user.orgName}',
+      icon: Icons.verified_user_rounded,
+      color: AppColors.primary,
+    );
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => _isForeman
-            ? const ForemanHomeShell()
-            : const WorkerHomeScreen(),
+        builder: (_) => user.isWorker
+            ? WorkerHomeScreen(user: user)
+            : ForemanHomeShell(user: user),
       ),
       (route) => false,
     );
@@ -87,7 +109,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'TapVerify Workforce',
+                  'TapVerify',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 21,
@@ -97,44 +119,12 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  WorkforceService.orgName,
+                  'One login for everyone who collects — factories, chamas, SACCOs, churches, schools and individuals.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700),
+                      fontSize: 12, color: AppColors.primary, height: 1.5),
                 ),
-                const SizedBox(height: 22),
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _roleButton(
-                          active: _isForeman,
-                          icon: Icons.supervisor_account_rounded,
-                          label: 'Foreman',
-                          onTap: () => _roleTap(true),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: _roleButton(
-                          active: !_isForeman,
-                          icon: Icons.badge_rounded,
-                          label: 'Worker',
-                          onTap: () => _roleTap(false),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 TextField(
                   controller: _phone,
                   keyboardType: TextInputType.phone,
@@ -164,17 +154,48 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 20),
                 BrightButton(
-                  label: _isForeman
-                      ? 'Sign in as Foreman'
-                      : 'Sign in as Worker',
+                  label: 'Sign in',
                   icon: Icons.login_rounded,
                   onPressed: _login,
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'PIN 1234 · Payments via M-Pesa, Airtel Money, card or wallet — every payment is verified with a signed receipt.',
+                  'Sample accounts · PIN 1234',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.muted,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final s in _samples)
+                      ActionChip(
+                        avatar: Icon(s.$3, size: 16, color: s.$4),
+                        label: Text(s.$1),
+                        onPressed: () => _fillSample(s.$2),
+                        labelStyle: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.text,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: s.$4.withOpacity(0.4)),
+                        ),
+                        backgroundColor: s.$4.withOpacity(0.08),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Every payment is verified with a signed receipt you can share.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 11,
@@ -190,7 +211,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                         builder: (_) => const WorkforceRegisterScreen()),
                   ),
                   child: Text(
-                    'New factory? Register with KYC',
+                    'New here? Register to collect',
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -217,48 +238,6 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _roleButton({
-    required bool active,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          gradient: active
-              ? const LinearGradient(
-                  colors: [AppColors.deep, AppColors.primary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight)
-              : null,
-          color: active ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: 20,
-                color: active ? Colors.white : AppColors.muted),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: active ? Colors.white : AppColors.muted,
-              ),
-            ),
-          ],
         ),
       ),
     );

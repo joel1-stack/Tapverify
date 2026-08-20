@@ -56,7 +56,7 @@ class _WorkersScreenState extends State<WorkersScreen> {
             controller: _query,
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
-              hintText: 'Search worker or code',
+              hintText: 'Search member or code',
               prefixIcon: Icon(Icons.search_rounded),
               isDense: true,
               contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -105,7 +105,7 @@ class _WorkersScreenState extends State<WorkersScreen> {
                       ),
                       SizedBox(height: 8),
                       Center(
-                        child: Text('No workers found',
+                        child: Text('No members found',
                             style: TextStyle(color: AppColors.muted)),
                       ),
                     ],

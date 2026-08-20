@@ -22,6 +22,147 @@ class WorkforceService {
   static const String orgName = 'Kamau Metalworks';
   static const String orgCode = 'KM';
 
+  /// ── universal identity ─────────────────────────────────────────────────
+  /// Every collector logs in with the same form. The app reads the
+  /// credentials and greets the person by name and position — foreman,
+  /// SACCO treasurer, church secretary, school bursar or individual.
+  static final List<TapVerifyUser> users = _buildUsers();
+
+  static TapVerifyUser? currentUser;
+
+  static RailsConfig railsConfig = RailsConfig();
+  static ActivePlan? activePlan;
+
+  static List<TapVerifyUser> _buildUsers() {
+    return [
+      TapVerifyUser(
+        id: 'u-foreman',
+        name: demoForemanName,
+        phone: demoForemanPhone,
+        pin: '1234',
+        position: 'Factory Foreman',
+        kind: UserKind.organization,
+        orgName: orgName,
+        kycApproved: true,
+        termsAccepted: true,
+      ),
+      TapVerifyUser(
+        id: 'u-worker',
+        name: demoWorkerName,
+        phone: demoWorkerPhone,
+        pin: '1234',
+        position: 'Worker · Foundry',
+        kind: UserKind.organization,
+        orgName: orgName,
+        termsAccepted: true,
+      ),
+      TapVerifyUser(
+        id: 'u-treasurer',
+        name: 'Wanjiru Wambui',
+        phone: '254701234567',
+        pin: '1234',
+        position: 'SACCO Treasurer',
+        kind: UserKind.organization,
+        orgName: 'Green Valley SACCO',
+        kycApproved: true,
+        termsAccepted: true,
+      ),
+      TapVerifyUser(
+        id: 'u-church',
+        name: 'Peter Maina',
+        phone: '254722345678',
+        pin: '1234',
+        position: 'Church Treasurer',
+        kind: UserKind.organization,
+        orgName: 'Umoja Church',
+        kycApproved: true,
+        termsAccepted: true,
+      ),
+      TapVerifyUser(
+        id: 'u-school',
+        name: 'Grace Otieno',
+        phone: '254744567890',
+        pin: '1234',
+        position: 'School Bursar',
+        kind: UserKind.organization,
+        orgName: 'Sunrise Academy',
+        kycApproved: true,
+        termsAccepted: true,
+      ),
+      TapVerifyUser(
+        id: 'u-individual',
+        name: 'Mary Njeri',
+        phone: '254733456789',
+        pin: '1234',
+        position: 'Collector',
+        kind: UserKind.individual,
+        orgName: 'Personal collection',
+        termsAccepted: true,
+      ),
+    ];
+  }
+
+  /// Universal login: any phone + PIN 1234. Returns the matching identity.
+  static TapVerifyUser? login(String phone, String pin) {
+    final p = phone.trim();
+    for (final u in users) {
+      if (u.phone == p && u.pin == pin.trim()) {
+        currentUser = u;
+        return u;
+      }
+    }
+    return null;
+  }
+
+  /// Registers a new collector (organization or individual). Individuals do
+  /// NOT need heavy KYC — accepting the terms is enough for a personal or
+  /// family collection. Organizations are shown as KYC-approved.
+  static TapVerifyUser registerUser({
+    required String name,
+    required String phone,
+    required String position,
+    required UserKind kind,
+    required String orgName,
+    bool kycApproved = false,
+  }) {
+    final u = TapVerifyUser(
+      id: 'u-${users.length + 1}',
+      name: name,
+      phone: phone.trim(),
+      pin: '1234',
+      position: position,
+      kind: kind,
+      orgName: orgName,
+      kycApproved: kycApproved,
+      termsAccepted: true,
+    );
+    users.add(u);
+    currentUser = u;
+    if (kind == UserKind.organization) {
+      registeredOrg = orgName;
+      registeredPhone = phone.trim();
+    }
+    return u;
+  }
+
+  static String collectorDisplay() {
+    final u = currentUser;
+    if (u == null) return 'Collector';
+    return '${u.name} · ${u.position}';
+  }
+
+  static String collectorOrg() =>
+      currentUser?.orgName ?? orgName;
+
+  static bool get isIndividualCollector =>
+      currentUser?.kind == UserKind.individual;
+
+  static void saveRailsConfig(RailsConfig cfg) => railsConfig = cfg;
+
+  static void activatePlan(String name, String price) {
+    activePlan = ActivePlan(name: name, price: price, activatedAt: DateTime.now());
+  }
+
   /// Mutable registration state — set by the WorkforceRegistrationScreen.
   static String registeredOrg = orgName;
   static String registeredPhone = demoForemanPhone;

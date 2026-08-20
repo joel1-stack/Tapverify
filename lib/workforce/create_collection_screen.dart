@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../workforce/workforce_service.dart';
 import 'collection_detail_screen.dart';
+import 'notification_center.dart';
+import 'pricing_screen.dart';
 
 /// Foreman creates a new obligation. Rail selection is UI-only for now; real
 /// payment keys are wired server-side later.
@@ -22,18 +24,24 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   String _railId = 'sasapay';
   DateTime _due = DateTime.now().add(const Duration(days: 7));
 
-  static const _types = ['Welfare', 'Medical', 'Emergency', 'Trip'];
+  static const _types = ['Welfare', 'Medical', 'Emergency', 'Trip', 'Fees', 'Other'];
 
-  static const _rails = [
-    ('sasapay', 'SasaPay Checkout link', Icons.link_rounded,
-        AppColors.sasapay, 'MPESA/Equity link sent by SMS'),
-    ('mpesa-prompt', 'M-Pesa STK Prompt', Icons.bolt_rounded,
-        AppColors.success, 'Push to each worker phone'),
-    ('till', 'M-PESA Till 9415678', Icons.storefront_rounded,
-        AppColors.success, 'Workers pay via till'),
-    ('paybill', 'M-PESA Paybill 522033', Icons.receipt_rounded,
-        AppColors.secondary, 'Paybill account KM01'),
-  ];
+  List<(String, String, IconData, Color, String)> get _rails {
+    final r = WorkforceService.railsConfig;
+    return [
+      ('sasapay', 'SasaPay Checkout link', Icons.link_rounded,
+          AppColors.sasapay, 'MPESA/Equity link sent by SMS'),
+      ('mpesa-prompt', 'M-Pesa STK Prompt', Icons.bolt_rounded,
+          AppColors.success, 'Push to each member phone'),
+      ('till', 'M-PESA Till ${r.till}', Icons.storefront_rounded,
+          AppColors.success, 'Members pay via till'),
+      ('paybill', 'M-PESA Paybill ${r.paybill}${r.paybillAccount.isNotEmpty ? ' (${r.paybillAccount})' : ''}',
+          Icons.receipt_rounded, AppColors.secondary, 'Paybill account ${r.paybillAccount}'),
+      if (r.bankAccount.isNotEmpty)
+        ('bank', '${r.bankName.isNotEmpty ? r.bankName : 'Bank'} transfer ${r.bankAccount}',
+            Icons.account_balance_rounded, AppColors.sasapay, 'Bank to ${r.bankName}'),
+    ];
+  }
 
   @override
   void dispose() {
@@ -44,6 +52,10 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   }
 
   void _save() {
+    if (WorkforceService.activePlan == null) {
+      _showPlanGate();
+      return;
+    }
     final title = _title.text.trim();
     final amount = double.tryParse(_amount.text.trim()) ?? 0;
     if (title.isEmpty || amount <= 0) {
@@ -75,6 +87,51 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
       context,
       MaterialPageRoute(builder: (_) => CollectionDetailScreen(collection: c)),
     );
+    NotificationCenter.instance.notify(
+      title: 'Collection raised',
+      body: '${title} · Ksh ${amount.round()} per member — notified by SMS.',
+      icon: Icons.campaign_rounded,
+      color: AppColors.accent,
+    );
+  }
+
+  Future<void> _showPlanGate() async {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Activate a plan first',
+          style: GoogleFonts.inter(
+              fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
+        ),
+        content: Text(
+          'Pay & go to unlock collections. Activate once — then raise as many collections as you need.',
+          style: GoogleFonts.inter(
+              fontSize: 13, color: AppColors.text, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Not now',
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700, color: AppColors.muted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+            child: Text('See pricing',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (go == true && mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PricingScreen()),
+      );
+    }
   }
 
   Future<void> _pickDue() async {

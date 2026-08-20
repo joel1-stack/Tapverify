@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import '../workforce/workforce_models.dart';
 
 /// Product tour — an auto-playing walkthrough of what the TapVerify mobile app
 /// serves. Runs from the More screen so it can be presented anywhere.

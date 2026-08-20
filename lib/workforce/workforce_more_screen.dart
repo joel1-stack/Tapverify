@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../workforce/workforce_models.dart';
+import '../workforce/workforce_service.dart';
 import 'workforce_login_screen.dart';
 import 'product_tour_screen.dart';
+import 'pricing_screen.dart';
+import 'collection_settings_screen.dart';
 import '../pay/payment_links_screen.dart';
 
 /// Workforce More — product console: rails, the 9-state lifecycle, verified
@@ -102,7 +105,7 @@ class WorkforceMoreScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Every collection is a trackable obligation. Every payment carries proof the foreman can audit in real time.',
+                'Every collection is a trackable obligation. Every payment carries proof you can audit in real time.',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: Colors.white.withOpacity(0.8),
@@ -113,6 +116,36 @@ class WorkforceMoreScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
+
+        if (WorkforceService.activePlan != null) ...[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.success.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.verified_rounded,
+                    color: AppColors.success, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${WorkforceService.activePlan!.name} plan active — ${WorkforceService.activePlan!.price}. Raise collections anytime.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
 
         GestureDetector(
           onTap: () => Navigator.push(
@@ -209,6 +242,61 @@ class WorkforceMoreScreen extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         'The full flow, end-to-end: raise, notify, pay, prove.',
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppColors.text, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const CollectionSettingsScreen()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.gold.withOpacity(0.45)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.account_balance_wallet_rounded,
+                      color: AppColors.gold, size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'COLLECTION DETAILS',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.gold,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Your Till, Paybill, bank & SasaPay details — members pay into these, you never touch the money.',
                         style: GoogleFonts.inter(
                             fontSize: 12, color: AppColors.text, height: 1.4),
                       ),
@@ -380,46 +468,79 @@ class WorkforceMoreScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         for (final t in _tiers) ...[
-          Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PricingScreen()),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.$1,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: WorkforceService.activePlan?.name == t.$1
+                        ? AppColors.success
+                        : AppColors.border,
+                    width: WorkforceService.activePlan?.name == t.$1 ? 1.6 : 1),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.$1,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.text,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        t.$3,
-                        style: GoogleFonts.inter(
-                            fontSize: 11, color: AppColors.muted),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          t.$3,
+                          style: GoogleFonts.inter(
+                              fontSize: 11, color: AppColors.muted),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  t.$2,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                  Text(
+                    t.$2,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: WorkforceService.activePlan?.name == t.$1
+                          ? AppColors.success.withOpacity(0.12)
+                          : AppColors.accent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Text(
+                      WorkforceService.activePlan?.name == t.$1
+                          ? 'ACTIVE'
+                          : 'PAY & GO',
+                      style: GoogleFonts.inter(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: WorkforceService.activePlan?.name == t.$1
+                            ? AppColors.success
+                            : AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -462,7 +583,7 @@ class WorkforceMoreScreen extends StatelessWidget {
               );
             },
             icon: const Icon(Icons.logout_rounded),
-            label: const Text('Back to role selection'),
+            label: const Text('Sign out'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.text,
               side: const BorderSide(color: AppColors.border),

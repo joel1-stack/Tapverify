@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
+import '../services/receipt_pdf.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
+import 'notification_center.dart';
 
 /// Collection detail — the proof center. Shows the 9-state lifecycle, how much
 /// is in, who paid (with rail evidence + transfer reference), and lets the
@@ -73,12 +75,20 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       );
       return;
     }
+    final first = target.first;
+    final w = WorkforceService.workerById(first.workerId);
     setState(() {
       for (final t in target.take(1)) {
         WorkforceService.payNow(c, t.workerId);
         WorkforceService.verify(c, t.workerId);
       }
     });
+    NotificationCenter.instance.notify(
+      title: 'Payment recorded',
+      body: '${w?.name ?? 'A member'} paid Ksh ${_fmt(c.amount)} for ${c.title} — proof verified.',
+      icon: Icons.check_circle_rounded,
+      color: AppColors.success,
+    );
   }
 
   void _remindPending() {
@@ -92,6 +102,14 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         }
       }
     });
+    if (n > 0) {
+      NotificationCenter.instance.notify(
+        title: 'Reminder sent',
+        body: 'SMS reminder sent to $n members for ${c.title}.',
+        icon: Icons.notifications_active_rounded,
+        color: AppColors.accent,
+      );
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('SMS reminder sent to $n workers',
@@ -101,6 +119,58 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+    );
+  }
+
+  Future<void> _shareSummary() async {
+    final u = WorkforceService.currentUser;
+    final firstRef = c.tasks.values
+        .where((t) => t.state.index >= WfPaymentState.completed.index)
+        .map((t) => t.txnRef)
+        .where((r) => r.isNotEmpty)
+        .firstOrNull;
+    await shareReceiptPdf(
+      ReceiptData(
+        receiptNo: 'RCP-${c.id.toUpperCase()}',
+        timestamp: DateTime.now().toString().substring(0, 16).replaceAll('-', '/'),
+        collectorName: u?.name ?? WorkforceService.demoForemanName,
+        collectorRole: u?.position ?? 'Collector',
+        collectorOrg: u?.orgName ?? WorkforceService.orgName,
+        memberName: 'All members · ${c.paidCount}/${c.tasks.length} paid',
+        obligation: c.title,
+        amount: 'Ksh ${_fmt(c.collected)} collected of Ksh ${_fmt(c.amount * c.tasks.length)}',
+        rail: c.railName,
+        transferId: firstRef ?? '—',
+        state: c.closed ? 'ARCHIVED' : 'IN PROGRESS',
+        termsNote: u?.termsAccepted == true
+            ? 'Collector has accepted the TapVerify terms.'
+            : 'TapVerify terms apply to this collection.',
+      ),
+      filename: 'TapVerify_${c.title.replaceAll(' ', '_')}.pdf',
+    );
+  }
+
+  Future<void> _shareWorker(WfPaymentTask t) async {
+    final u = WorkforceService.currentUser;
+    final w = WorkforceService.workerById(t.workerId);
+    if (w == null) return;
+    await shareReceiptPdf(
+      ReceiptData(
+        receiptNo: t.txnRef.isNotEmpty ? 'RCP-${t.txnRef}' : 'RCP-${c.id.toUpperCase()}',
+        timestamp: t.paidAt != null
+            ? '${t.paidAt!.day}/${t.paidAt!.month}/${t.paidAt!.year} ${t.paidAt!.hour.toString().padLeft(2, '0')}:${t.paidAt!.minute.toString().padLeft(2, '0')}'
+            : DateTime.now().toString().substring(0, 16),
+        collectorName: u?.name ?? WorkforceService.demoForemanName,
+        collectorRole: u?.position ?? 'Collector',
+        collectorOrg: u?.orgName ?? WorkforceService.orgName,
+        memberName: '${w.name} · ${w.code}',
+        obligation: c.title,
+        amount: 'Ksh ${_fmt(t.amount)}',
+        rail: t.rail,
+        transferId: t.txnRef,
+        state: '${t.state.label} · ${t.state.desc}',
+      ),
+      filename: 'TapVerify_receipt_${w.code}.pdf',
     );
   }
 
@@ -403,6 +473,14 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                       color: AppColors.accent,
                     ),
                   ),
+                )
+              else
+                IconButton(
+                  tooltip: 'Share this receipt (PDF)',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _shareWorker(t),
+                  icon: const Icon(Icons.share_rounded,
+                      size: 18, color: AppColors.primary),
                 ),
             ],
           ),
@@ -420,32 +498,56 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _remindPending,
+                    icon: const Icon(Icons.notifications_active_rounded,
+                        size: 18),
+                    label: const Text('Remind all'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.accent,
+                      side: const BorderSide(color: AppColors.accent),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: pct >= 100 ? _close : _simulatePayment,
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent),
+                    icon: Icon(
+                        pct >= 100 ? Icons.archive_rounded : Icons.bolt_rounded,
+                        size: 18),
+                    label: Text(pct >= 100 ? 'Archive' : 'Record a payment'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: _remindPending,
-                icon: const Icon(Icons.notifications_active_rounded, size: 18),
-                label: const Text('Remind all'),
+                onPressed: _shareSummary,
+                icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                label: const Text('Share PDF receipt'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.accent,
-                  side: const BorderSide(color: AppColors.accent),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
+                  textStyle: GoogleFonts.inter(
+                      fontSize: 13.5, fontWeight: FontWeight.w700),
                 ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: pct >= 100 ? _close : _simulatePayment,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent),
-                icon: Icon(
-                    pct >= 100 ? Icons.archive_rounded : Icons.bolt_rounded,
-                    size: 18),
-                label: Text(pct >= 100 ? 'Archive' : 'Record a payment'),
               ),
             ),
           ],

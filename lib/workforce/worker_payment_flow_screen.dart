@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
+import '../services/receipt_pdf.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
+import 'notification_center.dart';
 
 /// Worker payment flow — simulates the rail checkout and animates the task
 /// through CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED, ending in a
@@ -56,10 +58,40 @@ class _WorkerPaymentFlowScreenState extends State<WorkerPaymentFlowScreen> {
           _paid = WorkforceService.payNow(c, widget.worker.id);
           WorkforceService.verify(c, widget.worker.id);
         });
+        NotificationCenter.instance.notify(
+          title: 'Payment verified',
+          body:
+              '${widget.worker.name} paid Ksh ${_fmt(c.amount)} for ${c.title}.',
+          icon: Icons.verified_rounded,
+          color: AppColors.success,
+        );
         return;
       }
       setState(() => _step++);
     });
+  }
+
+  Future<void> _shareReceipt() async {
+    final task = _paid!;
+    final u = WorkforceService.currentUser;
+    await shareReceiptPdf(
+      ReceiptData(
+        receiptNo: 'RCP-${task.txnRef}',
+        timestamp: task.paidAt != null
+            ? '${task.paidAt!.day}/${task.paidAt!.month}/${task.paidAt!.year} ${task.paidAt!.hour.toString().padLeft(2, '0')}:${task.paidAt!.minute.toString().padLeft(2, '0')}'
+            : DateTime.now().toString().substring(0, 16),
+        collectorName: u?.name ?? WorkforceService.demoForemanName,
+        collectorRole: u?.position ?? 'Collector',
+        collectorOrg: u?.orgName ?? WorkforceService.orgName,
+        memberName: '${widget.worker.name} · ${widget.worker.code}',
+        obligation: c.title,
+        amount: 'Ksh ${_fmt(task.amount)}',
+        rail: task.rail,
+        transferId: task.txnRef,
+        state: '${task.state.label} · ${task.state.desc}',
+      ),
+      filename: 'TapVerify_receipt_${widget.worker.code}.pdf',
+    );
   }
 
   @override
@@ -281,6 +313,20 @@ class _WorkerPaymentFlowScreenState extends State<WorkerPaymentFlowScreen> {
           ),
         ),
         const SizedBox(height: 20),
+        SizedBox(
+          height: 54,
+          child: ElevatedButton.icon(
+            onPressed: _shareReceipt,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+            ),
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            label: const Text('Share PDF receipt'),
+          ),
+        ),
+        const SizedBox(height: 10),
         SizedBox(
           height: 54,
           child: ElevatedButton(

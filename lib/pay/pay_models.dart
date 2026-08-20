@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Universal payment-link model. A seller (factory, shop, chama, SACCO or
 /// freelancer) generates a link; the buyer pays through it; both sides earn a
 /// verified reputation streak.

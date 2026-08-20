@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../workforce/workforce_service.dart';
+import '../workforce/workforce_models.dart';
 import 'foreman_dashboard_screen.dart';
 import 'collections_screen.dart';
 import 'workers_screen.dart';
 import 'workforce_more_screen.dart';
 import 'workforce_login_screen.dart';
+import 'notification_bell.dart';
 
-/// Foreman bottom-nav shell: Dashboard / Collections / Workers / More.
+/// Collector bottom-nav shell: Dashboard / Collections / Members / More.
+/// One shell for every collector — foreman, SACCO treasurer, church, school
+/// or individual. The app greets the person by name and position.
 class ForemanHomeShell extends StatefulWidget {
-  const ForemanHomeShell({super.key});
+  const ForemanHomeShell({super.key, this.user});
+
+  final TapVerifyUser? user;
 
   @override
   State<ForemanHomeShell> createState() => _ForemanHomeShellState();
@@ -20,6 +26,14 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
   int _index = 0;
   final _dashKey = GlobalKey<ForemanDashboardState>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  TapVerifyUser? get user => widget.user ?? WorkforceService.currentUser;
+
+  String get _greeting {
+    final u = user;
+    if (u == null) return 'Dashboard';
+    return 'Hi, ${u.name.split(' ').first}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +56,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _titles[_index],
+              _index == 0 ? _greeting : _titles[_index],
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -51,7 +65,9 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
             ),
             if (_index == 0)
               Text(
-                WorkforceService.orgName,
+                user != null
+                    ? '${user!.position} · ${user!.orgName}'
+                    : WorkforceService.orgName,
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -61,6 +77,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
           ],
         ),
         actions: [
+          const NotificationBell(),
           IconButton(
             icon: const Icon(Icons.qr_code_rounded),
             tooltip: 'Payment QR (proof)',
@@ -119,7 +136,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
               icon: Icon(Icons.people_outline_rounded),
               selectedIcon:
                   Icon(Icons.people_rounded, color: AppColors.primary),
-              label: 'Workers',
+              label: 'Members',
             ),
             NavigationDestination(
               icon: Icon(Icons.more_horiz_rounded),
@@ -132,7 +149,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
     );
   }
 
-  static const _titles = ['Dashboard', 'Collections', 'Workers', 'More'];
+  static const _titles = ['Dashboard', 'Collections', 'Members', 'More'];
 
   Widget _drawer() {
     return Drawer(
@@ -171,7 +188,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          WorkforceService.demoForemanName,
+                          user?.name ?? WorkforceService.demoForemanName,
                           style: GoogleFonts.inter(
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
@@ -186,7 +203,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          WorkforceService.demoForemanPhone,
+                          user?.phone ?? WorkforceService.demoForemanPhone,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: Colors.white,
@@ -211,7 +228,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                                   size: 12, color: Colors.white),
                               const SizedBox(width: 6),
                               Text(
-                                'Foreman · ${WorkforceService.orgName}',
+                                '${user?.position ?? 'Foreman'} · ${user?.orgName ?? WorkforceService.orgName}',
                                 style: GoogleFonts.inter(
                                   color: Colors.white,
                                   fontSize: 11,
@@ -233,7 +250,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
                 children: [
                   _item(Icons.dashboard_rounded, 'Dashboard', 0),
                   _item(Icons.receipt_long_rounded, 'Collections', 1),
-                  _item(Icons.people_rounded, 'Workers', 2),
+                  _item(Icons.people_rounded, 'Members', 2),
                   _item(Icons.settings_rounded, 'More / Settings', 3),
                 ],
               ),

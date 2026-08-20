@@ -99,9 +99,17 @@ RECEIPT_BASE_URL = config('RECEIPT_BASE_URL', default='https://tverify.co.ke')
 AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='')
 AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='')
 AFRICASTALKING_SENDER_ID = config('AFRICASTALKING_SENDER_ID', default='TAPVERIFY')
+AFRICASTALKING_AIRTIME_PRODUCT_CODE = config('AFRICASTALKING_AIRTIME_PRODUCT_CODE', default='TAPVERIFY')
+AFRICASTALKING_USSD_SERVICE_CODE = config('AFRICASTALKING_USSD_SERVICE_CODE', default='*384*123#')
 
-# Active payment rail: 'loop' or 'payhero'
-ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='loop')
+# Avalanche Fuji attestations
+AVALANCHE_RPC = config('AVALANCHE_RPC', default='https://api.avax-test.network/ext/bc/C/rpc')
+AVALANCHE_CHAIN_ID = config('AVALANCHE_CHAIN_ID', default=43113, cast=int)
+AVALANCHE_ATTESTATION_ADDRESS = config('AVALANCHE_ATTESTATION_ADDRESS', default='')
+AVALANCHE_PRIVATE_KEY = config('AVALANCHE_PRIVATE_KEY', default='')
+
+# Active payment rail: 'sasapay', 'loop', 'payhero' or 'mpesa'
+ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='sasapay')
 
 # Loop API (primary rail) — LOOP Matrix gateway sandbox
 LOOP_BASE_URL = config('LOOP_BASE_URL', default='https://sandbox.loop.co.ke')

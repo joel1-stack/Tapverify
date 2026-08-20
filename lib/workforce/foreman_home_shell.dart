@@ -67,7 +67,7 @@ class _ForemanHomeShellState extends State<ForemanHomeShell> {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Proof console lives in More',
+                  content: Text('Attestation & proof live in More',
                       style: GoogleFonts.inter()),
                   backgroundColor: AppColors.accent,
                   behavior: SnackBarBehavior.floating,

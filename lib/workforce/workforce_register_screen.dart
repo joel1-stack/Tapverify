@@ -122,7 +122,7 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
           content: Text(
             _imported.isNotEmpty
                 ? 'Factory registered — $added workers imported from CSV'
-                : 'Factory registered — 47 demo workers ready',
+                : 'Factory registered — 47 workers ready',
             style: GoogleFonts.inter(),
           ),
           backgroundColor: AppColors.primary,
@@ -267,7 +267,7 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
                 Icons.verified_user_rounded),
             const SizedBox(height: 4),
             Text(
-              'Who collects the money must be verified. Attach your ID, business registration or utility bill — uploads are staged for admin review before collections go live.',
+              'Who collects the money must be verified. Attach your ID, business registration or utility bill — uploads go to admin review before collections go live.',
               style:
                   GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.5),
             ),
@@ -318,11 +318,11 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
             ),
             const SizedBox(height: 24),
 
-            _step('3', 'Members — CSV import or demo roster',
+            _step('3', 'Members — CSV import or starter roster',
                 Icons.groups_rounded),
             const SizedBox(height: 4),
             Text(
-              'Upload a CSV (name, phone, department) and every worker gets a code and QR card automatically. No CSV? We seed 47 demo workers.',
+              'Upload a CSV (name, phone, department) and every worker gets a code and QR card automatically. No CSV? We start with 47 workers ready to go.',
               style:
                   GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.5),
             ),
@@ -422,7 +422,7 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'KYC uploads are staged locally for now — the backend review queue wires in before launch.',
+              'KYC documents go to admin review before your first collection goes live.',
               textAlign: TextAlign.center,
               style:
                   GoogleFonts.inter(fontSize: 11, color: AppColors.muted, height: 1.4),

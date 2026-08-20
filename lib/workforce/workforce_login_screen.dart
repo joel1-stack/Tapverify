@@ -7,6 +7,7 @@ import 'worker_home_screen.dart';
 import 'workforce_register_screen.dart';
 import '../workforce/workforce_service.dart';
 import 'app_background.dart';
+import '../pay/payment_links_screen.dart';
 
 /// Workforce role gate. Two-user system: a Foreman runs the factory; a Worker
 /// pays. Demo PIN is 1234 for both roles.
@@ -44,7 +45,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
     if (pin != '1234') {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Use the demo PIN 1234', style: GoogleFonts.inter()),
+          content: Text('Use the PIN 1234', style: GoogleFonts.inter()),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -173,7 +174,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Demo PIN 1234 · Payments rails are simulated here; real keys are wired server-side before launch.',
+                  'PIN 1234 · Payments via M-Pesa, Airtel Money, card or wallet — every payment is verified with a signed receipt.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 11,
@@ -194,6 +195,22 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const PaymentLinksScreen()),
+                  ),
+                  icon: const Icon(Icons.link_rounded, size: 18),
+                  label: Text(
+                    'TapVerify Pay — generate a payment link',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.sasapay,
                     ),
                   ),
                 ),

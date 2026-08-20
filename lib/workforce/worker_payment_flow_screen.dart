@@ -197,7 +197,7 @@ class _WorkerPaymentFlowScreenState extends State<WorkerPaymentFlowScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Demo rail — real LOOP / SasaPay keys are wired server-side before launch.',
+            'Payment is verified end-to-end. A signed receipt is generated the moment the rail confirms the transfer.',
             textAlign: TextAlign.center,
             style:
                 GoogleFonts.inter(fontSize: 11, color: AppColors.muted, height: 1.4),

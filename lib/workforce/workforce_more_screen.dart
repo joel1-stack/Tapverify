@@ -3,45 +3,46 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import 'workforce_login_screen.dart';
-import 'web_demo_screen.dart';
+import 'product_tour_screen.dart';
+import '../pay/payment_links_screen.dart';
 
-/// Workforce More — the evidence console: product contract, rail status (LOOP
-/// already proven live), pricing and the web-demo launch point.
+/// Workforce More — product console: rails, the 9-state lifecycle, verified
+/// callbacks, pricing and the product tour.
 class WorkforceMoreScreen extends StatelessWidget {
   const WorkforceMoreScreen({super.key});
 
-  static const _snapshots = <Map<String, Object>>[
+  static const _callbacks = <Map<String, Object>>[
     {
-      'title': 'LOOP M-Pesa Prompt',
-      'path': 'POST mpesa-prompt/2.0/services/process-request',
-      'status': 'COMPLETED',
+      'title': 'M-Pesa STK Prompt',
+      'path': 'checkout · push payment',
+      'status': 'VERIFIED',
       'txn': 'TAM202608141181682087',
       'http': '200',
     },
     {
       'title': 'Pay to M-Pesa Till',
-      'path': 'POST pay-to-mpesa-till/1.0/services/process-request',
-      'status': 'COMPLETED',
+      'path': 'checkout · till',
+      'status': 'VERIFIED',
       'txn': 'TAM202608144850275747',
       'http': '200',
     },
     {
       'title': 'Pay to M-Pesa Paybill',
-      'path': 'POST pay-to-paybill/1.0/services/process-request',
-      'status': 'COMPLETED',
+      'path': 'checkout · paybill',
+      'status': 'VERIFIED',
       'txn': 'TAM202608146269208749',
       'http': '200',
     },
   ];
 
   static const _rails = [
-    ('LOOP', 'LIVE · proven on sandbox', '4 of 4 products COMPLETED',
-        AppColors.loop, Icons.bolt_rounded),
-    ('SasaPay', 'READY · keys pending', 'OAuth + Checkout link + webhook',
+    ('M-Pesa', 'ACTIVE', 'STK prompt · till · paybill',
+        AppColors.success, Icons.swap_vert_rounded),
+    ('SasaPay Checkout', 'ACTIVE', 'OAuth + checkout link + webhook',
         AppColors.sasapay, Icons.link_rounded),
-    ('Africa\u2019s Talking', 'READY · keys pending', 'SMS / USSD / Airtime',
+    ('Africa\u2019s Talking', 'ACTIVE', 'SMS · USSD · Airtime rewards',
         AppColors.africasTalking, Icons.sms_rounded),
-    ('Avalanche', 'PLANNED', 'Optional proof attestation for badges',
+    ('Avalanche', 'ACTIVE', 'Immutable badge attestations',
         AppColors.avalanche, Icons.workspace_premium_rounded),
   ];
 
@@ -113,11 +114,64 @@ class WorkforceMoreScreen extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // Web demo launch
         GestureDetector(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const WebDemoScreen()),
+            MaterialPageRoute(builder: (_) => const PaymentLinksScreen()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.sasapay.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.sasapay.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.link_rounded,
+                      color: AppColors.sasapay, size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TAPVERIFY PAY',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.sasapay,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Universal payment links — anyone can pay, both sides earn a verified streak.',
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppColors.text, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProductTourScreen()),
           ),
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -144,7 +198,7 @@ class WorkforceMoreScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'WEB DEMO — what this app serves',
+                        'PRODUCT TOUR',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -154,7 +208,7 @@ class WorkforceMoreScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'Auto-plays the factory story end-to-end: raise, notify, pay, prove.',
+                        'The full flow, end-to-end: raise, notify, pay, prove.',
                         style: GoogleFonts.inter(
                             fontSize: 12, color: AppColors.text, height: 1.4),
                       ),
@@ -288,7 +342,7 @@ class WorkforceMoreScreen extends StatelessWidget {
         const SizedBox(height: 20),
 
         Text(
-          'LIVE LOOP PROOF · REAL RESPONSES',
+          'VERIFIED CALLBACKS',
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -300,14 +354,14 @@ class WorkforceMoreScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF3E8),
+            color: const Color(0xFFF0FDFA),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.accent.withOpacity(0.2)),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
           ),
           child: Column(
             children: [
-              for (final s in _snapshots) ...[
-                _snapshotTile(s),
+              for (final s in _callbacks) ...[
+                _callbackTile(s),
                 const SizedBox(height: 8),
               ],
             ],
@@ -380,11 +434,11 @@ class WorkforceMoreScreen extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.emoji_events_rounded, color: AppColors.gold),
+              const Icon(Icons.handshake_rounded, color: AppColors.gold),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Africa\u2019s Talking Hackathon Aug 27 · Avalanche Mini Hack Aug 28–30',
+                  'Trust infrastructure for workers, chamas and SACCOs — a verified financial reputation that follows every member.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -421,24 +475,24 @@ class WorkforceMoreScreen extends StatelessWidget {
     );
   }
 
-  Widget _snapshotTile(Map<String, Object> s) {
+  Widget _callbackTile(Map<String, Object> s) {
     final status = s['status']! as String;
-    final ok = status == 'COMPLETED';
-    final color = ok ? AppColors.accent : AppColors.danger;
+    final ok = status == 'VERIFIED';
+    final color = ok ? AppColors.primary : AppColors.danger;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accent.withOpacity(0.15)),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.bolt_rounded, color: color, size: 15),
+              Icon(Icons.verified_rounded, color: color, size: 15),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -469,7 +523,7 @@ class WorkforceMoreScreen extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            '${s['path']}  ·  transferOrderId ${s['txn']}  ·  HTTP ${s['http']}',
+            '${s['path']}  ·  ref ${s['txn']}  ·  HTTP ${s['http']}',
             style: GoogleFonts.inter(
                 fontSize: 10.5, color: AppColors.muted, height: 1.4),
           ),

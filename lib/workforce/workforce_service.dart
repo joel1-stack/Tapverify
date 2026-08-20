@@ -107,7 +107,7 @@ class WorkforceService {
     //    "who paid" grid and the 9-state stepper look alive.
     {
       final ids = all.map((w) => w.id).toList();
-      final rail = 'LOOP M-Pesa Prompt';
+      final rail = 'M-Pesa STK Prompt';
       final tasks = <String, WfPaymentTask>{};
       for (int i = 0; i < ids.length; i++) {
         final id = ids[i];
@@ -131,10 +131,10 @@ class WorkforceService {
         type: 'Welfare',
         amount: 200,
         due: now.add(const Duration(days: 5)),
-        railId: 'loop-prompt',
+        railId: 'mpesa-prompt',
         railName: rail,
         message:
-            'KM welfare for August — Ksh 200. Pay via the LOOP prompt you received or the link in your SMS.',
+            'KM welfare for August — Ksh 200. Pay via your checkout link.',
         createdAt: now.subtract(const Duration(days: 2)),
         tasks: tasks,
       ));
@@ -177,7 +177,7 @@ class WorkforceService {
     //    streaks so the badge section has earned badges.
     {
       final ids = all.map((w) => w.id).toList();
-      final rail = 'LOOP M-Pesa Prompt';
+      final rail = 'M-Pesa STK Prompt';
       final tasks = <String, WfPaymentTask>{};
       for (int i = 0; i < ids.length; i++) {
         final id = ids[i];
@@ -197,7 +197,7 @@ class WorkforceService {
         type: 'Emergency',
         amount: 1000,
         due: now.subtract(const Duration(days: 3)),
-        railId: 'loop-prompt',
+        railId: 'sasapay',
         railName: rail,
         message:
             'EMERGENCY — support for the Mwangi family. Contribute Ksh 1,000 before the deadline.',

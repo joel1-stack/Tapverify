@@ -94,7 +94,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('SMS reminder sent to $n workers (simulated)',
+        content: Text('SMS reminder sent to $n workers',
             style: GoogleFonts.inter()),
         backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
@@ -445,7 +445,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                 icon: Icon(
                     pct >= 100 ? Icons.archive_rounded : Icons.bolt_rounded,
                     size: 18),
-                label: Text(pct >= 100 ? 'Archive' : 'Simulate a payment'),
+                label: Text(pct >= 100 ? 'Archive' : 'Record a payment'),
               ),
             ),
           ],

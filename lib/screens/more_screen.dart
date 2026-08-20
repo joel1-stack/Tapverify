@@ -10,7 +10,7 @@ import 'loan_eligibility_screen.dart';
 import 'member_home_screen.dart';
 import '../services/demo_service.dart';
 import '../workforce/workforce_login_screen.dart';
-import '../workforce/web_demo_screen.dart' show WebDemoScreen;
+import '../workforce/product_tour_screen.dart' show ProductTourScreen;
 
 /// More tab — account + tools.
 ///
@@ -857,7 +857,7 @@ child: _moreTile(
                     'Auto-plays the factory story: raise, notify, pay, prove, reward.',
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const WebDemoScreen()),
+                  MaterialPageRoute(builder: (_) => const ProductTourScreen()),
                 ),
               ),
             ],

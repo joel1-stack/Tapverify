@@ -4,17 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../workforce/workforce_models.dart';
 
-/// Web demo — an auto-playing story of what the TapVerify mobile app serves.
-/// For the web build this is the marketing/demo surface; on the phone it runs
-/// from the More screen so the team can present it anywhere.
-class WebDemoScreen extends StatefulWidget {
-  const WebDemoScreen({super.key});
+/// Product tour — an auto-playing walkthrough of what the TapVerify mobile app
+/// serves. Runs from the More screen so it can be presented anywhere.
+class ProductTourScreen extends StatefulWidget {
+  const ProductTourScreen({super.key});
 
   @override
-  State<WebDemoScreen> createState() => _WebDemoScreenState();
+  State<ProductTourScreen> createState() => _ProductTourScreenState();
 }
 
-class _WebDemoScreenState extends State<WebDemoScreen> {
+class _ProductTourScreenState extends State<ProductTourScreen> {
   int _step = 0;
   bool _playing = true;
   Timer? _timer;
@@ -64,7 +63,7 @@ class _WebDemoScreenState extends State<WebDemoScreen> {
                     const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'TapVerify Workforce — demo',
+                      'TapVerify Workforce',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -303,7 +302,7 @@ final _steps = [
     phase: '2 · NOTIFY',
     title: 'Every worker gets the prompt',
     body:
-        'Each phone receives the obligation: a LOOP M-Pesa prompt or a SasaPay checkout link, delivered over Africa\u2019s Talking SMS. No one can say "I didn\u2019t know".',
+        'Each phone receives the obligation: a SasaPay checkout link delivered over Africa\u2019s Talking SMS. No one can say "I didn\u2019t know".',
     tags: ['SMS', 'STK prompt', 'Checkout link'],
     color: AppColors.secondary,
     mock: _notifyMock(),
@@ -366,7 +365,7 @@ Widget _obligationMock() {
           children: [
             const Icon(Icons.bolt_rounded, size: 14, color: AppColors.accent),
             const SizedBox(width: 6),
-            Text('LOOP M-Pesa Prompt',
+            Text('M-Pesa STK Prompt',
                 style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -399,7 +398,7 @@ Widget _notifyMock() {
     children: [
       const Icon(Icons.sms_rounded, color: AppColors.secondary, size: 18),
       const SizedBox(height: 8),
-      _smsBubble('August welfare levy — Ksh 200 due. Pay via your LOOP prompt or the checkout link. — Kamau Metalworks'),
+      _smsBubble('August welfare levy — Ksh 200 due. Pay via your checkout link. — Kamau Metalworks'),
       const SizedBox(height: 8),
       _smsBubble('Pay now: km.co.ke/pay/ae71', bold: true),
       const SizedBox(height: 8),

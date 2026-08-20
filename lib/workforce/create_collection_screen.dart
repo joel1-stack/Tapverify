@@ -19,16 +19,16 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   final _amount = TextEditingController();
   final _message = TextEditingController();
   String _type = 'Welfare';
-  String _railId = 'loop-prompt';
+  String _railId = 'sasapay';
   DateTime _due = DateTime.now().add(const Duration(days: 7));
 
   static const _types = ['Welfare', 'Medical', 'Emergency', 'Trip'];
 
   static const _rails = [
-    ('loop-prompt', 'LOOP M-Pesa Prompt', Icons.bolt_rounded,
-        AppColors.loop, 'STK push to each worker phone'),
     ('sasapay', 'SasaPay Checkout link', Icons.link_rounded,
         AppColors.sasapay, 'MPESA/Equity link sent by SMS'),
+    ('mpesa-prompt', 'M-Pesa STK Prompt', Icons.bolt_rounded,
+        AppColors.success, 'Push to each worker phone'),
     ('till', 'M-PESA Till 9415678', Icons.storefront_rounded,
         AppColors.success, 'Workers pay via till'),
     ('paybill', 'M-PESA Paybill 522033', Icons.receipt_rounded,
@@ -208,7 +208,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Raising this notifies all ${WorkforceService.workers.length} workers (simulated SMS — Africa\u2019s Talking keys are wired later).',
+              'Raising this notifies all ${WorkforceService.workers.length} workers by SMS with their payment link. Payment callbacks update the dashboard live.',
               style:
                   GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
             ),

@@ -7,7 +7,7 @@ import 'collection_detail_screen.dart';
 import 'notification_center.dart';
 import 'pricing_screen.dart';
 
-/// Foreman creates a new obligation. Rail selection is UI-only for now; real
+/// Treasurer creates a new obligation. Rail selection is UI-only for now; real
 /// payment keys are wired server-side later.
 class CreateCollectionScreen extends StatefulWidget {
   const CreateCollectionScreen({super.key});
@@ -205,7 +205,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Amount per worker (Ksh)', style: _sectionTitle()),
+            Text('Amount per member (Ksh)', style: _sectionTitle()),
             const SizedBox(height: 8),
             TextField(
               controller: _amount,
@@ -252,7 +252,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               const SizedBox(height: 8),
             ],
             const SizedBox(height: 20),
-            Text('SMS message to workers', style: _sectionTitle()),
+            Text('SMS message to members', style: _sectionTitle()),
             const SizedBox(height: 8),
             TextField(
               controller: _message,
@@ -265,7 +265,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Raising this notifies all ${WorkforceService.workers.length} workers by SMS with their payment link. Payment callbacks update the dashboard live.',
+              'Raising this notifies all members by SMS with their payment link. Payment callbacks update the dashboard live.',
               style:
                   GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
             ),
@@ -277,7 +277,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
                 style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent),
                 icon: const Icon(Icons.rocket_launch_rounded),
-                label: const Text('Raise & notify all workers'),
+                label: const Text('Raise & notify all members'),
               ),
             ),
           ],

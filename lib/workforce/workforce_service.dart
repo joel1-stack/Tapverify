@@ -2,60 +2,23 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'workforce_models.dart';
 
-/// TapVerify Workforce — in-memory demo source of truth.
+/// TapVerify — core service layer.
 ///
-/// Seeds the Kamau Metalworks demo: 47 workers across five departments, four
-/// collections (welfare / medical / emergency / trip), and every payment task
-/// positioned somewhere in the 9-state lifecycle so the foreman dashboard and
-/// the web demo can render realistic proof. No network calls — payment rails
-/// are wired later with real keys; here they are simulated labels + TAM-style
-/// reference numbers.
+/// This is the single source of truth for the collector app. It manages:
+/// - Universal identity (collectors: SACCO treasurer, church, school, individual)
+/// - Collection lifecycle (create, notify, pay, verify, streak, badge)
+/// - Rails configuration (Till, Paybill, Bank, SasaPay)
+/// - Subscription plans (Pay & go)
+/// - In-memory state for the demo; in production this talks to the Django API.
 class WorkforceService {
   WorkforceService._();
 
-  static final _rng = Random(7);
-
-  static const String demoForemanName = 'Juma Kamau';
-  static const String demoForemanPhone = '254712345678';
-  static const String demoWorkerName = 'Ochieng Odhiambo';
-  static const String demoWorkerPhone = '254715641339';
-  static const String orgName = 'Kamau Metalworks';
-  static const String orgCode = 'KM';
-
-  /// ── universal identity ─────────────────────────────────────────────────
-  /// Every collector logs in with the same form. The app reads the
-  /// credentials and greets the person by name and position — foreman,
-  /// SACCO treasurer, church secretary, school bursar or individual.
+  // ── Identity ─────────────────────────────────────────────────────────────
   static final List<TapVerifyUser> users = _buildUsers();
-
   static TapVerifyUser? currentUser;
-
-  static RailsConfig railsConfig = RailsConfig();
-  static ActivePlan? activePlan;
 
   static List<TapVerifyUser> _buildUsers() {
     return [
-      TapVerifyUser(
-        id: 'u-foreman',
-        name: demoForemanName,
-        phone: demoForemanPhone,
-        pin: '1234',
-        position: 'Factory Foreman',
-        kind: UserKind.organization,
-        orgName: orgName,
-        kycApproved: true,
-        termsAccepted: true,
-      ),
-      TapVerifyUser(
-        id: 'u-worker',
-        name: demoWorkerName,
-        phone: demoWorkerPhone,
-        pin: '1234',
-        position: 'Worker · Foundry',
-        kind: UserKind.organization,
-        orgName: orgName,
-        termsAccepted: true,
-      ),
       TapVerifyUser(
         id: 'u-treasurer',
         name: 'Wanjiru Wambui',
@@ -102,7 +65,6 @@ class WorkforceService {
     ];
   }
 
-  /// Universal login: any phone + PIN 1234. Returns the matching identity.
   static TapVerifyUser? login(String phone, String pin) {
     final p = phone.trim();
     for (final u in users) {
@@ -114,9 +76,6 @@ class WorkforceService {
     return null;
   }
 
-  /// Registers a new collector (organization or individual). Individuals do
-  /// NOT need heavy KYC — accepting the terms is enough for a personal or
-  /// family collection. Organizations are shown as KYC-approved.
   static TapVerifyUser registerUser({
     required String name,
     required String phone,
@@ -139,8 +98,8 @@ class WorkforceService {
     users.add(u);
     currentUser = u;
     if (kind == UserKind.organization) {
-      registeredOrg = orgName;
-      registeredPhone = phone.trim();
+      _registeredOrg = orgName;
+      _registeredPhone = phone.trim();
     }
     return u;
   }
@@ -151,11 +110,41 @@ class WorkforceService {
     return '${u.name} · ${u.position}';
   }
 
-  static String collectorOrg() =>
-      currentUser?.orgName ?? orgName;
+  static String get orgName => _registeredOrg.isNotEmpty
+      ? _registeredOrg
+      : currentUser?.orgName ?? 'TapVerify';
 
   static bool get isIndividualCollector =>
       currentUser?.kind == UserKind.individual;
+
+  // ── Registration state ─────────────────────────────────────────────────
+  static String _registeredOrg = '';
+  static String _registeredPhone = '';
+
+  static String get registeredOrg => _registeredOrg;
+  static String get registeredPhone => _registeredPhone;
+
+  static void registerOrg({
+    required String name,
+    required String phone,
+    required String type,
+    required double monthlyContribution,
+  }) {
+    _registeredOrg = name;
+    _registeredPhone = phone;
+    _registeredType = type;
+    _monthlyContribution = monthlyContribution;
+  }
+
+  static String _registeredType = '';
+  static double _monthlyContribution = 0;
+
+  static String get registeredType => _registeredType;
+  static double get monthlyContribution => _monthlyContribution;
+
+  // ── Rails & Plan ─────────────────────────────────────────────────────────
+  static RailsConfig railsConfig = RailsConfig();
+  static ActivePlan? activePlan;
 
   static void saveRailsConfig(RailsConfig cfg) => railsConfig = cfg;
 
@@ -163,228 +152,13 @@ class WorkforceService {
     activePlan = ActivePlan(name: name, price: price, activatedAt: DateTime.now());
   }
 
-  /// Mutable registration state — set by the WorkforceRegistrationScreen.
-  static String registeredOrg = orgName;
-  static String registeredPhone = demoForemanPhone;
+  static String get collectorQrPayload =>
+      'TAPVERIFY|$_registeredOrg|$_registeredType|$_registeredPhone';
 
-  static final List<WfWorker> workers = _buildWorkers();
-  static final List<WfCollection> collections = _buildCollections(workers);
+  // ── Collections & Tasks ────────────────────────────────────────────────
+  static final List<WfCollection> collections = [];
   static final List<WfBadge> badges = _buildBadges();
   static int _seq = 100;
-
-  static final List<String> _firstNames = [
-    'Ochieng', 'Wanjiru', 'Kipchoge', 'Achieng', 'Mwangi', 'Chebet', 'Otieno',
-    'Njeri', 'Kiprop', 'Muthoni', 'Omondi', 'Wambui', 'Koech', 'Akinyi',
-    'Njoroge', 'Jebet', 'Oduya', 'Nyambura', 'Kiptoo', 'Adhiambo', 'Kimani',
-    'Chepkoech', 'Onyango', 'Wairimu', 'Rono', 'Anyango', 'Mutua', 'Kosgei',
-    'Auma', 'Ndungu', 'Chelangat', 'Odhiambo', 'Waithera', 'Kipyego',
-    'Ogalo', 'Njoki', 'Langat', 'Apiyo', 'Karanja', 'Cherono', 'Odongo',
-    'Nekesa', 'Maina', 'Rotich', 'Adoyo', 'Mburu', 'Kendi',
-  ];
-
-  static final List<String> _lastNames = [
-    'Odhiambo', 'Wanjiku', 'Kiprop', 'Okoth', 'Mwangi', 'Kiplagat', 'Onyango',
-    'Njoroge', 'Rono', 'Chepkemoi', 'Otieno', 'Kimani', 'Kosgei', 'Omondi',
-    'Mutua', 'Jepkorir', 'Ochieng', 'Wambugu', 'Langat', 'Ouko', 'Ndegwa',
-    'Cheruiyot', 'Awuor', 'Maina', 'Kemei', 'Achieng', 'Gitau', 'Kibet',
-  ];
-
-  static final List<String> _departments = [
-    'Foundry', 'Machining', 'Assembly', 'Fabrication', 'Admin',
-  ];
-
-  static List<WfWorker> _buildWorkers() {
-    final list = <WfWorker>[];
-    for (int i = 0; i < 47; i++) {
-      final first = _firstNames[i];
-      final last = _lastNames[_rng.nextInt(_lastNames.length)];
-      list.add(WfWorker(
-        id: 'w-${i + 1}',
-        code: '$orgCode${(i + 1).toString().padLeft(2, '0')}',
-        name: '$first $last',
-        phone: '2547${(10000000 + _rng.nextInt(89999999)).toString()}',
-        department: _departments[i % _departments.length],
-        avatarHue: (i * 31) % 360,
-        memberSince: '${2020 + (i % 5)}-${(i % 12) + 1}',
-        currentStreak: i % 13, // 0..12
-        bestStreak: 3 + (i % 10),
-        onTimePct: 60 + (i % 40),
-      ));
-    }
-    return list;
-  }
-
-  static String _ref() => 'TAM20260814${(_seq++).toString()}';
-
-  static List<WfCollection> _buildCollections(List<WfWorker> all) {
-    final now = DateTime.now();
-    final startIdx = {
-      'foundry': 0,
-      'machining': 9,
-      'assembly': 18,
-      'fabrication': 27,
-      'admin': 36,
-    };
-
-    WfPaymentTask task(String wId, String rail, WfPaymentState st,
-        {String ref = '', double amount = 0}) {
-      return WfPaymentTask(
-        workerId: wId,
-        state: st,
-        rail: rail,
-        txnRef: ref.isEmpty ? _ref() : ref,
-        amount: amount,
-        paidAt: st.index >= WfPaymentState.completed.index ? now : null,
-      );
-    }
-
-    /// Worker ids for a department slice of `size`.
-    List<String> slice(String dept, int size) =>
-        all.skip(startIdx[dept]!).take(size).map((w) => w.id).toList();
-
-    final collections = <WfCollection>[];
-
-    // 1. ACTIVE — August welfare levy (LOOP Prompt). Mix of states so the
-    //    "who paid" grid and the 9-state stepper look alive.
-    {
-      final ids = all.map((w) => w.id).toList();
-      final rail = 'M-Pesa STK Prompt';
-      final tasks = <String, WfPaymentTask>{};
-      for (int i = 0; i < ids.length; i++) {
-        final id = ids[i];
-        WfPaymentState st;
-        if (i < 24) {
-          st = WfPaymentState.completed;
-        } else if (i < 30) {
-          st = WfPaymentState.pending;
-        } else if (i < 36) {
-          st = WfPaymentState.notified;
-        } else if (i < 42) {
-          st = WfPaymentState.created;
-        } else {
-          st = WfPaymentState.pending;
-        }
-        tasks[id] = task(id, rail, st, amount: 200);
-      }
-      collections.add(WfCollection(
-        id: 'c-aug-welfare',
-        title: 'August welfare levy',
-        type: 'Welfare',
-        amount: 200,
-        due: now.add(const Duration(days: 5)),
-        railId: 'mpesa-prompt',
-        railName: rail,
-        message:
-            'KM welfare for August — Ksh 200. Pay via your checkout link.',
-        createdAt: now.subtract(const Duration(days: 2)),
-        tasks: tasks,
-      ));
-    }
-
-    // 2. ACTIVE — Medical fund top-up (SasaPay Checkout links). Mostly
-    //    pending/notified so the foreman can send reminders.
-    {
-      final ids = slice('machining', 20);
-      final rail = 'SasaPay Checkout link';
-      final tasks = <String, WfPaymentTask>{};
-      for (int i = 0; i < ids.length; i++) {
-        final id = ids[i];
-        WfPaymentState st;
-        if (i < 6) {
-          st = WfPaymentState.completed;
-        } else if (i < 11) {
-          st = WfPaymentState.pending;
-        } else {
-          st = WfPaymentState.notified;
-        }
-        tasks[id] = task(id, rail, st, amount: 500);
-      }
-      collections.add(WfCollection(
-        id: 'c-medical',
-        title: 'Medical fund top-up',
-        type: 'Medical',
-        amount: 500,
-        due: now.add(const Duration(days: 3)),
-        railId: 'sasapay',
-        railName: rail,
-        message:
-            'Medical fund top-up — Ksh 500. Checkout link sent by SMS; MPESA/Equity accepted.',
-        createdAt: now.subtract(const Duration(days: 1)),
-        tasks: tasks,
-      ));
-    }
-
-    // 3. CLOSED — Emergency (Mwangi family). All paid + verified, some with
-    //    streaks so the badge section has earned badges.
-    {
-      final ids = all.map((w) => w.id).toList();
-      final rail = 'M-Pesa STK Prompt';
-      final tasks = <String, WfPaymentTask>{};
-      for (int i = 0; i < ids.length; i++) {
-        final id = ids[i];
-        WfPaymentState st;
-        if (i % 7 == 0) {
-          st = WfPaymentState.streak;
-        } else if (i % 13 == 0) {
-          st = WfPaymentState.badge;
-        } else {
-          st = WfPaymentState.completed;
-        }
-        tasks[id] = task(id, rail, st, amount: 1000);
-      }
-      final c = WfCollection(
-        id: 'c-emergency',
-        title: 'Emergency — Mwangi family',
-        type: 'Emergency',
-        amount: 1000,
-        due: now.subtract(const Duration(days: 3)),
-        railId: 'sasapay',
-        railName: rail,
-        message:
-            'EMERGENCY — support for the Mwangi family. Contribute Ksh 1,000 before the deadline.',
-        createdAt: now.subtract(const Duration(days: 7)),
-        tasks: tasks,
-      )
-        ..closed = true;
-      collections.add(c);
-    }
-
-    // 4. ACTIVE — End-year trip deposit (Paybill). Mixed partial progress.
-    {
-      final ids = slice('fabrication', 25);
-      final rail = 'M-PESA Paybill 522033';
-      final tasks = <String, WfPaymentTask>{};
-      for (int i = 0; i < ids.length; i++) {
-        final id = ids[i];
-        WfPaymentState st;
-        if (i < 9) {
-          st = WfPaymentState.completed;
-        } else if (i < 15) {
-          st = WfPaymentState.verified;
-        } else if (i < 20) {
-          st = WfPaymentState.pending;
-        } else {
-          st = WfPaymentState.created;
-        }
-        tasks[id] = task(id, rail, st, amount: 2500);
-      }
-      collections.add(WfCollection(
-        id: 'c-trip',
-        title: 'End-year trip deposit',
-        type: 'Trip',
-        amount: 2500,
-        due: now.add(const Duration(days: 12)),
-        railId: 'paybill',
-        railName: rail,
-        message:
-            'End-year staff trip — deposit Ksh 2,500. Paybill 522033, account KM01.',
-        createdAt: now.subtract(const Duration(days: 4)),
-        tasks: tasks,
-      ));
-    }
-
-    return collections;
-  }
 
   static List<WfBadge> _buildBadges() {
     return const [
@@ -445,54 +219,7 @@ class WorkforceService {
     ];
   }
 
-  // ── queries ───────────────────────────────────────────────────────────────
-
-  /// Registers a new factory and updates the demo foreman identity.
-  static void registerOrg({
-    required String name,
-    required String phone,
-    required String type,
-    required double monthlyContribution,
-  }) {
-    registeredOrg = name;
-    registeredPhone = phone;
-    _registeredType = type;
-    _monthlyContribution = monthlyContribution;
-  }
-
-  static String _registeredType = 'Metalworks';
-  static double _monthlyContribution = 200;
-
-  static String get registeredType => _registeredType;
-  static double get monthlyContribution => _monthlyContribution;
-
-  /// Bulk-adds workers from a CSV import (name, phone, department).
-  static int importWorkers(
-      List<({String name, String phone, String department})> rows) {
-    var added = 0;
-    for (final row in rows) {
-      if (row.name.trim().isEmpty) continue;
-      final n = workers.length + 1;
-      workers.add(WfWorker(
-        id: 'w-$n',
-        code: '${orgCode}${n.toString().padLeft(2, '0')}',
-        name: row.name.trim(),
-        phone: row.phone.trim().replaceAll(RegExp(r'\s+'), ''),
-        department: row.department.trim().isEmpty ? 'General' : row.department.trim(),
-        avatarHue: (n * 31) % 360,
-        memberSince: DateTime.now().year.toString(),
-        currentStreak: 0,
-        bestStreak: 0,
-        onTimePct: 100,
-      ));
-      added++;
-    }
-    return added;
-  }
-
-  /// Payload encoded in the factory's payment QR card.
-  static String get foremanQrPayload =>
-      'TAPVERIFY|$registeredOrg|${_registeredType}|$registeredPhone';
+  static String _ref() => 'TAM20260814${(_seq++).toString()}';
 
   static List<WfCollection> get activeCollections =>
       collections.where((c) => !c.closed).toList()
@@ -501,60 +228,41 @@ class WorkforceService {
   static List<WfCollection> get closedCollections =>
       collections.where((c) => c.closed).toList();
 
-  static WfWorker? workerById(String id) {
-    for (final w in workers) {
-      if (w.id == id) return w;
-    }
-    return null;
-  }
-
-  /// Aggregate stats for the foreman dashboard.
   static Map<String, dynamic> stats() {
     final active = activeCollections;
-    final totalCollected = active.fold<double>(
-        0.0, (s, c) => s + c.collected);
+    final totalCollected = active.fold<double>(0.0, (s, c) => s + c.collected);
     final totalExpected =
         active.fold<double>(0.0, (s, c) => s + c.amount * c.tasks.length);
     final paidMembers = <String>{};
+    final allMemberIds = <String>{};
     for (final c in active) {
       c.tasks.forEach((wid, t) {
-        if (t.state.index >= WfPaymentState.completed.index) paidMembers.add(wid);
+        allMemberIds.add(wid);
+        if (t.state.index >= WfPaymentState.completed.index) {
+          paidMembers.add(wid);
+        }
       });
     }
     final rate = totalExpected == 0 ? 0.0 : (totalCollected / totalExpected) * 100;
     return {
-      'workers': workers.length,
-      'paidMembers': paidMembers.length,
+      'members': allMemberIds.length,
       'activeCollections': active.length,
       'collected': totalCollected,
       'expected': totalExpected,
       'rate': rate,
+      'paidMembers': paidMembers.length,
       'pendingReminders': active.fold<int>(
           0,
-          (s, c) =>
-              s +
+          (s, c) => s +
               c.tasks.values
                   .where((t) =>
                       t.state == WfPaymentState.pending ||
                       t.state == WfPaymentState.created)
                   .length),
-      'streakLeaders': workers.where((w) => w.currentStreak >= 6).length,
+      'streakLeaders': 0,
     };
   }
 
-  /// Payment tasks that belong to a worker across all active collections.
-  static List<({WfCollection collection, WfPaymentTask task})> tasksForWorker(
-      String workerId) {
-    final out = <({WfCollection collection, WfPaymentTask task})>[];
-    for (final c in activeCollections) {
-      final t = c.tasks[workerId];
-      if (t != null) out.add((collection: c, task: t));
-    }
-    return out;
-  }
-
-  /// Simulates a worker paying now: CREATED/NOTIFIED/PENDING → COMPLETED →
-  /// VERIFIED, bumps streak, possibly earns a badge. Returns the payment task.
   static WfPaymentTask payNow(WfCollection collection, String workerId) {
     final task = collection.tasks[workerId]!;
     task.state = WfPaymentState.completed;
@@ -564,8 +272,6 @@ class WorkforceService {
     return task;
   }
 
-  /// Simulates the proof layer: VERIFIED (in production, a signed webhook /
-  /// Avalanche attestation). Completes the journey to proof.
   static void verify(WfCollection collection, String workerId) {
     final task = collection.tasks[workerId]!;
     if (task.state == WfPaymentState.completed) {
@@ -573,7 +279,6 @@ class WorkforceService {
     }
   }
 
-  /// Creates a new obligation and notifies every worker (simulated SMS).
   static WfCollection createCollection({
     required String title,
     required String type,
@@ -582,12 +287,29 @@ class WorkforceService {
     required String railId,
     required String railName,
     required String message,
+    List<Map<String, String>> members = const [],
   }) {
     final tasks = <String, WfPaymentTask>{};
     final rail = railName;
-    for (final w in workers) {
-      tasks[w.id] = WfPaymentTask(
-        workerId: w.id,
+    for (int i = 0; i < members.length; i++) {
+      final m = members[i];
+      final name = m['name'] ?? 'Member ${i + 1}';
+      final phone = m['phone'] ?? '';
+      final memberId = 'w-${i + 1}';
+      final member = WfMember(
+        id: memberId,
+        code: (i + 1).toString().padLeft(2, '0'),
+        name: name,
+        phone: phone,
+        department: 'General',
+        avatarHue: (i * 31) % 360,
+        memberSince: DateTime.now().year.toString(),
+        currentStreak: 0,
+        bestStreak: 0,
+        onTimePct: 100,
+      );
+      tasks[member.id] = WfPaymentTask(
+        workerId: member.id,
         state: WfPaymentState.notified,
         rail: rail,
         txnRef: '',
@@ -609,4 +331,32 @@ class WorkforceService {
     collections.insert(0, c);
     return c;
   }
+
+  static WfMember? memberById(String id) {
+    // In production this queries the backend.
+    // Demo returns a placeholder.
+    return WfMember(
+      id: id,
+      code: id.replaceFirst('w-', '').padLeft(2, '0'),
+      name: 'Member ${id.replaceFirst("w-", "")}',
+      phone: '2547${id.replaceFirst("w-", "").padLeft(8, "0")}',
+      department: 'General',
+      avatarHue: (int.tryParse(id.replaceFirst('w-', '')) ?? 0) * 31 % 360,
+      memberSince: DateTime.now().year.toString(),
+      currentStreak: 0,
+      bestStreak: 0,
+      onTimePct: 100,
+    );
+  }
+
+  static List<({WfCollection collection, WfPaymentTask task})> tasksForMember(
+      String memberId) {
+    final out = <({WfCollection collection, WfPaymentTask task})>[];
+    for (final c in activeCollections) {
+      final t = c.tasks[memberId];
+      if (t != null) out.add((collection: c, task: t));
+    }
+    return out;
+  }
+
 }

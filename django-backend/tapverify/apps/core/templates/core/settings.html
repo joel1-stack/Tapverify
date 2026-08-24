@@ -1,0 +1,115 @@
+{% extends "core/base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px;">
+    <div class="mb-8">
+        <h1 style="font-size: 26px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px;">Settings</h1>
+        <p style="font-size: 15px; color: var(--slate-500); margin-top: 4px;">Manage your group configuration and preferences.</p>
+    </div>
+
+    <form method="POST" action="{% url 'web-settings' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_settings">
+
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2>Group Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Group Name</label>
+                    <input class="form-input" type="text" name="name" value="{{ workspace.name }}" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Group Type</label>
+                        <select class="form-select" name="type">
+                            <option value="chama" {% if workspace.type == 'chama' %}selected{% endif %}>Chama / Welfare Group</option>
+                            <option value="church" {% if workspace.type == 'church' %}selected{% endif %}>Church / Religious</option>
+                            <option value="event" {% if workspace.type == 'event' %}selected{% endif %}>Event / Conference</option>
+                            <option value="delivery" {% if workspace.type == 'delivery' %}selected{% endif %}>Delivery / Logistics</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Phone</label>
+                        <input class="form-input" type="tel" name="phone" value="{{ workspace.phone }}" inputmode="numeric">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2>Payment Rails</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-sm text-muted mb-4">Configure how members can pay. At least one payment method must be set up.</p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Till Number</label>
+                        <input class="form-input" type="text" name="till_number" value="{{ workspace.till_number|default:'' }}" placeholder="e.g. 123456">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Paybill Number</label>
+                        <input class="form-input" type="text" name="paybill_number" value="{{ workspace.paybill_number|default:'' }}" placeholder="e.g. 123456">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Number (for Paybill)</label>
+                    <input class="form-input" type="text" name="account_number" value="{{ workspace.account_number|default:'' }}" placeholder="e.g. Group001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Default Monthly Contribution (Ksh)</label>
+                    <input class="form-input" type="number" name="monthly_amount" value="{{ workspace.monthly_amount|floatformat:0 }}" min="1">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2>Subscription</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: var(--slate-50); border-radius: 10px; margin-bottom: 16px;">
+                    <div>
+                        <div style="font-weight: 700; color: var(--slate-900);">{{ workspace.get_plan_display }}</div>
+                        <div class="text-sm text-muted mt-2">{{ workspace.members.count }} of
+                            {% if workspace.plan == 'free' %}50{% elif workspace.plan == 'basic' %}200{% else %}Unlimited{% endif %} members used
+                        </div>
+                    </div>
+                    {% if workspace.plan == 'free' %}
+                    <button type="button" class="btn btn-primary btn-sm">Upgrade Plan</button>
+                    {% else %}
+                    <span class="badge badge-green">Active</span>
+                    {% endif %}
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                    <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: 10px; text-align: center; {% if workspace.plan == 'free' %}border-color: var(--teal-500); background: var(--teal-50);{% endif %}">
+                        <div style="font-weight: 700; font-size: 14px; color: var(--slate-900);">Free</div>
+                        <div class="text-sm text-muted">50 members</div>
+                        <div style="font-weight: 700; color: var(--teal-700); margin-top: 4px;">Ksh 0</div>
+                    </div>
+                    <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: 10px; text-align: center; {% if workspace.plan == 'basic' %}border-color: var(--teal-500); background: var(--teal-50);{% endif %}">
+                        <div style="font-weight: 700; font-size: 14px; color: var(--slate-900);">Basic</div>
+                        <div class="text-sm text-muted">200 members</div>
+                        <div style="font-weight: 700; color: var(--teal-700); margin-top: 4px;">Ksh 1,000/mo</div>
+                    </div>
+                    <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: 10px; text-align: center; {% if workspace.plan == 'pro' %}border-color: var(--teal-500); background: var(--teal-50);{% endif %}">
+                        <div style="font-weight: 700; font-size: 14px; color: var(--slate-900);">Pro</div>
+                        <div class="text-sm text-muted">Unlimited</div>
+                        <div style="font-weight: 700; color: var(--teal-700); margin-top: 4px;">Ksh 3,000/mo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <a href="{% url 'web-dashboard' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

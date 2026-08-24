@@ -172,37 +172,28 @@ class _PricingScreenState extends State<PricingScreen> {
                     children: [
                       Icon(t.$5, size: 20, color: t.$6),
                       const SizedBox(width: 10),
-                      Text(
-                        t.$1,
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: t.$2,
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: t.$6,
-                              ),
-                            ),
-                            TextSpan(
-                              text: t.$3,
-                              style: GoogleFonts.inter(
-                                  fontSize: 11, color: AppColors.muted),
-                            ),
-                          ],
+                      Expanded(
+                        child: Text(
+                          t.$1,
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.text,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${t.$2}${t.$3}',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: t.$6,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     t.$4,
                     style: GoogleFonts.inter(
@@ -211,24 +202,42 @@ class _PricingScreenState extends State<PricingScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 46,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: plan?.name == t.$1 || _paying
                           ? null
                           : () => _payAndGo(t.$1, t.$2, t.$3),
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: t.$6),
-                      icon: Icon(_paying
-                          ? Icons.hourglass_top_rounded
-                          : plan?.name == t.$1
-                              ? Icons.check_rounded
-                              : Icons.payments_rounded),
-                      label: Text(
-                        _paying
-                            ? 'Processing…'
-                            : plan?.name == t.$1
-                                ? 'Active'
-                                : 'Pay & go — ${t.$2}${t.$3}',
+                        backgroundColor: t.$6,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        textStyle: GoogleFonts.inter(
+                            fontSize: 13, fontWeight: FontWeight.w700),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _paying
+                                ? Icons.hourglass_top_rounded
+                                : plan?.name == t.$1
+                                    ? Icons.check_rounded
+                                    : Icons.payments_rounded,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              _paying
+                                  ? 'Processing…'
+                                  : plan?.name == t.$1
+                                      ? 'Active'
+                                      : 'Pay & go — ${t.$2}${t.$3}',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

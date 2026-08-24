@@ -19,11 +19,11 @@ class CreatePaymentLinkScreen extends StatefulWidget {
 }
 
 class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
-  final _seller = TextEditingController(text: 'Kamau Metalworks');
+  final _seller = TextEditingController(text: '');
   final _amount = TextEditingController();
   final _description = TextEditingController(text: 'September welfare');
   String _channel = 'till';
-  final _details = TextEditingController(text: '9415678');
+  final _details = TextEditingController(text: '');
   PaymentLink? _created;
 
   @override
@@ -39,10 +39,10 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
     setState(() {
       _channel = id;
       _details.text = switch (id) {
-        'till' => '9415678',
-        'paybill' => '522033',
-        'bank' => 'Kenya Commercial Bank · 118 555 6690',
-        _ => 'sasapay@kamau-metalworks',
+        'till' => '',
+        'paybill' => '',
+        'bank' => '',
+        _ => '',
       };
     });
   }

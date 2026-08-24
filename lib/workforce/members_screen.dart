@@ -4,25 +4,22 @@ import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 
-/// Workers tab — the 47-strong Kamau Metalworks roster grouped by department,
-/// with on-time records and streaks.
-class WorkersScreen extends StatefulWidget {
-  const WorkersScreen({super.key});
+/// Members — the collector's roster, with on-time records and streaks.
+class MembersScreen extends StatefulWidget {
+  const MembersScreen({super.key});
 
   @override
-  State<WorkersScreen> createState() => _WorkersScreenState();
+  State<MembersScreen> createState() => _MembersScreenState();
 }
 
-class _WorkersScreenState extends State<WorkersScreen> {
+class _MembersScreenState extends State<MembersScreen> {
   final _query = TextEditingController();
   String _dept = 'All';
 
   static const _departments = [
     'All',
-    'Foundry',
-    'Machining',
-    'Assembly',
-    'Fabrication',
+    'General',
+    'Finance',
     'Admin',
   ];
 
@@ -32,9 +29,13 @@ class _WorkersScreenState extends State<WorkersScreen> {
     super.dispose();
   }
 
-  List<WfWorker> _visible() {
+  List<WfMember> _visible() {
     final q = _query.text.trim().toLowerCase();
-    return WorkforceService.workers.where((w) {
+    return WorkforceService.activeCollections
+        .expand((c) => c.tasks.values)
+        .map((t) => WorkforceService.memberById(t.workerId))
+        .whereType<WfMember>()
+        .where((w) {
       if (_dept != 'All' && w.department != _dept) return false;
       if (q.isNotEmpty &&
           !w.name.toLowerCase().contains(q) &&
@@ -114,7 +115,7 @@ class _WorkersScreenState extends State<WorkersScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     itemCount: list.length,
-                    itemBuilder: (context, i) => _workerRow(list[i]),
+                    itemBuilder: (context, i) => _memberRow(list[i]),
                   ),
           ),
         ),
@@ -122,8 +123,8 @@ class _WorkersScreenState extends State<WorkersScreen> {
     );
   }
 
-  Widget _workerRow(WfWorker w) {
-    final activeDue = WorkforceService.tasksForWorker(w.id)
+  Widget _memberRow(WfMember w) {
+    final activeDue = WorkforceService.tasksForMember(w.id)
         .where((e) => e.task.state.index < WfPaymentState.completed.index)
         .length;
     return Container(

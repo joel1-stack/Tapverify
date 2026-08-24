@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in — TapVerify</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #064E3B 0%, #0D9488 50%, #0F766E 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+        }
+        .login-brand {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-brand-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .login-brand h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        .login-brand p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-top: 4px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .login-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0F172A;
+            margin-bottom: 4px;
+        }
+        .login-card .subtitle {
+            font-size: 14px;
+            color: #64748B;
+            margin-bottom: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #0F172A;
+            background: #F8FAFC;
+            transition: all 0.15s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0D9488;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+        .form-input::placeholder {
+            color: #94A3B8;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0D9488, #0F766E);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+            margin-top: 8px;
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13,148,136,0.4);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        .error-msg {
+            color: #DC2626;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 16px;
+            padding: 12px;
+            background: #FEF2F2;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-brand">
+            <div class="login-brand-icon">TV</div>
+            <h1>TapVerify</h1>
+            <p>Group Collection OS</p>
+        </div>
+
+        <div class="login-card">
+            <h2>Sign in to your account</h2>
+            <p class="subtitle">Enter your phone number and PIN to continue.</p>
+
+            <form method="POST" action="{% url 'web-login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone number</label>
+                    <input class="form-input" type="tel" id="phone" name="phone"
+                           placeholder="e.g. 254712345678" required autofocus
+                           inputmode="numeric" autocomplete="tel">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pin">PIN</label>
+                    <input class="form-input" type="password" id="pin" name="pin"
+                           placeholder="Enter your 4-digit PIN" required maxlength="6"
+                           inputmode="numeric" pattern="[0-9]*">
+                </div>
+                <button type="submit" class="btn-login">Sign in</button>
+                {% if error %}
+                <div class="error-msg">{{ error }}</div>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="login-footer">Powered by TapVerify</div>
+    </div>
+</body>
+</html>

@@ -11,9 +11,6 @@ class PayService {
   final List<PaymentLink> _links = [];
   final Map<String, StreakProfile> _profiles = {};
 
-  static const String demoBuyerName = 'Amina Yusuf';
-  static const String demoBuyerPhone = '254700111222';
-
   static final List<Map<String, Object>> _channels = [
     {'id': 'till', 'label': 'M-Pesa Till', 'icon': Icons.storefront_rounded},
     {'id': 'paybill', 'label': 'M-Pesa Paybill', 'icon': Icons.receipt_rounded},

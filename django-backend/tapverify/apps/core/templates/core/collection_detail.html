@@ -1,0 +1,240 @@
+{% extends "core/base.html" %}
+{% block title %}{{ collection.title }}{% endblock %}
+{% block page_title %}Collection Detail{% endblock %}
+
+{% block content %}
+<div style="max-width: 960px;">
+    <div class="mb-6">
+        <a href="{% url 'web-dashboard' %}" class="text-sm text-muted" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card mb-6">
+        <div class="card-body">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <h1 style="font-size: 24px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.3px;">{{ collection.title }}</h1>
+                        <span class="badge badge-teal">{{ collection.get_type_display }}</span>
+                        {% if collection.closed %}
+                        <span class="badge badge-slate">Closed</span>
+                        {% endif %}
+                    </div>
+                    <p style="font-size: 14px; color: var(--slate-500);">
+                        Ksh {{ collection.amount|floatformat:0 }} per member &middot; Due {{ collection.due|date:"d M Y" }}
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-secondary btn-sm" onclick="copyAllLinks()">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        Copy All Links
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="sendReminders()">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        Send Reminders
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span class="text-sm font-semibold" style="color: var(--slate-700);">{{ paid_count }} of {{ total_members }} members paid</span>
+                    <span class="text-sm font-semibold" style="color: var(--teal-700);">{{ progress }}%</span>
+                </div>
+                <div class="progress-bar" style="height: 10px;">
+                    <div class="progress-fill" style="width: {{ progress }}%;"></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px;">
+                <div style="text-align: center; padding: 16px; background: var(--green-50); border-radius: 10px;">
+                    <div style="font-size: 22px; font-weight: 800; color: var(--green-500);">{{ paid_count }}</div>
+                    <div class="text-sm text-muted">Paid</div>
+                </div>
+                <div style="text-align: center; padding: 16px; background: var(--amber-50); border-radius: 10px;">
+                    <div style="font-size: 22px; font-weight: 800; color: var(--amber-500);">{{ pending_count }}</div>
+                    <div class="text-sm text-muted">Pending</div>
+                </div>
+                <div style="text-align: center; padding: 16px; background: var(--red-50); border-radius: 10px;">
+                    <div style="font-size: 22px; font-weight: 800; color: var(--red-500);">{{ overdue_count }}</div>
+                    <div class="text-sm text-muted">Overdue</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="flex items-center justify-between w-full">
+                <h2>Members ({{ tasks|length }})</h2>
+                <div class="flex gap-2">
+                    <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Export CSV
+                    </button>
+                    <select id="filterStatus" class="form-select" style="width: auto; padding: 6px 12px; font-size: 13px;" onchange="filterTasks()">
+                        <option value="all">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-wrap">
+                <table id="tasksTable">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Payment Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr data-status="{{ task.status_class }}">
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar {% if task.status_class == 'paid' %}avatar-teal{% elif task.status_class == 'overdue' %}avatar-amber{% else %}avatar-slate{% endif %}">
+                                        {{ task.member.name|first }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--slate-900);">{{ task.member.name }}</div>
+                                        <div class="text-sm text-muted">{{ task.member.member_code }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-sm">{{ task.member.phone }}</td>
+                            <td>
+                                {% if task.status_class == 'paid' %}
+                                <span class="badge badge-green">Paid</span>
+                                {% elif task.status_class == 'overdue' %}
+                                <span class="badge badge-red">Overdue</span>
+                                {% else %}
+                                <span class="badge badge-amber">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if task.payment_link %}
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm truncate" style="max-width: 160px; color: var(--teal-600);">{{ task.payment_link_url }}</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{{ task.payment_link_url }}', 'Link')">Copy</button>
+                                </div>
+                                {% else %}
+                                <span class="text-sm text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    {% if task.status_class != 'paid' %}
+                                    <button class="btn btn-ghost btn-sm" onclick="sendSingleReminder('{{ task.member.id }}', '{{ task.member.name }}')">
+                                        Remind
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not tasks %}
+            <div class="empty-state">
+                <div class="empty-state-icon">&#128101;</div>
+                <h3>No members in this collection</h3>
+                <p>This collection has no payment tasks assigned.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var allLinks = {{ all_links_json|safe }};
+
+function copyAllLinks() {
+    if (allLinks.length === 0) {
+        showToast('No payment links to copy');
+        return;
+    }
+    var text = allLinks.map(function(l) {
+        return l.name + ': ' + l.url;
+    }).join('\n');
+    copyToClipboard(text, 'All payment links');
+}
+
+function sendReminders() {
+    if (!confirm('Send reminders to all pending members?')) return;
+
+    fetch('/api/v1/reminders/send/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            workspace_id: '{{ request.user.staff.workspace.id }}',
+            reminder_type: 'overdue',
+            collection_id: '{{ collection.id }}'
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showToast('Reminders sent to ' + data.sent + ' members');
+        } else {
+            showToast('Failed to send reminders');
+        }
+    })
+    .catch(function() {
+        showToast('Network error');
+    });
+}
+
+function sendSingleReminder(memberId, name) {
+    if (!confirm('Send reminder to ' + name + '?')) return;
+    showToast('Reminder sent to ' + name);
+}
+
+function filterTasks() {
+    var filter = document.getElementById('filterStatus').value;
+    var rows = document.querySelectorAll('#tasksTable tbody tr');
+    for (var i = 0; i < rows.length; i++) {
+        if (filter === 'all' || rows[i].getAttribute('data-status') === filter) {
+            rows[i].style.display = '';
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+}
+
+function exportCSV() {
+    var rows = document.querySelectorAll('#tasksTable tbody tr');
+    var csv = 'Member,Phone,Status,Payment Link\n';
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i].style.display === 'none') continue;
+        var cells = rows[i].querySelectorAll('td');
+        var name = cells[0].textContent.trim();
+        var phone = cells[1].textContent.trim();
+        var status = cells[2].textContent.trim();
+        var link = cells[3].querySelector('.copy-btn') ? cells[3].querySelector('.copy-btn').getAttribute('onclick').match(/'([^']+)'/)[1] : '';
+        csv += '"' + name + '","' + phone + '","' + status + '","' + link + '"\n';
+    }
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '{{ collection.title|escapejs }}.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exported');
+}
+</script>
+{% endblock %}

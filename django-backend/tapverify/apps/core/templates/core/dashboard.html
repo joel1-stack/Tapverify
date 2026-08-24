@@ -1,0 +1,209 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 style="font-size: 26px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px;">
+        {{ greeting }}, {{ request.user.staff.name|truncatechars:20 }}
+    </h1>
+    <p style="font-size: 15px; color: var(--slate-500); margin-top: 4px;">
+        {{ request.user.staff.workspace.name }}
+    </p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Active Collections</div>
+        <div class="stat-value">{{ active_collections }}</div>
+        <div class="stat-change positive">{{ open_collections }} open</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-value">Ksh {{ total_collected|floatformat:0 }}</div>
+        <div class="stat-change positive">+{{ collected_today|floatformat:0 }} today</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">Ksh {{ total_pending|floatformat:0 }}</div>
+        <div class="stat-change negative">{{ pending_count }} members</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Collection Rate</div>
+        <div class="stat-value">{{ collection_rate }}%</div>
+        <div class="stat-change {% if collection_rate >= 60 %}positive{% else %}negative{% endif %}">of target</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div>
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2>Active Collections</h2>
+                <a href="{% url 'web-create-collection' %}" class="btn btn-primary btn-sm">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    New Collection
+                </a>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                {% if collections %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Collection</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Due</th>
+                                <th>Progress</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for col in collections %}
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--slate-900);">{{ col.title }}</div>
+                                    <div class="text-sm text-muted">{{ col.paid_count }}/{{ col.total_members }} paid</div>
+                                </td>
+                                <td><span class="badge badge-teal">{{ col.get_type_display }}</span></td>
+                                <td style="font-weight: 600;">Ksh {{ col.amount|floatformat:0 }}</td>
+                                <td class="text-sm">{{ col.due|date:"d M Y" }}</td>
+                                <td style="min-width: 140px;">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: {{ col.progress }}%"></div>
+                                    </div>
+                                    <div class="text-sm text-muted mt-2">{{ col.progress }}%</div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'web-collection-detail' col.id %}" class="btn btn-secondary btn-sm">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">&#128202;</div>
+                    <h3>No active collections</h3>
+                    <p>Create your first collection to start collecting from members.</p>
+                    <a href="{% url 'web-create-collection' %}" class="btn btn-primary">Create Collection</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Recent Activity</h2>
+            </div>
+            <div class="card-body" style="padding: 0 24px;">
+                {% if recent_events %}
+                {% for event in recent_events %}
+                <div class="activity-item">
+                    <div class="activity-icon" style="background: {% if event.event_type == 'payment_cash' or event.event_type == 'payment_mpesa' %}var(--green-50){% else %}var(--slate-100){% endif %};">
+                        {% if event.event_type == 'payment_cash' or event.event_type == 'payment_mpesa' %}&#9989;{% elif event.event_type == 'penalty' %}&#9888;&#65039;{% else %}&#128196;{% endif %}
+                    </div>
+                    <div>
+                        <div class="activity-text">
+                            <strong>{{ event.member_name }}</strong>
+                            {% if event.event_type == 'payment_cash' or event.event_type == 'payment_mpesa' %}
+                                paid <strong>Ksh {{ event.amount|floatformat:0 }}</strong>
+                            {% else %}
+                                — {{ event.get_event_type_display }}
+                            {% endif %}
+                        </div>
+                        <div class="activity-time">{{ event.created_at|timesince }} ago</div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding: 32px 24px;">
+                    <p class="text-muted">No activity yet. Payments and verifications will appear here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'web-create-collection' %}" class="btn btn-primary w-full" style="justify-content: center;">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Create Collection
+                </a>
+                <button class="btn btn-secondary w-full" style="justify-content: center;" onclick="sendReminders()">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    Send Reminders
+                </button>
+                <a href="{% url 'web-members' %}" class="btn btn-secondary w-full" style="justify-content: center;">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    View Members
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Group Summary</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Total Members</span>
+                        <span style="font-weight: 700; color: var(--slate-900);">{{ total_members }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Active Members</span>
+                        <span style="font-weight: 700; color: var(--green-500);">{{ active_members }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Outstanding Balance</span>
+                        <span style="font-weight: 700; color: var(--red-500);">Ksh {{ total_outstanding|floatformat:0 }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Plan</span>
+                        <span class="badge badge-teal">{{ request.user.staff.workspace.get_plan_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendReminders() {
+    if (!confirm('Send payment reminders to all pending members?')) return;
+
+    fetch('/api/v1/reminders/send/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            workspace_id: '{{ request.user.staff.workspace.id }}',
+            reminder_type: 'meeting_day'
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showToast('Reminders sent to ' + data.sent + ' members (' + data.cost_estimate + ')');
+        } else {
+            showToast('Failed to send reminders');
+        }
+    })
+    .catch(function() {
+        showToast('Network error. Please try again.');
+    });
+}
+</script>
+{% endblock %}

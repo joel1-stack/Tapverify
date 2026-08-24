@@ -121,7 +121,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Ksh ${c.amount} · ${c.railName} · ${c.tasks.length} workers',
+              'Ksh ${c.amount} · ${c.railName} · ${c.tasks.length} members',
               style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
             ),
             const SizedBox(height: 12),

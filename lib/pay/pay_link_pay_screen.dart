@@ -17,7 +17,7 @@ class PayLinkPayScreen extends StatefulWidget {
 }
 
 class _PayLinkPayScreenState extends State<PayLinkPayScreen> {
-  final _buyer = TextEditingController(text: PayService.demoBuyerName);
+  final _buyer = TextEditingController(text: '');
   bool _running = false;
   ({String ref, String attestation})? _receipt;
 

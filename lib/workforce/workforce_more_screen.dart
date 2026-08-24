@@ -4,7 +4,6 @@ import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 import 'workforce_login_screen.dart';
-import 'product_tour_screen.dart';
 import 'pricing_screen.dart';
 import 'collection_settings_screen.dart';
 import '../pay/payment_links_screen.dart';
@@ -50,8 +49,8 @@ class WorkforceMoreScreen extends StatelessWidget {
   ];
 
   static const _tiers = [
-    ('Starter', 'KES 1,500/mo', 'Up to 50 workers · SMS · one rail'),
-    ('Growth', 'KES 3,500–5,000/mo', 'Up to 200 workers · all rails · API'),
+    ('Starter', 'KES 1,500/mo', 'Up to 50 members · SMS · one rail'),
+    ('Growth', 'KES 3,500–5,000/mo', 'Up to 200 members · all rails · API'),
     ('Business', 'Custom', 'Unlimited · on-prem proof · onboarding'),
   ];
 
@@ -188,60 +187,6 @@ class WorkforceMoreScreen extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         'Universal payment links — anyone can pay, both sides earn a verified streak.',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: AppColors.text, height: 1.4),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProductTourScreen()),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.accent.withOpacity(0.4)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.play_circle_fill_rounded,
-                      color: AppColors.accent, size: 30),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'PRODUCT TOUR',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.accent,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'The full flow, end-to-end: raise, notify, pay, prove.',
                         style: GoogleFonts.inter(
                             fontSize: 12, color: AppColors.text, height: 1.4),
                       ),
@@ -508,36 +453,42 @@ class WorkforceMoreScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Text(
-                    t.$2,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
-                  ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: WorkforceService.activePlan?.name == t.$1
-                          ? AppColors.success.withOpacity(0.12)
-                          : AppColors.accent.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: Text(
-                      WorkforceService.activePlan?.name == t.$1
-                          ? 'ACTIVE'
-                          : 'PAY & GO',
-                      style: GoogleFonts.inter(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        color: WorkforceService.activePlan?.name == t.$1
-                            ? AppColors.success
-                            : AppColors.accent,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        t.$2,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: WorkforceService.activePlan?.name == t.$1
+                              ? AppColors.success.withOpacity(0.12)
+                              : AppColors.accent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Text(
+                          WorkforceService.activePlan?.name == t.$1
+                              ? 'ACTIVE'
+                              : 'PAY & GO',
+                          style: GoogleFonts.inter(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: WorkforceService.activePlan?.name == t.$1
+                                ? AppColors.success
+                                : AppColors.accent,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -559,7 +510,7 @@ class WorkforceMoreScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Trust infrastructure for workers, chamas and SACCOs — a verified financial reputation that follows every member.',
+                  'Trust infrastructure for chamas, SACCOs and individuals — a verified financial reputation that follows every member.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

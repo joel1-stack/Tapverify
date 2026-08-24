@@ -94,6 +94,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGIN_URL = '/login/'
+
 RECEIPT_BASE_URL = config('RECEIPT_BASE_URL', default='https://tverify.co.ke')
 
 AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='')
@@ -107,6 +109,14 @@ AVALANCHE_RPC = config('AVALANCHE_RPC', default='https://api.avax-test.network/e
 AVALANCHE_CHAIN_ID = config('AVALANCHE_CHAIN_ID', default=43113, cast=int)
 AVALANCHE_ATTESTATION_ADDRESS = config('AVALANCHE_ATTESTATION_ADDRESS', default='')
 AVALANCHE_PRIVATE_KEY = config('AVALANCHE_PRIVATE_KEY', default='')
+
+# SasaPay (production keys for Tap Verify - VIEWTECH LIMITED)
+SASAPAY_BASE_URL = config('SASAPAY_BASE_URL', default='https://sandbox.sasapay.app')
+SASAPAY_CLIENT_ID = config('SASAPAY_CLIENT_ID', default='XNxeTbgFcKgRHYknbAmhKQApoHhl0P8jp9oGs5US')
+SASAPAY_CLIENT_SECRET = config('SASAPAY_CLIENT_SECRET', default='iCzqvZ93tFBDbdkubiAo1qSvswKuF0bV52yfeCaQ2JoBLdb8tL6QV12bq5qEacNzpOdgW74wtqsWTN05JzkdbpXSnqapC5AJ5m4jALTiUhWwORAC20JsVFcsRROrnmYF')
+SASAPAY_MERCHANT_CODE = config('SASAPAY_MERCHANT_CODE', default='600980')
+SASAPAY_ACCOUNT_NUMBER = config('SASAPAY_ACCOUNT_NUMBER', default='600980')
+SASAPAY_CALLBACK_URL = config('SASAPAY_CALLBACK_URL', default='https://api.tvrfy.co.ke/webhooks/sasapay/')
 
 # Active payment rail: 'sasapay', 'loop', 'payhero' or 'mpesa'
 ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='sasapay')

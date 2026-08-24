@@ -6,15 +6,15 @@ import '../workforce/workforce_service.dart';
 import 'create_collection_screen.dart';
 import 'collection_detail_screen.dart';
 
-/// Foreman landing tab — live overview of the factory's obligations.
-class ForemanDashboardScreen extends StatefulWidget {
-  const ForemanDashboardScreen({super.key});
+/// Treasurer landing tab — live overview of the group's obligations.
+class TreasurerDashboardScreen extends StatefulWidget {
+  const TreasurerDashboardScreen({super.key});
 
   @override
-  ForemanDashboardState createState() => ForemanDashboardState();
+  TreasurerDashboardState createState() => TreasurerDashboardState();
 }
 
-class ForemanDashboardState extends State<ForemanDashboardScreen> {
+class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
   void reload() {
     if (mounted) setState(() {});
   }
@@ -134,7 +134,7 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                       const SizedBox(height: 2),
                       Text(
                         WorkforceService.currentUser?.name ??
-                            WorkforceService.demoForemanName,
+                            WorkforceService.collectorDisplay(),
                         style: GoogleFonts.inter(
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
@@ -160,7 +160,7 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
                                 size: 13, color: Colors.white),
                             const SizedBox(width: 5),
                             Text(
-                              '${WorkforceService.currentUser?.position ?? 'Foreman'} · ${WorkforceService.currentUser?.orgName ?? WorkforceService.orgName}',
+                              '${WorkforceService.currentUser?.position ?? 'Treasurer'} · ${WorkforceService.currentUser?.orgName ?? WorkforceService.orgName}',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -189,10 +189,10 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
 
   Widget _statRow(Map<String, dynamic> s) {
     final cards = [
-      ('${s['workers']}', 'Workers', Icons.people_rounded, AppColors.primary),
+      ('${s['members']}', 'Members', Icons.people_rounded, AppColors.primary),
       ('Ksh ${_fmt(s['collected'])}', 'Collected', Icons.payments_rounded,
           AppColors.accent),
-      ('${s['paidMembers']}/${s['workers']}', 'Paid in', Icons.check_circle_rounded,
+      ('${s['paidMembers']}/${s['members']}', 'Paid in', Icons.check_circle_rounded,
           AppColors.gold),
       ('${s['activeCollections']}', 'Active', Icons.receipt_long_rounded,
           AppColors.secondary),
@@ -288,7 +288,7 @@ class ForemanDashboardState extends State<ForemanDashboardScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            '$reminders workers are still waiting on reminders — resend them from any collection.',
+            '$reminders members are still waiting on reminders — resend them from any collection.',
             style: GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
           ),
         ],

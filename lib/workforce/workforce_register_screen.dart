@@ -7,7 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
-import 'foreman_home_shell.dart';
+import 'treasurer_home_shell.dart';
 import 'app_background.dart';
 import 'notification_center.dart';
 
@@ -28,7 +28,7 @@ class WorkforceRegisterScreen extends StatefulWidget {
 
 class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
   final _name = TextEditingController();
-  final _phone = TextEditingController(text: WorkforceService.demoForemanPhone);
+  final _phone = TextEditingController(text: '254701234567');
   final _monthly = TextEditingController(text: '200');
   final _position = TextEditingController(text: 'Collector');
   UserKind _kind = UserKind.organization;
@@ -145,11 +145,10 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
         type: _type,
         monthlyContribution: monthly,
       );
-      final added = WorkforceService.importWorkers(_imported);
       NotificationCenter.instance.notify(
         title: '${name} is live',
         body: _imported.isNotEmpty
-            ? '$added members imported — ready to raise your first collection.'
+            ? '${_imported.length} members imported — ready to raise your first collection.'
             : 'Ready to raise your first collection.',
         icon: Icons.storefront_rounded,
         color: AppColors.primary,
@@ -164,7 +163,7 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
     }
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => ForemanHomeShell(user: user)),
+      MaterialPageRoute(builder: (_) => TreasurerHomeShell(user: user)),
       (route) => false,
     );
   }
@@ -444,14 +443,14 @@ class _WorkforceRegisterScreenState extends State<WorkforceRegisterScreen> {
                       child: Column(
                         children: [
                           QrImageView(
-                            data: WorkforceService.foremanQrPayload,
+                            data: WorkforceService.collectorQrPayload,
                             version: QrVersions.auto,
                             size: 148,
                             backgroundColor: Colors.white,
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            '${WorkforceService.foremanQrPayload}|${_kind == UserKind.individual ? 'individual' : 'org'}',
+                            '${WorkforceService.collectorQrPayload}|${_kind == UserKind.individual ? 'individual' : 'org'}',
                             style: GoogleFonts.inter(
                                 fontSize: 9.5, color: AppColors.muted),
                           ),

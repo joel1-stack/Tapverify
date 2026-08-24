@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import 'foreman_home_shell.dart';
-import 'worker_home_screen.dart';
+import 'treasurer_home_shell.dart';
 import 'workforce_register_screen.dart';
 import '../workforce/workforce_service.dart';
 import 'app_background.dart';
 import 'notification_center.dart';
 import '../pay/payment_links_screen.dart';
 
-/// Universal login. One form for everyone — a factory foreman, a SACCO
-/// treasurer, a church secretary, a school bursar, a worker or an individual
-/// collecting for one appeal. The app reads the phone + PIN, resolves the
-/// person, then greets them by name and position.
+/// Universal login. One form for everyone — a SACCO treasurer, a church
+/// secretary, a school bursar, or an individual collecting for one appeal.
+/// The app reads the phone + PIN, resolves the person, then greets them by
+/// name and position.
 class WorkforceLoginScreen extends StatefulWidget {
   const WorkforceLoginScreen({super.key});
 
@@ -22,18 +21,16 @@ class WorkforceLoginScreen extends StatefulWidget {
 }
 
 class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
-  final _phone = TextEditingController(text: WorkforceService.demoForemanPhone);
+  final _phone = TextEditingController(text: '254701234567');
   final _pin = TextEditingController();
   bool _obscure = true;
 
   static const _samples = [
-    ('Foreman', 'u-foreman', Icons.factory_rounded, AppColors.primary),
-    ('Worker', 'u-worker', Icons.handyman_rounded, AppColors.success),
     ('SACCO Treasurer', 'u-treasurer', Icons.account_balance_rounded,
         AppColors.sasapay),
-    ('Church', 'u-church', Icons.church_rounded, AppColors.accent),
+    ('Church Treasurer', 'u-church', Icons.church_rounded, AppColors.accent),
     ('School Bursar', 'u-school', Icons.school_rounded, AppColors.sky),
-    ('Individual', 'u-individual', Icons.person_rounded, AppColors.gold),
+    ('Individual Collector', 'u-individual', Icons.person_rounded, AppColors.gold),
   ];
 
   @override
@@ -78,9 +75,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => user.isWorker
-            ? WorkerHomeScreen(user: user)
-            : ForemanHomeShell(user: user),
+        builder: (_) => TreasurerHomeShell(user: user),
       ),
       (route) => false,
     );
@@ -119,7 +114,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'One login for everyone who collects — factories, chamas, SACCOs, churches, schools and individuals.',
+                  'One login for everyone who collects — SACCOs, churches, schools and individuals.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                       fontSize: 12, color: AppColors.primary, height: 1.5),

@@ -8,7 +8,7 @@ import 'notification_center.dart';
 
 /// Collection detail — the proof center. Shows the 9-state lifecycle, how much
 /// is in, who paid (with rail evidence + transfer reference), and lets the
-/// foreman remind, simulate a payment and verify proof.
+/// treasurer remind, simulate a payment and verify proof.
 class CollectionDetailScreen extends StatefulWidget {
   const CollectionDetailScreen({required this.collection});
 
@@ -36,7 +36,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     final q = _query.text.trim().toLowerCase();
     return c.tasks.values.where((t) {
       if (q.isNotEmpty) {
-        final w = WorkforceService.workerById(t.workerId);
+        final w = WorkforceService.memberById(t.workerId);
         if (w == null) return false;
         if (!w.name.toLowerCase().contains(q) &&
             !w.code.toLowerCase().contains(q) &&
@@ -76,7 +76,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       return;
     }
     final first = target.first;
-    final w = WorkforceService.workerById(first.workerId);
+    final w = WorkforceService.memberById(first.workerId);
     setState(() {
       for (final t in target.take(1)) {
         WorkforceService.payNow(c, t.workerId);
@@ -112,7 +112,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('SMS reminder sent to $n workers',
+        content: Text('SMS reminder sent to $n members',
             style: GoogleFonts.inter()),
         backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
@@ -133,7 +133,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       ReceiptData(
         receiptNo: 'RCP-${c.id.toUpperCase()}',
         timestamp: DateTime.now().toString().substring(0, 16).replaceAll('-', '/'),
-        collectorName: u?.name ?? WorkforceService.demoForemanName,
+        collectorName: u?.name ?? WorkforceService.collectorDisplay(),
         collectorRole: u?.position ?? 'Collector',
         collectorOrg: u?.orgName ?? WorkforceService.orgName,
         memberName: 'All members · ${c.paidCount}/${c.tasks.length} paid',
@@ -150,9 +150,9 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     );
   }
 
-  Future<void> _shareWorker(WfPaymentTask t) async {
+  Future<void> _shareMember(WfPaymentTask t) async {
     final u = WorkforceService.currentUser;
-    final w = WorkforceService.workerById(t.workerId);
+    final w = WorkforceService.memberById(t.workerId);
     if (w == null) return;
     await shareReceiptPdf(
       ReceiptData(
@@ -160,7 +160,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         timestamp: t.paidAt != null
             ? '${t.paidAt!.day}/${t.paidAt!.month}/${t.paidAt!.year} ${t.paidAt!.hour.toString().padLeft(2, '0')}:${t.paidAt!.minute.toString().padLeft(2, '0')}'
             : DateTime.now().toString().substring(0, 16),
-        collectorName: u?.name ?? WorkforceService.demoForemanName,
+        collectorName: u?.name ?? WorkforceService.collectorDisplay(),
         collectorRole: u?.position ?? 'Collector',
         collectorOrg: u?.orgName ?? WorkforceService.orgName,
         memberName: '${w.name} · ${w.code}',
@@ -217,7 +217,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                 Row(
                   children: [
                     Text(
-                      'WHO PAID · ${c.tasks.length} WORKERS',
+                      'WHO PAID · ${c.tasks.length} MEMBERS',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -241,7 +241,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                   controller: _query,
                   onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
-                    hintText: 'Search worker, code or department',
+                    hintText: 'Search member, code or department',
                     prefixIcon: Icon(Icons.search_rounded),
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -278,7 +278,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                   _emptyResult()
                 else
                   for (final t in _visible()) ...[
-                    _workerRow(t),
+                    _memberRow(t),
                     const SizedBox(height: 8),
                   ],
               ],
@@ -366,8 +366,8 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     );
   }
 
-  Widget _workerRow(WfPaymentTask t) {
-    final w = WorkforceService.workerById(t.workerId);
+  Widget _memberRow(WfPaymentTask t) {
+    final w = WorkforceService.memberById(t.workerId);
     if (w == null) return const SizedBox.shrink();
     final st = t.state;
     final paid = st.index >= WfPaymentState.completed.index;
@@ -478,7 +478,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                 IconButton(
                   tooltip: 'Share this receipt (PDF)',
                   visualDensity: VisualDensity.compact,
-                  onPressed: () => _shareWorker(t),
+                  onPressed: () => _shareMember(t),
                   icon: const Icon(Icons.share_rounded,
                       size: 18, color: AppColors.primary),
                 ),
@@ -569,7 +569,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
           const Icon(Icons.search_off_rounded, size: 30, color: AppColors.muted),
           const SizedBox(height: 8),
           Text(
-            'No workers match this filter.',
+            'No members match this filter.',
             style: GoogleFonts.inter(
                 fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text),
           ),

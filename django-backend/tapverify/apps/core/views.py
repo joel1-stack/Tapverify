@@ -1,15 +1,21 @@
 from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.http import JsonResponse
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 import logging
 import hashlib
+import json
 
-from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder, PaymentLink
+from .models import Workspace, Staff, Member, VerificationEvent, MpesaTransaction, PaymentReminder, PaymentLink, Collection, PaymentTask
 from .serializers import (
     WorkspaceSerializer, StaffSerializer, MemberSerializer, MemberListSerializer,
     VerificationEventSerializer, VerifyRequestSerializer, ReceiptSerializer,
@@ -695,3 +701,341 @@ def create_workspace_demo(request):
         'members': members,
         'api_base': '/api/v1/'
     })
+
+
+# ───────────────────────────────────────────────
+# WEB DASHBOARD VIEWS
+# ───────────────────────────────────────────────
+
+def web_login_view(request):
+    if request.user.is_authenticated:
+        return redirect('web-dashboard')
+
+    if request.method == 'POST':
+        phone = request.POST.get('phone', '').strip()
+        pin = request.POST.get('pin', '').strip()
+
+        if not phone or not pin:
+            return render(request, 'core/login.html', {'error': 'Phone and PIN are required.'})
+
+        try:
+            staff = Staff.objects.select_related('workspace', 'user').get(
+                phone=phone, pin_code=pin, is_active=True
+            )
+        except Staff.DoesNotExist:
+            return render(request, 'core/login.html', {'error': 'Invalid phone or PIN.'})
+
+        if staff.user:
+            user = staff.user
+        else:
+            user, _ = User.objects.get_or_create(
+                username=phone,
+                defaults={'first_name': staff.name}
+            )
+            staff.user = user
+            staff.save(update_fields=['user'])
+
+        login(request, user)
+        return redirect('web-dashboard')
+
+    return render(request, 'core/login.html', {'error': None})
+
+
+@login_required
+def web_logout_view(request):
+    logout(request)
+    return redirect('web-login')
+
+
+@login_required
+def dashboard_view(request):
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+    collections = Collection.objects.filter(workspace=workspace, closed=False)
+    members = Member.objects.filter(workspace=workspace, is_active=True)
+    recent_events = VerificationEvent.objects.filter(
+        workspace=workspace
+    ).select_related('member', 'verifier').order_by('-created_at')[:10]
+
+    total_members = members.count()
+    active_members = members.filter(is_active=True).count()
+    total_outstanding = members.aggregate(total=Sum('balance_due'))['total'] or 0
+
+    total_collected = VerificationEvent.objects.filter(
+        workspace=workspace,
+        event_type__startswith='payment',
+        status='approved'
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    today = timezone.now().date()
+    collected_today = VerificationEvent.objects.filter(
+        workspace=workspace,
+        event_type__startswith='payment',
+        status='approved',
+        created_at__date=today
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    total_target = total_members * workspace.monthly_amount if total_members > 0 else 0
+    collection_rate = round((total_collected / total_target * 100) if total_target > 0 else 0, 1)
+
+    collections_data = []
+    for col in collections:
+        total = col.tasks.count()
+        paid = col.paid_count
+        progress = round((paid / total * 100) if total > 0 else 0)
+        collections_data.append({
+            'id': col.id,
+            'title': col.title,
+            'type': col.type,
+            'get_type_display': col.get_type_display(),
+            'amount': col.amount,
+            'due': col.due,
+            'paid_count': paid,
+            'total_members': total,
+            'progress': progress,
+        })
+
+    hour = timezone.now().hour
+    if hour < 12:
+        greeting = 'Good morning'
+    elif hour < 17:
+        greeting = 'Good afternoon'
+    else:
+        greeting = 'Good evening'
+
+    recent_events_data = []
+    for ev in recent_events:
+        recent_events_data.append({
+            'member_name': ev.member.name,
+            'event_type': ev.event_type,
+            'get_event_type_display': ev.get_event_type_display(),
+            'amount': ev.amount,
+            'created_at': ev.created_at,
+        })
+
+    context = {
+        'greeting': greeting,
+        'active_collections': collections.count(),
+        'open_collections': collections.count(),
+        'total_collected': total_collected,
+        'collected_today': collected_today,
+        'total_pending': total_outstanding,
+        'pending_count': members.filter(balance_due__gt=0).count(),
+        'collection_rate': collection_rate,
+        'collections': collections_data,
+        'recent_events': recent_events_data,
+        'total_members': total_members,
+        'active_members': active_members,
+        'total_outstanding': total_outstanding,
+    }
+    return render(request, 'core/dashboard.html', context)
+
+
+@login_required
+def create_collection_view(request):
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+    members = Member.objects.filter(workspace=workspace, is_active=True).order_by('name')
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        collection_type = request.POST.get('type', 'welfare')
+        amount = request.POST.get('amount', '0')
+        due = request.POST.get('due', '')
+        rail = request.POST.get('rail', 'sasapay')
+        message_template = request.POST.get('message', '')
+        member_ids = request.POST.getlist('members')
+
+        if not all([title, amount, due, member_ids]):
+            messages.error(request, 'Please fill all required fields and select at least one member.')
+            return render(request, 'core/create_collection.html', {'members': members})
+
+        from django.utils.dateparse import parse_datetime
+        due_dt = parse_datetime(due)
+        if due_dt is None:
+            from datetime import datetime
+            due_dt = datetime.strptime(due, '%Y-%m-%d')
+            due_dt = timezone.make_aware(due_dt)
+
+        collection = Collection.objects.create(
+            workspace=workspace,
+            title=title,
+            type=collection_type,
+            amount=amount,
+            due=due_dt,
+            rail=rail,
+            message=message_template,
+        )
+
+        selected_members = Member.objects.filter(id__in=member_ids, workspace=workspace, is_active=True)
+        for member in selected_members:
+            msg = message_template.replace('{name}', member.name).replace(
+                '{amount}', str(amount)).replace(
+                '{type}', collection.get_type_display()).replace(
+                '{due_date}', due_dt.strftime('%d %b %Y'))
+
+            task = PaymentTask.objects.create(
+                collection=collection,
+                member=member,
+                amount=amount,
+                state='created',
+            )
+
+            payment_link = PaymentLink.objects.create(
+                workspace=workspace,
+                member=member,
+                amount=amount,
+                description=f'{title} — {workspace.name}',
+            )
+
+        messages.success(request, f'Collection "{title}" created with {len(member_ids)} members.')
+        return redirect('web-collection-detail', collection_id=collection.id)
+
+    return render(request, 'core/create_collection.html', {'members': members})
+
+
+@login_required
+def collection_detail_view(request, collection_id):
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+    collection = get_object_or_404(Collection, id=collection_id, workspace=workspace)
+    tasks = PaymentTask.objects.filter(
+        collection=collection
+    ).select_related('member').order_by('member__name')
+
+    total_members = tasks.count()
+    paid_count = collection.paid_count
+    pending_count = tasks.filter(state__in=['created', 'notified', 'pending']).count()
+    overdue_count = 0
+    for task in tasks:
+        if task.state in ('created', 'notified', 'pending') and collection.due < timezone.now():
+            overdue_count += 1
+
+    progress = round((paid_count / total_members * 100) if total_members > 0 else 0)
+
+    base_url = settings.RECEIPT_BASE_URL
+    tasks_data = []
+    all_links = []
+    for task in tasks:
+        payment_link = PaymentLink.objects.filter(
+            workspace=workspace, member=task.member, status='pending'
+        ).order_by('-created_at').first()
+
+        if task.state in ('completed', 'verified', 'streak', 'badge', 'reward'):
+            status_class = 'paid'
+        elif task.state in ('created', 'notified', 'pending') and collection.due < timezone.now():
+            status_class = 'overdue'
+        else:
+            status_class = 'pending'
+
+        link_url = f"{base_url}/p/{payment_link.token}" if payment_link else None
+        if link_url:
+            all_links.append({'name': task.member.name, 'url': link_url})
+
+        tasks_data.append({
+            'id': task.id,
+            'member': task.member,
+            'state': task.state,
+            'amount': task.amount,
+            'paid_at': task.paid_at,
+            'status_class': status_class,
+            'payment_link': payment_link,
+            'payment_link_url': link_url,
+        })
+
+    context = {
+        'collection': collection,
+        'tasks': tasks_data,
+        'total_members': total_members,
+        'paid_count': paid_count,
+        'pending_count': pending_count,
+        'overdue_count': overdue_count,
+        'progress': progress,
+        'all_links_json': json.dumps(all_links),
+    }
+    return render(request, 'core/collection_detail.html', context)
+
+
+@login_required
+def members_view(request):
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add_member':
+            name = request.POST.get('name', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            contribution = request.POST.get('monthly_contribution', '500')
+
+            if name and phone:
+                if Member.objects.filter(workspace=workspace, phone=phone).exists():
+                    messages.error(request, f'A member with phone {phone} already exists.')
+                else:
+                    Member.objects.create(
+                        workspace=workspace,
+                        name=name,
+                        phone=phone,
+                        monthly_contribution=contribution,
+                    )
+                    messages.success(request, f'{name} has been added.')
+            else:
+                messages.error(request, 'Name and phone are required.')
+
+        return redirect('web-members')
+
+    members = Member.objects.filter(
+        workspace=workspace, is_active=True
+    ).order_by('name')
+
+    return render(request, 'core/members.html', {'members': members})
+
+
+@login_required
+def settings_view(request):
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'update_settings':
+            workspace.name = request.POST.get('name', workspace.name).strip()
+            workspace.type = request.POST.get('type', workspace.type)
+            workspace.phone = request.POST.get('phone', workspace.phone).strip()
+            workspace.till_number = request.POST.get('till_number', '') or None
+            workspace.paybill_number = request.POST.get('paybill_number', '') or None
+            workspace.account_number = request.POST.get('account_number', '') or None
+
+            monthly = request.POST.get('monthly_amount')
+            if monthly:
+                try:
+                    workspace.monthly_amount = float(monthly)
+                except (ValueError, TypeError):
+                    pass
+
+            workspace.save()
+            messages.success(request, 'Settings saved successfully.')
+
+        return redirect('web-settings')
+
+    return render(request, 'core/settings.html', {'workspace': workspace})

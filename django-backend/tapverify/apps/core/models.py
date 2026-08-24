@@ -285,7 +285,7 @@ class Collection(models.Model):
 
 
 class PaymentTask(models.Model):
-    """One worker's task inside a Collection — the 9-state lifecycle.
+    """One member's task inside a Collection — the 9-state lifecycle.
 
     CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED → STREAK → BADGE →
     REWARD → ARCHIVED. `rail` + `txn_ref` are the evidence of how money moved.
@@ -312,8 +312,24 @@ class PaymentTask(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     rail = models.CharField(max_length=20, blank=True, default='')
     txn_ref = models.CharField(max_length=100, blank=True, default='')
+
+    # SasaPay checkout fields
+    payment_token = models.CharField(max_length=16, unique=True, db_index=True,
+                                     blank=True, default='',
+                                     help_text='Unique reference per member for SasaPay checkout')
+    checkout_url = models.URLField(blank=True, default='',
+                                   help_text='SasaPay checkout URL to share via WhatsApp')
+    provider_checkout_id = models.CharField(max_length=100, blank=True, default='',
+                                            help_text='SasaPay CheckoutRequestID')
+    provider_tx_code = models.CharField(max_length=100, blank=True, default='',
+                                        help_text='SasaPay TransactionCode from webhook')
+
+    sms_status = models.CharField(max_length=20, default='pending')
+    sms_message_id = models.CharField(max_length=100, blank=True, default='')
+
     paid_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'payment_tasks'
@@ -321,6 +337,11 @@ class PaymentTask(models.Model):
 
     def __str__(self):
         return f"{self.member.name} — {self.collection.title} ({self.state})"
+
+    def save(self, *args, **kwargs):
+        if not self.payment_token:
+            self.payment_token = secrets.token_urlsafe(8)[:12].upper()
+        super().save(*args, **kwargs)
 
     def advance(self, to_state):
         """Move the task through the lifecycle (validating order)."""
@@ -333,3 +354,49 @@ class PaymentTask(models.Model):
             self.paid_at = timezone.now()
         self.save(update_fields=['state', 'paid_at'])
         return self
+
+
+class StreakRecord(models.Model):
+    """Gamification: consecutive on-time payments per member."""
+
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='streaks')
+    collection_type = models.CharField(max_length=50, default='welfare')
+    current_streak = models.IntegerField(default=0)
+    longest_streak = models.IntegerField(default=0)
+    total_paid = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total_contributions = models.IntegerField(default=0)
+    last_paid_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'streak_records'
+        unique_together = ['member', 'collection_type']
+
+    def __str__(self):
+        return f"{self.member.name} — {self.current_streak} month streak"
+
+    def record_payment(self, amount, paid_at, due_date):
+        """Record a payment and update streak."""
+        self.total_paid += amount
+        self.total_contributions += 1
+        self.last_paid_at = paid_at
+
+        if paid_at.date() <= due_date:
+            self.current_streak += 1
+            if self.current_streak > self.longest_streak:
+                self.longest_streak = self.current_streak
+        else:
+            self.current_streak = 0
+
+        self.save()
+        return self
+
+    @property
+    def badge_level(self):
+        if self.current_streak >= 12:
+            return 'gold'
+        elif self.current_streak >= 6:
+            return 'silver'
+        elif self.current_streak >= 3:
+            return 'bronze'
+        return None

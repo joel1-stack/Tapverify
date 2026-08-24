@@ -1,6 +1,8 @@
 from django.urls import path
 from django.contrib import admin
 from . import views
+from .webhook_handler import sasapay_webhook, sasapay_webhook_test
+from .ussd_handler import ussd_handler
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -11,6 +13,9 @@ urlpatterns = [
     path('logout/', views.web_logout_view, name='web-logout'),
     path('collections/new/', views.create_collection_view, name='web-create-collection'),
     path('collections/<uuid:collection_id>/', views.collection_detail_view, name='web-collection-detail'),
+    path('collections/<uuid:collection_id>/generate-links/', views.generate_links_view, name='web-generate-links'),
+    path('collections/<uuid:collection_id>/remind/', views.remind_pending_view, name='web-remind'),
+    path('collections/<uuid:collection_id>/reconcile/', views.reconcile_view, name='web-reconcile'),
     path('members/', views.members_view, name='web-members'),
     path('settings/', views.settings_view, name='web-settings'),
 
@@ -36,16 +41,23 @@ urlpatterns = [
 
     # Payment Links (member pays on own phone)
     path('api/v1/payment-link/create/', views.PaymentLinkCreateView.as_view(), name='payment-link-create'),
-    path('p/<str:token>/', views.payment_link_view, name='payment-link-view'),
-    path('p/<str:token>/pay/', views.payment_link_pay, name='payment-link-pay'),
-    path('p/<str:token>/status/', views.payment_link_status, name='payment-link-status'),
+    path('pay/<str:token>/', views.payment_link_view, name='payment-link-view'),
+    path('pay/<str:token>/pay/', views.payment_link_pay, name='payment-link-pay'),
+    path('pay/<str:token>/status/', views.payment_link_status, name='payment-link-status'),
 
     # Payment Rails
     path('api/v1/rail/info/', views.payment_rail_info, name='payment-rail-info'),
 
-    # Webhooks
+    # SasaPay Webhook
+    path('webhooks/sasapay/', sasapay_webhook, name='sasapay-webhook'),
+    path('webhooks/sasapay/test/', sasapay_webhook_test, name='sasapay-webhook-test'),
+
+    # Legacy Webhooks
     path('api/v1/webhooks/mpesa/', views.mpesa_callback, name='mpesa-callback'),
     path('api/v1/webhooks/loop/', views.loop_webhook, name='loop-webhook'),
+
+    # USSD
+    path('ussd/', ussd_handler, name='ussd-handler'),
 
     # Demo setup
     path('api/v1/demo/setup/', views.create_workspace_demo, name='demo-setup'),

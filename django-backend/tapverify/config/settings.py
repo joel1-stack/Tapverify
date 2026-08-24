@@ -96,6 +96,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 
+LOGIN_URL = '/login/'
+
 RECEIPT_BASE_URL = config('RECEIPT_BASE_URL', default='https://tverify.co.ke')
 
 AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='')

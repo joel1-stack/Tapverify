@@ -1039,3 +1039,168 @@ def settings_view(request):
         return redirect('web-settings')
 
     return render(request, 'core/settings.html', {'workspace': workspace})
+
+
+@login_required
+def generate_links_view(request, collection_id):
+    """Generate SasaPay checkout links for all pending members in a collection."""
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+    collection = get_object_or_404(Collection, id=collection_id, workspace=workspace)
+
+    from .services.sasapay import get_sasapay_client
+    client = get_sasapay_client()
+
+    tasks = PaymentTask.objects.filter(
+        collection=collection,
+        state__in=['created', 'notified'],
+    ).select_related('member')
+
+    generated = 0
+    for task in tasks:
+        if task.checkout_url:
+            continue
+
+        try:
+            result = client.create_checkout(
+                phone=task.member.phone,
+                amount=task.amount,
+                reference=task.payment_token,
+                description=f"{collection.title} — {task.member.name}",
+            )
+
+            if result.get('success') and result.get('checkout_url'):
+                task.checkout_url = result['checkout_url']
+                task.provider_checkout_id = result.get('checkout_request_id', '')
+                task.state = 'notified'
+                task.save()
+                generated += 1
+
+                # Send checkout link via SMS
+                try:
+                    from .services.africastalking import AfricasTalkingService
+                    at = AfricasTalkingService()
+                    at.send_checkout_link(
+                        task.member.phone,
+                        task.member.name,
+                        task.amount,
+                        task.checkout_url,
+                    )
+                    task.sms_status = 'sent'
+                    task.save(update_fields=['sms_status'])
+                except Exception as e:
+                    logger.error("SMS failed for task %s: %s", task.id, e)
+
+        except Exception as e:
+            logger.error("Checkout generation failed for task %s: %s", task.id, e)
+
+    if generated > 0:
+        messages.success(request, f'Generated {generated} payment links.')
+    else:
+        messages.info(request, 'All links already generated or no pending tasks.')
+
+    return redirect('web-collection-detail', collection_id=collection.id)
+
+
+@login_required
+def remind_pending_view(request, collection_id):
+    """Send SMS reminders to all pending members."""
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+    collection = get_object_or_404(Collection, id=collection_id, workspace=workspace)
+
+    from .services.africastalking import AfricasTalkingService
+    at = AfricasTalkingService()
+
+    pending = PaymentTask.objects.filter(
+        collection=collection,
+        state__in=['created', 'notified', 'pending'],
+    ).select_related('member')
+
+    sent = 0
+    for task in pending:
+        msg = (
+            f"REMINDER: {collection.title} Ksh {int(task.amount)} "
+            f"due {collection.due.strftime('%d %b')}. "
+        )
+        if task.checkout_url:
+            msg += f"Pay: {task.checkout_url}"
+        else:
+            msg += "Contact your treasurer."
+
+        ok, _, _ = at.send_sms(task.member.phone, msg)
+        if ok:
+            sent += 1
+
+    messages.success(request, f'Sent {sent} reminders.')
+    return redirect('web-collection-detail', collection_id=collection.id)
+
+
+@login_required
+def reconcile_view(request, collection_id):
+    """Pull SasaPay transactions and match to unpaid tasks."""
+    try:
+        staff = request.user.staff
+    except Staff.DoesNotExist:
+        return redirect('web-login')
+
+    workspace = staff.workspace
+    collection = get_object_or_404(Collection, id=collection_id, workspace=workspace)
+
+    from .services.sasapay import get_sasapay_client, SUCCESS_CODES
+    client = get_sasapay_client()
+
+    all_txs = client.reconcile_all(merchant_code=workspace.account_number)
+
+    matched = 0
+    for tx in all_txs:
+        tx_ref = tx.get('transaction_reference', '')
+        tx_code = tx.get('transaction_code', '')
+        result_code = tx.get('result_code', '')
+
+        if result_code not in SUCCESS_CODES:
+            continue
+
+        # Try match by payment_token
+        try:
+            task = PaymentTask.objects.get(
+                payment_token=tx_ref,
+                collection=collection,
+                state__in=['created', 'notified', 'pending'],
+            )
+            task.state = 'completed'
+            task.provider_tx_code = tx_code
+            task.paid_at = timezone.now()
+            task.save()
+            matched += 1
+        except PaymentTask.DoesNotExist:
+            pass
+
+        # Try match by provider_tx_code
+        try:
+            task = PaymentTask.objects.get(
+                provider_tx_code=tx_code,
+                collection=collection,
+            )
+            if task.state != 'completed':
+                task.state = 'completed'
+                task.paid_at = timezone.now()
+                task.save()
+                matched += 1
+        except PaymentTask.DoesNotExist:
+            pass
+
+    if matched > 0:
+        messages.success(request, f'Reconciliation: {matched} payments matched.')
+    else:
+        messages.info(request, 'No new transactions to reconcile.')
+
+    return redirect('web-collection-detail', collection_id=collection.id)

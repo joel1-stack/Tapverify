@@ -81,11 +81,10 @@ class SasaPayClient:
         ).decode('ascii')
 
         try:
-            resp = requests.post(
+            resp = requests.get(
                 f"{self.base_url}/api/v1/auth/token/?grant_type=client_credentials",
                 headers={
                     'Authorization': f'Basic {credentials}',
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
                 timeout=30,

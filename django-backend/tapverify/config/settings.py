@@ -120,22 +120,16 @@ SASAPAY_MERCHANT_CODE = config('SASAPAY_MERCHANT_CODE', default='600980')
 SASAPAY_ACCOUNT_NUMBER = config('SASAPAY_ACCOUNT_NUMBER', default='600980')
 SASAPAY_CALLBACK_URL = config('SASAPAY_CALLBACK_URL', default='https://api.tvrfy.co.ke/webhooks/sasapay/')
 
-# Active payment rail: 'sasapay', 'loop', 'payhero' or 'mpesa'
+# Active payment rail: 'sasapay'
 ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='sasapay')
 
-# Loop API (primary rail) — LOOP Matrix gateway sandbox
-LOOP_BASE_URL = config('LOOP_BASE_URL', default='https://sandbox.loop.co.ke')
-LOOP_CONSUMER_KEY = config('LOOP_CONSUMER_KEY', default='')
-LOOP_CONSUMER_SECRET = config('LOOP_CONSUMER_SECRET', default='')
-LOOP_TOKEN_URL = config('LOOP_TOKEN_URL', default='')
-LOOP_TILL = config('LOOP_TILL', default='')
-LOOP_TILL_SECRET = config('LOOP_TILL_SECRET', default='')
-LOOP_IPN_SECRET = config('LOOP_IPN_SECRET', default='')
-
-# PayHero (legacy, secondary rail)
-PAYHERO_API_USERNAME = config('PAYHERO_API_USERNAME', default='')
-PAYHERO_API_PASSWORD = config('PAYHERO_API_PASSWORD', default='')
-PAYHERO_CHANNEL_ID = config('PAYHERO_CHANNEL_ID', default='')
+# SasaPay (sandbox keys for TapVerify — VIEWTECH LIMITED)
+SASAPAY_BASE_URL = config('SASAPAY_BASE_URL', default='https://sandbox.sasapay.app')
+SASAPAY_CLIENT_ID = config('SASAPAY_CLIENT_ID', default='XNxeTbgFcKgRHYknbAmhKQApoHhl0P8jp9oGs5US')
+SASAPAY_CLIENT_SECRET = config('SASAPAY_CLIENT_SECRET', default='iCzqvZ93tFBDbdkubiAo1qSvswKuF0bV52yfeCaQ2JoBLdb8tL6QV12bq5qEacNzpOdgW74wtqsWTN05JzkdbpXSnqapC5AJ5m4jALTiUhWwORAC20JsVFcsRROrnmYF')
+SASAPAY_MERCHANT_CODE = config('SASAPAY_MERCHANT_CODE', default='600980')
+SASAPAY_ACCOUNT_NUMBER = config('SASAPAY_ACCOUNT_NUMBER', default='600980')
+SASAPAY_CALLBACK_URL = config('SASAPAY_CALLBACK_URL', default='https://api.tvrfy.co.ke/webhooks/sasapay/')
 
 LOGGING = {
     'version': 1,

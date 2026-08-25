@@ -52,13 +52,6 @@ urlpatterns = [
     path('webhooks/sasapay/', sasapay_webhook, name='sasapay-webhook'),
     path('webhooks/sasapay/test/', sasapay_webhook_test, name='sasapay-webhook-test'),
 
-    # Legacy Webhooks
-    path('api/v1/webhooks/mpesa/', views.mpesa_callback, name='mpesa-callback'),
-    path('api/v1/webhooks/loop/', views.loop_webhook, name='loop-webhook'),
-
     # USSD
     path('ussd/', ussd_handler, name='ussd-handler'),
-
-    # Demo setup
-    path('api/v1/demo/setup/', views.create_workspace_demo, name='demo-setup'),
 ]

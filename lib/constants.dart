@@ -12,8 +12,8 @@ import 'package:flutter/material.dart';
 ///    collection, simulate a payment)
 ///  - [secondary] — SasaPay Blue (payment rails, checkout links, secondary
 ///    buttons)
-///  - [loop] / [sasapay] / [avalanche] / [africasTalking] — rail chips & the
-///    More/evidence console
+  ///  - [sasapay] / [avalanche] / [africasTalking] — rail chips & the
+  ///    More/evidence console
 ///  - [success]/[warning]/[danger] — 9-state lifecycle semantics
 class AppColors {
   static const Color primary = Color(0xFF0D9488);

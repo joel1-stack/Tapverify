@@ -10,9 +10,8 @@ import 'workforce_more_screen.dart';
 import 'workforce_login_screen.dart';
 import 'notification_bell.dart';
 
-/// Collector bottom-nav shell: Dashboard / Collections / Members / More.
-/// One shell for every collector — SACCO treasurer, church, school
-/// or individual. The app greets the person by name and position.
+/// 3-tab shell: Dashboard / Collections / Members.
+/// Drawer holds: Settings, Sign out.
 class TreasurerHomeShell extends StatefulWidget {
   const TreasurerHomeShell({super.key, this.user});
 
@@ -48,54 +47,22 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu_rounded),
             onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            tooltip: 'Open menu',
           ),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              _index == 0 ? _greeting : _titles[_index],
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppColors.text,
-              ),
-            ),
+            Text(_index == 0 ? _greeting : _titles[_index],
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
             if (_index == 0)
               Text(
-                user != null
-                    ? '${user!.position} · ${user!.orgName}'
-                    : WorkforceService.orgName,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.muted,
-                ),
+                user != null ? '${user!.position} · ${user!.orgName}' : WorkforceService.orgName,
+                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted),
               ),
           ],
         ),
-        actions: [
-          const NotificationBell(),
-          IconButton(
-            icon: const Icon(Icons.qr_code_rounded),
-            tooltip: 'Payment QR (proof)',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Attestation & proof live in More',
-                      style: GoogleFonts.inter()),
-                  backgroundColor: AppColors.accent,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 4),
-        ],
+        actions: [const NotificationBell(), const SizedBox(width: 4)],
       ),
       drawer: _drawer(),
       body: IndexedStack(
@@ -104,7 +71,6 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
           TreasurerDashboardScreen(key: _dashKey),
           const CollectionsScreen(),
           const MembersScreen(),
-          const WorkforceMoreScreen(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -116,32 +82,24 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
           selectedIndex: _index,
           backgroundColor: Colors.white,
           indicatorColor: AppColors.primary.withOpacity(0.12),
-          height: 68,
+          height: 64,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.dashboard_outlined),
-              selectedIcon:
-                  Icon(Icons.dashboard_rounded, color: AppColors.primary),
+              selectedIcon: Icon(Icons.dashboard_rounded, color: AppColors.primary),
               label: 'Dashboard',
             ),
             NavigationDestination(
               icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon:
-                  Icon(Icons.receipt_long_rounded, color: AppColors.primary),
+              selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primary),
               label: 'Collections',
             ),
             NavigationDestination(
               icon: Icon(Icons.people_outline_rounded),
-              selectedIcon:
-                  Icon(Icons.people_rounded, color: AppColors.primary),
+              selectedIcon: Icon(Icons.people_rounded, color: AppColors.primary),
               label: 'Members',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.more_horiz_rounded),
-              selectedIcon: Icon(Icons.more_horiz, color: AppColors.primary),
-              label: 'More',
             ),
           ],
         ),
@@ -149,150 +107,81 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
     );
   }
 
-  static const _titles = ['Dashboard', 'Collections', 'Members', 'More'];
+  static const _titles = ['Dashboard', 'Collections', 'Members'];
 
   Widget _drawer() {
     return Drawer(
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(),
       child: SafeArea(
         child: Column(
           children: [
             Container(
               width: double.infinity,
-              clipBehavior: Clip.antiAlias,
+              padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Stack(
-                children: [
-                  Image.network(
-                    AppImages.chamaMeeting,
-                    height: 190,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 190,
-                      color: AppColors.deep,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 110,
-                          child:
-                              Image.asset(AppAssets.logoFull, fit: BoxFit.contain),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          user?.name ?? user?.name ?? 'Collector',
-                          style: GoogleFonts.inter(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            shadows: [
-                              const Shadow(
-                                  color: Colors.black54, blurRadius: 8),
-                              const Shadow(
-                                  color: Colors.black38, offset: Offset(0, 2)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          user?.phone ?? user?.phone ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            shadows: const [
-                              Shadow(color: Colors.black54, blurRadius: 6),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black38,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.verified_rounded,
-                                  size: 12, color: Colors.white),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${user?.position ?? 'Treasurer'} · ${user?.orgName ?? WorkforceService.orgName}',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                children: [
-                  _item(Icons.dashboard_rounded, 'Dashboard', 0),
-                  _item(Icons.receipt_long_rounded, 'Collections', 1),
-                  _item(Icons.people_rounded, 'Members', 2),
-                  _item(Icons.settings_rounded, 'More / Settings', 3),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: AppColors.border)),
+                gradient: LinearGradient(
+                  colors: [AppColors.deep, AppColors.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _signOut(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.danger,
-                        elevation: 0,
-                        side: const BorderSide(color: AppColors.danger),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: const Icon(Icons.logout_rounded, size: 18),
-                      label: Text(
-                        'Sign out',
-                        style: GoogleFonts.inter(
-                            fontSize: 14, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'TapVerify Workforce v2.0.0',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.muted,
+                  Image.asset(AppAssets.logoFull, width: 100, fit: BoxFit.contain),
+                  const SizedBox(height: 14),
+                  Text(user?.name ?? 'Collector',
+                      style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
+                  const SizedBox(height: 2),
+                  Text(user?.phone ?? '',
+                      style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(6)),
+                    child: Text(
+                      '${user?.position ?? 'Treasurer'} · ${user?.orgName ?? WorkforceService.orgName}',
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            _drawerItem(Icons.settings_rounded, 'Settings', () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkforceMoreScreen()));
+            }),
+            _drawerItem(Icons.info_outline_rounded, 'About TapVerify', () {
+              Navigator.pop(context);
+              showAboutDialog(
+                context: context,
+                applicationName: 'TapVerify',
+                applicationVersion: '2.0.0',
+                children: [Text('Group Collection Operating System', style: GoogleFonts.inter())],
+              );
+            }),
+            const Spacer(),
+            const Divider(color: AppColors.border, height: 1),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => const WorkforceLoginScreen()));
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    side: const BorderSide(color: AppColors.danger),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.logout_rounded, size: 18),
+                  label: Text('Sign out', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
               ),
             ),
           ],
@@ -301,54 +190,14 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
     );
   }
 
-  void _signOut() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const WorkforceLoginScreen()),
-      (route) => false,
-    );
-  }
-
-  Widget _item(IconData icon, String label, int index) {
-    final active = _index == index;
-    final c = active ? AppColors.primary : AppColors.text;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        tileColor: active ? AppColors.primary.withOpacity(0.08) : null,
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: active
-                ? AppColors.primary.withOpacity(0.12)
-                : AppColors.primary.withOpacity(0.06),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon,
-              color: active ? AppColors.primary : AppColors.muted, size: 21),
-        ),
-        title: Text(label,
-            style: GoogleFonts.inter(
-                fontWeight: FontWeight.w700, fontSize: 14, color: c)),
-        trailing: active
-            ? Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-              )
-            : Icon(Icons.chevron_right_rounded,
-                size: 18, color: AppColors.muted.withOpacity(0.4)),
-        onTap: () {
-          Navigator.pop(context);
-          setState(() => _index = index);
-        },
-      ),
+  Widget _drawerItem(IconData icon, String label, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.text, size: 22),
+      title: Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
+      trailing: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 }

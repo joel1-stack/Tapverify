@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'workforce_models.dart';
 
@@ -82,13 +81,14 @@ class WorkforceService {
     required String position,
     required UserKind kind,
     required String orgName,
+    String pin = '1234',
     bool kycApproved = false,
   }) {
     final u = TapVerifyUser(
       id: 'u-${users.length + 1}',
       name: name,
       phone: phone.trim(),
-      pin: '1234',
+      pin: pin.trim(),
       position: position,
       kind: kind,
       orgName: orgName,

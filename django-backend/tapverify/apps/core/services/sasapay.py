@@ -330,6 +330,52 @@ class SasaPayClient:
         return 'sasapay'
 
 
+class MockSasaPayClient:
+    """Use when SasaPay sandbox is unavailable or returning 401."""
+
+    def get_access_token(self, force=False):
+        return 'mock-token-for-development'
+
+    def create_checkout(self, phone, amount, reference, description='',
+                        callback_url=None):
+        ref = reference or f"MOCK-{int(time.time())}"
+        return {
+            'success': True,
+            'checkout_request_id': f'PR-{ref}',
+            'checkout_url': f'https://sandbox.sasapay.app/checkout/mock?ref={ref}&amount={amount}&phone={phone}',
+            'message': 'Mock checkout created',
+            'raw': {'status': True, 'responseCode': '0'},
+        }
+
+    def query_transactions(self, page=1, merchant_code=None):
+        return []
+
+    def reconcile_all(self, merchant_code=None):
+        return []
+
+    def verify_signature(self, payload, signature):
+        return True
+
+    def verify_webhook(self, payload, headers):
+        result_code = str(payload.get('ResultCode') or payload.get('result_code') or '')
+        return {
+            'valid': True,
+            'reference': payload.get('Reference') or payload.get('CheckoutRequestID'),
+            'status': 'success' if result_code in ('0', 'SP00000') else 'pending',
+            'amount': payload.get('Amount') or payload.get('amount'),
+            'receipt_number': payload.get('TransactionCode') or f'MOCK-{int(time.time())}',
+            'phone': payload.get('PhoneNumber') or payload.get('phone_number'),
+            'result_code': result_code,
+            'result_description': payload.get('ResultDesc') or '',
+        }
+
+    def check_status(self, reference):
+        return {'status': 'success', 'reference': reference}
+
+    def get_rail_name(self):
+        return 'sasapay'
+
+
 # Singleton
 _client = None
 
@@ -337,5 +383,10 @@ _client = None
 def get_sasapay_client():
     global _client
     if _client is None:
-        _client = SasaPayClient()
+        from django.conf import settings
+        mock_mode = getattr(settings, 'SASAPAY_MOCK_MODE', False)
+        if mock_mode:
+            _client = MockSasaPayClient()
+        else:
+            _client = SasaPayClient()
     return _client

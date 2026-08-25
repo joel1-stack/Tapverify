@@ -9,10 +9,8 @@ import 'app_background.dart';
 import 'notification_center.dart';
 import '../pay/payment_links_screen.dart';
 
-/// Universal login. One form for everyone — a SACCO treasurer, a church
-/// secretary, a school bursar, or an individual collecting for one appeal.
-/// The app reads the phone + PIN, resolves the person, then greets them by
-/// name and position.
+/// Universal login. One form — phone + PIN. The system resolves the person
+/// and greets them by name and position. No role chips, no guessing.
 class WorkforceLoginScreen extends StatefulWidget {
   const WorkforceLoginScreen({super.key});
 
@@ -25,28 +23,11 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
   final _pin = TextEditingController();
   bool _obscure = true;
 
-  static const _samples = [
-    ('SACCO Treasurer', 'u-treasurer', Icons.account_balance_rounded,
-        AppColors.sasapay),
-    ('Church Treasurer', 'u-church', Icons.church_rounded, AppColors.accent),
-    ('School Bursar', 'u-school', Icons.school_rounded, AppColors.sky),
-    ('Individual Collector', 'u-individual', Icons.person_rounded, AppColors.gold),
-  ];
-
   @override
   void dispose() {
     _phone.dispose();
     _pin.dispose();
     super.dispose();
-  }
-
-  void _fillSample(String id) {
-    for (final u in WorkforceService.users) {
-      if (u.id == id) {
-        setState(() => _phone.text = u.phone);
-        return;
-      }
-    }
   }
 
   void _login() {
@@ -55,7 +36,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'No account for this phone. Use PIN 1234 or pick a sample below.',
+            'No account found. Register first, or check your phone and PIN.',
             style: GoogleFonts.inter(),
           ),
           backgroundColor: AppColors.danger,
@@ -114,7 +95,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'One login for everyone who collects — SACCOs, churches, schools and individuals.',
+                  'Sign in to your collection dashboard.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                       fontSize: 12, color: AppColors.primary, height: 1.5),
@@ -157,40 +138,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Sample accounts · PIN 1234',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.muted,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final s in _samples)
-                      ActionChip(
-                        avatar: Icon(s.$3, size: 16, color: s.$4),
-                        label: Text(s.$1),
-                        onPressed: () => _fillSample(s.$2),
-                        labelStyle: GoogleFonts.inter(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.text,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: s.$4.withOpacity(0.4)),
-                        ),
-                        backgroundColor: s.$4.withOpacity(0.08),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Every payment is verified with a signed receipt you can share.',
+                  'New here? Set up your group or personal collection in 60 seconds.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 11,
@@ -206,7 +154,7 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
                         builder: (_) => const WorkforceRegisterScreen()),
                   ),
                   child: Text(
-                    'New here? Register to collect',
+                    'Register to collect',
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,

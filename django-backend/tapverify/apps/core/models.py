@@ -217,7 +217,7 @@ class PaymentLink(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.CharField(max_length=200, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    rail_used = models.CharField(max_length=20, default='loop')
+    rail_used = models.CharField(max_length=20, default='sasapay')
     transaction_ref = models.CharField(max_length=100, blank=True)
 
     expires_at = models.DateTimeField(null=True, blank=True)
@@ -252,12 +252,7 @@ class Collection(models.Model):
         ('trip', 'Trip'),
     ]
     RAIL_CHOICES = [
-        ('loop-prompt', 'LOOP M-Pesa Prompt'),
-        ('loop-till', 'LOOP Pay to Till'),
-        ('loop-paybill', 'LOOP Pay to Paybill'),
         ('sasapay', 'SasaPay Checkout link'),
-        ('till', 'M-PESA Till'),
-        ('paybill', 'M-PESA Paybill'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -266,7 +261,7 @@ class Collection(models.Model):
     type = models.CharField(max_length=20, choices=COLLECTION_TYPES, default='welfare')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     due = models.DateTimeField()
-    rail = models.CharField(max_length=20, choices=RAIL_CHOICES, default='loop-prompt')
+    rail = models.CharField(max_length=20, choices=RAIL_CHOICES, default='sasapay')
     message = models.TextField(blank=True)
     sms_sent = models.BooleanField(default=False)
     closed = models.BooleanField(default=False)

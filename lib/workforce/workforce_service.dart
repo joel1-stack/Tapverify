@@ -9,7 +9,7 @@ import 'workforce_models.dart';
 /// - Collection lifecycle (create, notify, pay, verify, streak, badge)
 /// - Rails configuration (Till, Paybill, Bank, SasaPay)
 /// - Subscription plans (Pay & go)
-/// - In-memory state for the demo; in production this talks to the Django API.
+/// - In-memory state; in production this talks to the Django API.
 class WorkforceService {
   WorkforceService._();
 
@@ -334,7 +334,7 @@ class WorkforceService {
 
   static WfMember? memberById(String id) {
     // In production this queries the backend.
-    // Demo returns a placeholder.
+    // Placeholder — in production this queries the backend.
     return WfMember(
       id: id,
       code: id.replaceFirst('w-', '').padLeft(2, '0'),

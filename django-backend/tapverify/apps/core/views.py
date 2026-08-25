@@ -153,19 +153,19 @@ class VerifyMemberView(generics.GenericAPIView):
             verified_at=timezone.now()
         )
 
-        # Loop Request-to-Pay: fire the M-Pesa prompt to the member's phone
-        loop_result = None
-        if data.get('event_type') == 'payment_loop' and data.get('payment_link_token'):
+        # SasaPay: fire the checkout link to the member's phone
+        payment_result = None
+        if data.get('event_type') == 'payment_sasapay' and data.get('payment_link_token'):
             rail = get_payment_rail()
-            loop_result = rail.initiate_payment(
+            payment_result = rail.initiate_payment(
                 phone=member.phone,
                 amount=data['amount'],
                 reference=data['payment_link_token'],
                 description=f'{workspace.name} - {member.name}',
             )
-            event.notes = f"{event.notes} Loop: {loop_result.get('message') or 'initiated'}".strip()
+            event.notes = f"{event.notes} SasaPay: {payment_result.get('message') or 'initiated'}".strip()
 
-        if data.get('event_type') in ('payment_cash', 'payment_mpesa', 'payment_loop'):
+        if data.get('event_type') in ('payment_cash', 'payment_mpesa', 'payment_sasapay'):
             member.balance_due = max(0, member.balance_due - data['amount'])
             member.last_paid_at = timezone.now()
             member.save()
@@ -322,7 +322,7 @@ class SendRemindersView(generics.GenericAPIView):
 class PaymentLinkCreateView(generics.GenericAPIView):
     """
     POST /api/v1/payment-link/create/
-    Creates a payment link so the MEMBER can pay on their own phone via Loop.
+    Creates a payment link so the MEMBER can pay on their own phone via SasaPay.
     """
     def post(self, request):
         workspace_id = request.data.get('workspace_id')
@@ -410,7 +410,7 @@ def payment_link_view(request, token):
 def payment_link_pay(request, token):
     """
     POST /p/<token>/pay/
-    Initiates Loop Request to Pay for the member.
+    Initiates SasaPay checkout for the member.
     """
     pl = get_object_or_404(PaymentLink, token=token, status='pending')
 
@@ -464,7 +464,7 @@ def payment_rail_info(request):
     rail = get_payment_rail()
     return Response({
         'active_rail': rail.get_rail_name(),
-        'available_rails': ['loop', 'payhero'],
+        'available_rails': ['sasapay'],
     })
 
 

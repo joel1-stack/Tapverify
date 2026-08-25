@@ -5,9 +5,7 @@ import '../workforce/workforce_service.dart';
 import 'notification_center.dart';
 
 /// Pricing — pay & go. A collector activates a plan once; after that they can
-/// log in any time, edit the description and raise the next collection. No
-/// money moves here in the demo — activation is simulated until real APIs are
-/// connected.
+/// log in any time, edit the description and raise the next collection.
 class PricingScreen extends StatefulWidget {
   const PricingScreen({super.key});
 

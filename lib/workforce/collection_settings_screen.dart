@@ -8,9 +8,8 @@ import 'app_background.dart';
 import 'notification_center.dart';
 
 /// How the collector actually receives money. Members pay into these account
-/// details — the collector never touches cash. In production the Till,
-/// Paybill, Bank and SasaPay rails are connected to partner APIs (Loop,
-/// SasaPay, PayHero); USSD, SMS and Avalanche badges ride on top.
+/// details — the collector never touches cash. In production SasaPay handles
+/// checkout links; USSD, SMS and Avalanche badges ride on top.
 class CollectionSettingsScreen extends StatefulWidget {
   const CollectionSettingsScreen({super.key});
 
@@ -235,7 +234,7 @@ class _CollectionSettingsScreenState extends State<CollectionSettingsScreen> {
                           Border.all(color: AppColors.secondary.withOpacity(0.25)),
                     ),
                     child: Text(
-                      'In production these rails are wired to partner APIs — Loop, SasaPay and PayHero take the Till / Paybill / bank directly. USSD, SMS reminders and Avalanche badge attestations are included.',
+                      'In production these rails are wired to SasaPay — checkout links, USSD, SMS reminders and Avalanche badge attestations are included.',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         color: AppColors.text,

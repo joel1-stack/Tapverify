@@ -43,7 +43,7 @@ class TapVerifyUser {
 
 /// How the collector actually receives money. Members pay into THESE account
 /// details — the collector never touches cash directly. Partner APIs (SasaPay,
-/// PayHero) take the Till/Paybill/Bank rails in production.
+/// SasaPay takes the checkout link rails in production.
 class RailsConfig {
   RailsConfig({
     this.till = '',

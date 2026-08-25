@@ -11,7 +11,7 @@ One entrypoint drives the whole money journey:
                           →  trigger the Airtime reward at 3-month streaks
 
 The router is provider-agnostic: it delegates each step to a rail adapter
-(SasaPay, M-Pesa, PayHero) and to the AT + Avalanche adapters, so swapping a
+(SasaPay) and to the AT + Avalanche adapters, so swapping a
 rail never changes the lifecycle logic.
 """
 import logging

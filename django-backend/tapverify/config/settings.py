@@ -1,6 +1,6 @@
 """
 TapVerify Django Settings
-For hackathon and production. Use .env for secrets.
+Use .env for secrets in production.
 """
 import os
 from pathlib import Path
@@ -8,7 +8,7 @@ from decouple import config, Csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='hackathon-dev-key-change-in-production')
+SECRET_KEY = config('SECRET_KEY', default='dev-key-change-in-production')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 

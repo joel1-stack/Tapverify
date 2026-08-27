@@ -13,10 +13,13 @@ class _WebDashboardState extends State<WebDashboard> {
 
   static const _navItems = [
     _NavItem(Icons.dashboard_rounded, 'Dashboard'),
+    _NavItem(Icons.add_circle_rounded, 'New Order'),
     _NavItem(Icons.receipt_long_rounded, 'Orders'),
     _NavItem(Icons.people_rounded, 'Customers'),
     _NavItem(Icons.bar_chart_rounded, 'Revenue'),
     _NavItem(Icons.shield_rounded, 'Credit Profile'),
+    _NavItem(Icons.phone_android_rounded, 'USSD Simulator'),
+    _NavItem(Icons.sms_rounded, 'Bulk SMS'),
     _NavItem(Icons.settings_rounded, 'Settings'),
   ];
 
@@ -152,11 +155,14 @@ class _WebDashboardState extends State<WebDashboard> {
   Widget _body() {
     switch (_selectedNav) {
       case 0: return _dashboardBody();
-      case 1: return _ordersBody();
-      case 2: return _customersBody();
-      case 3: return _revenueBody();
-      case 4: return _creditBody();
-      case 5: return _settingsBody();
+      case 1: return _newOrderBody();
+      case 2: return _ordersBody();
+      case 3: return _customersBody();
+      case 4: return _revenueBody();
+      case 5: return _creditBody();
+      case 6: return _ussdBody();
+      case 7: return _bulkSmsBody();
+      case 8: return _settingsBody();
       default: return _dashboardBody();
     }
   }
@@ -536,6 +542,317 @@ class _WebDashboardState extends State<WebDashboard> {
               fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
         ],
       ),
+    );
+  }
+
+  // ── NEW ORDER ──
+  Widget _newOrderBody() {
+    final nameCtrl = TextEditingController();
+    final amountCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(28),
+        decoration: _cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Record Customer Payment', style: GoogleFonts.inter(
+                fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+            const SizedBox(height: 6),
+            Text('Create an order and generate a payment link', style: GoogleFonts.inter(
+                fontSize: 13, color: AppColors.muted)),
+            const SizedBox(height: 24),
+            _field('Customer name', Icons.person_rounded, nameCtrl),
+            const SizedBox(height: 16),
+            _field('Amount (Ksh)', Icons.payments_rounded, amountCtrl, keyboard: TextInputType.number),
+            const SizedBox(height: 16),
+            _field('Order description', Icons.receipt_rounded, descCtrl),
+            const SizedBox(height: 16),
+            Text('Payment method', style: GoogleFonts.inter(
+                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: [
+                _payChip('M-Pesa STK', true),
+                _payChip('SasaPay Link', false),
+                _payChip('Till Number', false),
+                _payChip('Paybill', false),
+                _payChip('Card', false),
+                _payChip('Airtel', false),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Order created! Payment link generated.', style: GoogleFonts.inter()),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                },
+                icon: const Icon(Icons.link_rounded, size: 18),
+                label: Text('Create Order & Generate Link', style: GoogleFonts.inter(
+                    fontSize: 14, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _field(String hint, IconData icon, TextEditingController ctrl,
+      {TextInputType? keyboard}) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: keyboard,
+      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.inter(color: AppColors.muted.withOpacity(0.5), fontSize: 14),
+        prefixIcon: Icon(icon, color: AppColors.muted, size: 20),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _payChip(String label, bool selected) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: selected ? AppColors.primary : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+      ),
+      child: Text(label, style: GoogleFonts.inter(
+          fontSize: 12, fontWeight: FontWeight.w700,
+          color: selected ? Colors.white : AppColors.text)),
+    );
+  }
+
+  // ── USSD SIMULATOR ──
+  Widget _ussdBody() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(28),
+        decoration: _cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.phone_android_rounded, color: AppColors.primary, size: 22),
+                const SizedBox(width: 10),
+                Text('USSD Simulator', style: GoogleFonts.inter(
+                    fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text('Shortcode 14434 · *384*123#', style: GoogleFonts.inter(
+                fontSize: 13, color: AppColors.muted)),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDFA),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Phone: 0715 641 339', style: GoogleFonts.inter(
+                      fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text)),
+                  const SizedBox(height: 12),
+                  Text('Dial *384*123# to start session', style: GoogleFonts.inter(
+                      fontSize: 13, color: AppColors.muted)),
+                  const SizedBox(height: 16),
+                  _ussdMenuItem('1', 'Clock In'),
+                  _ussdMenuItem('2', 'Clock Out'),
+                  _ussdMenuItem('3', 'View Balance'),
+                  _ussdMenuItem('4', 'Report Safety Incident'),
+                  _ussdMenuItem('5', 'View Announcements'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('PIN: 1234 · Demo mode active', style: GoogleFonts.inter(
+                      fontSize: 12, color: AppColors.primary)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _ussdMenuItem(String num, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 28, height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Center(child: Text(num, style: GoogleFonts.inter(
+                fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary))),
+          ),
+          const SizedBox(width: 10),
+          Text(label, style: GoogleFonts.inter(
+              fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+        ],
+      ),
+    );
+  }
+
+  // ── BULK SMS ──
+  Widget _bulkSmsBody() {
+    final msgCtrl = TextEditingController(
+        text: 'Dear {name}, your payment of Ksh {amount} for order #{order} is due on {date}. Pay now: {link}');
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 600),
+        padding: const EdgeInsets.all(28),
+        decoration: _cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.sms_rounded, color: AppColors.primary, size: 22),
+                const SizedBox(width: 10),
+                Text('Bulk SMS', style: GoogleFonts.inter(
+                    fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text('Send payment reminders via Africa\'s Talking', style: GoogleFonts.inter(
+                fontSize: 13, color: AppColors.muted)),
+            const SizedBox(height: 20),
+            Text('Recipients', style: GoogleFonts.inter(
+                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted)),
+            const SizedBox(height: 8),
+            TextField(
+              maxLines: 3,
+              style: GoogleFonts.inter(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Paste phone numbers, one per line:\n0712345678\n0723456789\n0734567890',
+                hintStyle: GoogleFonts.inter(color: AppColors.muted.withOpacity(0.5), fontSize: 13),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Message template', style: GoogleFonts.inter(
+                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: msgCtrl,
+              maxLines: 4,
+              style: GoogleFonts.inter(fontSize: 13),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6, runSpacing: 6,
+              children: [
+                _tag('{name}'), _tag('{amount}'), _tag('{order}'), _tag('{date}'), _tag('{link}'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('SMS sent to 12 customers!', style: GoogleFonts.inter()),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                },
+                icon: const Icon(Icons.send_rounded, size: 18),
+                label: Text('Send Bulk SMS', style: GoogleFonts.inter(
+                    fontSize: 14, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(text, style: GoogleFonts.inter(
+          fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
     );
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
+import 'web_login.dart';
+import 'web_dashboard.dart';
 
 class WebLandingPage extends StatefulWidget {
   const WebLandingPage({super.key});
@@ -24,6 +26,14 @@ class _WebLandingPageState extends State<WebLandingPage> {
   void dispose() {
     _scroll.dispose();
     super.dispose();
+  }
+
+  void _goToLogin() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const WebLoginPage()));
+  }
+
+  void _goToDemo() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const WebDashboard()));
   }
 
   @override
@@ -53,7 +63,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
                     const SizedBox(width: 16),
                   ],
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _goToLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -207,7 +217,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
                       style: GoogleFonts.inter(fontSize: 16, color: Colors.white70)),
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _goToLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
@@ -258,7 +268,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextButton(
-        onPressed: () {},
+        onPressed: _goToLogin,
         child: Text(text, style: GoogleFonts.inter(
             fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
       ),
@@ -275,7 +285,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
             color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text('🚀 Built for Kenyan SMEs', style: GoogleFonts.inter(
+          child: Text('Built for Kenyan SMEs', style: GoogleFonts.inter(
               fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
         ),
         const SizedBox(height: 20),
@@ -296,7 +306,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
           mainAxisAlignment: narrow ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
             ElevatedButton(
-              onPressed: () {},
+              onPressed: _goToLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
@@ -306,7 +316,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
             ),
             const SizedBox(width: 16),
             OutlinedButton(
-              onPressed: () {},
+              onPressed: _goToDemo,
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.border),
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
@@ -363,11 +373,11 @@ class _WebLandingPageState extends State<WebLandingPage> {
   }
 
   List<_StepData> _steps() => [
-    _StepData('1', 'Record Payment', 'Business owner records a customer payment — name, amount, order.', AppColors.primary),
-    _StepData('2', 'Generate Link', 'SasaPay checkout link generated — unique per customer per order.', AppColors.secondary),
-    _StepData('3', 'Customer Pays', 'Link shared via WhatsApp or SMS. Customer taps to pay.', AppColors.success),
-    _StepData('4', 'Webhook Verifies', 'SasaPay callback confirms payment. Dashboard updates instantly.', AppColors.deep),
-    _StepData('5', 'Revenue Proof', 'Over months, a verified credit profile emerges. Lender-ready.', AppColors.gold),
+    _StepData('1', 'Record Payment', 'Business owner records a customer payment.', AppColors.primary),
+    _StepData('2', 'Generate Link', 'SasaPay checkout link generated per order.', AppColors.secondary),
+    _StepData('3', 'Customer Pays', 'Link shared via WhatsApp or SMS.', AppColors.success),
+    _StepData('4', 'Webhook Verifies', 'SasaPay callback confirms payment.', AppColors.deep),
+    _StepData('5', 'Revenue Proof', 'Verified credit profile emerges.', AppColors.gold),
   ];
 
   Widget _stepCard(_StepData s, bool narrow) {
@@ -404,12 +414,12 @@ class _WebLandingPageState extends State<WebLandingPage> {
   }
 
   List<_FeatureData> _features() => [
-    _FeatureData(Icons.payment_rounded, 'Multi-Rail Payments', 'M-Pesa, SasaPay, Airtel, Card, Bank — all verified.'),
-    _FeatureData(Icons.verified_rounded, 'Cryptographic Proof', 'HMAC-SHA512 signed webhooks. Tamper-proof records.'),
-    _FeatureData(Icons.receipt_long_rounded, 'SMS Receipts', 'Automatic receipts sent via Africa\'s Talking.'),
-    _FeatureData(Icons.phone_android_rounded, 'USSD Access', 'Check balance, clock in, report via *384*123#.'),
-    _FeatureData(Icons.stacked_bar_chart_rounded, 'Revenue Dashboard', 'Bar charts, monthly trends, consistency scores.'),
-    _FeatureData(Icons.shield_rounded, 'Credit Profile', 'Verified revenue history for loan applications.'),
+    _FeatureData(Icons.payment_rounded, 'Multi-Rail Payments', 'M-Pesa, SasaPay, Airtel, Card, Bank.'),
+    _FeatureData(Icons.verified_rounded, 'Cryptographic Proof', 'HMAC-SHA512 signed webhooks.'),
+    _FeatureData(Icons.receipt_long_rounded, 'SMS Receipts', 'Automatic receipts via Africa\'s Talking.'),
+    _FeatureData(Icons.phone_android_rounded, 'USSD Access', 'Check balance via *384*123#.'),
+    _FeatureData(Icons.stacked_bar_chart_rounded, 'Revenue Dashboard', 'Bar charts and consistency scores.'),
+    _FeatureData(Icons.shield_rounded, 'Credit Profile', 'Verified revenue for loan applications.'),
   ];
 
   Widget _featureCard(_FeatureData f) {
@@ -505,7 +515,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: _goToLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: p.popular ? AppColors.primary : Colors.white,
                 side: p.popular ? null : const BorderSide(color: AppColors.border),

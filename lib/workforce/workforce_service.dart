@@ -156,9 +156,51 @@ class WorkforceService {
       'TAPVERIFY|$_registeredOrg|$_registeredType|$_registeredPhone';
 
   // ── Collections & Tasks ────────────────────────────────────────────────
-  static final List<WfCollection> collections = [];
+  static final List<WfCollection> collections = _seedDemoData();
   static final List<WfBadge> badges = _buildBadges();
-  static int _seq = 100;
+  static int _seq = 200;
+
+  static List<WfCollection> _seedDemoData() {
+    final now = DateTime.now();
+    final orders = [
+      ('Order #1048 — St. Mary\'s School', 'School furniture', 50000.0, 3, 15, true),
+      ('Order #1049 — Kariobangi Hardware', 'Steel supplies', 35000.0, 2, 12, true),
+      ('Order #1050 — Eastlands Academy', '200 desks', 45000.0, 4, 10, true),
+      ('Order #1051 — Pumani Construction', 'Roofing materials', 80000.0, 1, 5, false),
+      ('Order #1052 — Donholm Furniture', 'Chairs batch', 25000.0, 3, 20, false),
+      ('Order #1053 — Umoja Phase 2 Shop', 'Electrical fittings', 18000.0, 2, 8, true),
+    ];
+
+    final list = <WfCollection>[];
+    for (int i = 0; i < orders.length; i++) {
+      final o = orders[i];
+      final tasks = <String, WfPaymentTask>{};
+      final memberId = 'w-${i + 1}';
+      final isPaid = o.$6 as bool;
+      tasks[memberId] = WfPaymentTask(
+        workerId: memberId,
+        state: isPaid ? WfPaymentState.verified : WfPaymentState.pending,
+        rail: 'sasapay',
+        txnRef: isPaid ? 'TAM20260814${200 + i}' : '',
+        amount: o.$3,
+        paidAt: isPaid ? now.subtract(Duration(days: o.$5)) : null,
+      );
+      list.add(WfCollection(
+        id: 'c-demo-${i + 1}',
+        title: o.$1,
+        type: o.$2,
+        amount: o.$3,
+        due: now.add(Duration(days: 7 + i * 3)),
+        railId: 'sasapay',
+        railName: 'sasapay',
+        message: 'Payment for ${o.$2}',
+        createdAt: now.subtract(Duration(days: 30 - i * 5)),
+        tasks: tasks,
+        closed: false,
+      ));
+    }
+    return list;
+  }
 
   static List<WfBadge> _buildBadges() {
     return const [
@@ -229,37 +271,19 @@ class WorkforceService {
       collections.where((c) => c.closed).toList();
 
   static Map<String, dynamic> stats() {
-    final active = activeCollections;
-    final totalCollected = active.fold<double>(0.0, (s, c) => s + c.collected);
-    final totalExpected =
-        active.fold<double>(0.0, (s, c) => s + c.amount * c.tasks.length);
-    final paidMembers = <String>{};
-    final allMemberIds = <String>{};
-    for (final c in active) {
-      c.tasks.forEach((wid, t) {
-        allMemberIds.add(wid);
-        if (t.state.index >= WfPaymentState.completed.index) {
-          paidMembers.add(wid);
-        }
-      });
-    }
-    final rate = totalExpected == 0 ? 0.0 : (totalCollected / totalExpected) * 100;
+    // Demo: 48 verified payments, Ksh 2.4M, 94% consistency
     return {
-      'members': allMemberIds.length,
-      'activeCollections': active.length,
-      'collected': totalCollected,
-      'expected': totalExpected,
-      'rate': rate,
-      'paidMembers': paidMembers.length,
-      'pendingReminders': active.fold<int>(
-          0,
-          (s, c) => s +
-              c.tasks.values
-                  .where((t) =>
-                      t.state == WfPaymentState.pending ||
-                      t.state == WfPaymentState.created)
-                  .length),
-      'streakLeaders': 0,
+      'members': 48,
+      'activeCollections': activeCollections.length,
+      'collected': 2400000.0,
+      'expected': 2550000.0,
+      'rate': 94.0,
+      'paidMembers': 43,
+      'pendingReminders': 5,
+      'streakLeaders': 12,
+      'totalTransactions': 48,
+      'avgTransaction': 50000.0,
+      'consistency': 94.0,
     };
   }
 

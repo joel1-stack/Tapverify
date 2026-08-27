@@ -15,8 +15,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 
-from ..models import PaymentTask, StreakRecord
-from ..services.sasapay import get_sasapay_client, SUCCESS_CODES
+from .models import PaymentTask, StreakRecord
+from .services.sasapay import get_sasapay_client, SUCCESS_CODES
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def _process_successful_payment(task, payload):
 
     # Send SMS receipt
     try:
-        from ..services.africastalking import AfricasTalkingService
+        from .services.africastalking import AfricasTalkingService
         at = AfricasTalkingService()
         receipt_msg = (
             f"RECEIPT: {task.collection.title}\n"

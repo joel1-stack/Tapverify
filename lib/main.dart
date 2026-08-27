@@ -1,24 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-import 'workforce/workforce_login_screen.dart';
+import 'workforce/splash_screen.dart';
+import 'web/landing_page.dart';
 
-/// TapVerify — verified revenue history for manufacturing SMEs, jua kali
-/// workshops, and businesses. Customers pay via WhatsApp links or USSD;
-/// business owners track everything in the app or on the web dashboard.
 void main() {
   runApp(const TapVerifyApp());
 }
 
-/// Root widget. Applies the global TapVerify Material 3 theme (Trust Teal seed,
-/// Inter font, custom button/input/card styling).
 class TapVerifyApp extends StatelessWidget {
   const TapVerifyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TapVerify',
+      title: 'TapVerify — Proof of Payment',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -81,7 +78,7 @@ class TapVerifyApp extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
-      home: const WorkforceLoginScreen(),
+      home: kIsWeb ? const WebLandingPage() : const SplashScreen(),
     );
   }
 }

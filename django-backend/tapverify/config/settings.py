@@ -33,7 +33,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = 'tapverify.config.urls'
 
 TEMPLATES = [
     {
@@ -51,16 +51,12 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = 'tapverify.config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='tapverify'),
-        'USER': config('DB_USER', default='tapverify'),
-        'PASSWORD': config('DB_PASSWORD', default='tapverify123'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -101,10 +97,12 @@ LOGIN_URL = '/login/'
 RECEIPT_BASE_URL = config('RECEIPT_BASE_URL', default='https://tverify.co.ke')
 
 AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='joelkaunda15')
-AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='atsk_5eeb16bc28680c56c8922932f63a6b8d3da3e675046ddb1af02c420e236c39428ca8f16a')
+AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='atsk_23600759f9c7c4a65263251f8e7f68eb02069696cd76f93e220f0500b4c8dc0299365fc2')
 AFRICASTALKING_SENDER_ID = config('AFRICASTALKING_SENDER_ID', default='TAPVERIFY')
 AFRICASTALKING_AIRTIME_PRODUCT_CODE = config('AFRICASTALKING_AIRTIME_PRODUCT_CODE', default='TAPVERIFY')
+AFRICASTALKING_USSD_SHORTCODE = config('AFRICASTALKING_USSD_SHORTCODE', default='14434')
 AFRICASTALKING_USSD_SERVICE_CODE = config('AFRICASTALKING_USSD_SERVICE_CODE', default='*384*123#')
+AFRICASTALKING_SANDBOX = config('AFRICASTALKING_SANDBOX', default=True, cast=bool)
 
 # Avalanche Fuji attestations
 AVALANCHE_RPC = config('AVALANCHE_RPC', default='https://api.avax-test.network/ext/bc/C/rpc')

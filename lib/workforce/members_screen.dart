@@ -4,24 +4,15 @@ import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 
-/// Customers — the business owner's roster, with on-time records and streaks.
+/// Customers — clean list with streak and status.
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
-
   @override
   State<MembersScreen> createState() => _MembersScreenState();
 }
 
 class _MembersScreenState extends State<MembersScreen> {
   final _query = TextEditingController();
-  String _dept = 'All';
-
-  static const _departments = [
-    'All',
-    'General',
-    'Finance',
-    'Admin',
-  ];
 
   @override
   void dispose() {
@@ -36,7 +27,6 @@ class _MembersScreenState extends State<MembersScreen> {
         .map((t) => WorkforceService.memberById(t.workerId))
         .whereType<WfMember>()
         .where((w) {
-      if (_dept != 'All' && w.department != _dept) return false;
       if (q.isNotEmpty &&
           !w.name.toLowerCase().contains(q) &&
           !w.code.toLowerCase().contains(q)) {
@@ -56,66 +46,54 @@ class _MembersScreenState extends State<MembersScreen> {
           child: TextField(
             controller: _query,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
               hintText: 'Search customers...',
-              prefixIcon: Icon(Icons.search_rounded),
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 12),
+              hintStyle: GoogleFonts.inter(color: AppColors.muted.withOpacity(0.5)),
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              for (final d in _departments) ...[
-                ChoiceChip(
-                  label: Text(d),
-                  selected: _dept == d,
-                  onSelected: (_) => setState(() => _dept = d),
-                  selectedColor: AppColors.primary,
-                  labelStyle: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    color: _dept == d ? Colors.white : AppColors.text,
-                    fontSize: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: AppColors.border),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ],
           ),
         ),
         const SizedBox(height: 12),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async => setState(() {}),
-            color: AppColors.accent,
+            color: AppColors.primary,
             child: list.isEmpty
                 ? ListView(
                     children: const [
                       SizedBox(height: 120),
                       Center(
-                        child: Icon(Icons.person_search_rounded,
-                            size: 40, color: AppColors.muted),
-                      ),
+                          child: Icon(Icons.person_search_rounded,
+                              size: 40, color: AppColors.muted)),
                       SizedBox(height: 8),
                       Center(
-                        child: Text('No customers found',
-                            style: TextStyle(color: AppColors.muted)),
-                      ),
+                          child: Text('No customers found',
+                              style: TextStyle(color: AppColors.muted))),
                     ],
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     itemCount: list.length,
-                    itemBuilder: (context, i) => _memberRow(list[i]),
+                    itemBuilder: (context, i) => _customerCard(list[i]),
                   ),
           ),
         ),
@@ -123,13 +101,14 @@ class _MembersScreenState extends State<MembersScreen> {
     );
   }
 
-  Widget _memberRow(WfMember w) {
+  Widget _customerCard(WfMember w) {
     final activeDue = WorkforceService.tasksForMember(w.id)
         .where((e) => e.task.state.index < WfPaymentState.completed.index)
         .length;
+    final isClear = activeDue == 0;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -152,61 +131,38 @@ class _MembersScreenState extends State<MembersScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  w.name,
-                  style: GoogleFonts.inter(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.text,
-                  ),
-                ),
+                Text(w.name,
+                    style: GoogleFonts.inter(
+                        fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
                 const SizedBox(height: 2),
-                Text(
-                  '${w.code} · ${w.department} · since ${w.memberSince}',
-                  style:
-                      GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
-                ),
+                Text(w.code,
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
               ],
             ),
           ),
-          if (activeDue > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: Text(
-                '$activeDue due',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.warning,
-                ),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF16A34A).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: Text(
-                'CLEAR',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF16A34A),
-                ),
-              ),
-            ),
-          const SizedBox(width: 8),
+          // Status pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.gold.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(7),
+              color: (isClear ? AppColors.success : AppColors.warning)
+                  .withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              isClear ? 'CLEAR' : '$activeDue DUE',
+              style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: isClear ? AppColors.success : AppColors.warning),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Streak
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -214,14 +170,11 @@ class _MembersScreenState extends State<MembersScreen> {
                 const Icon(Icons.local_fire_department_rounded,
                     size: 12, color: AppColors.gold),
                 const SizedBox(width: 3),
-                Text(
-                  '${w.currentStreak}',
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.gold,
-                  ),
-                ),
+                Text('${w.currentStreak}',
+                    style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.gold)),
               ],
             ),
           ),

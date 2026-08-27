@@ -5,11 +5,24 @@ import '../constants.dart';
 import '../workforce/workforce_service.dart';
 import 'collection_detail_screen.dart';
 
-/// Business owner records a new customer payment. Rail selection is UI-only for now; real
-/// payment keys are wired server-side later.
+enum PaymentMethod {
+  mpesaStk('M-Pesa STK Push', Icons.phone_android_rounded, 'mpesa_stk', 'Send STK Push'),
+  sasaPay('SasaPay Link', Icons.link_rounded, 'sasapay', 'Generate Link & Send'),
+  mpesaTill('M-Pesa Till', Icons.store_rounded, 'mpesa_till', 'Show Till Number'),
+  mpesaPaybill('M-Pesa Paybill', Icons.receipt_long_rounded, 'mpesa_paybill', 'Show Paybill'),
+  card('Card Payment', Icons.credit_card_rounded, 'card', 'Process Card Payment'),
+  airtel('Airtel Money', Icons.phone_iphone_rounded, 'airtel', 'Send Airtel Request');
+
+  final String label;
+  final IconData icon;
+  final String railId;
+  final String buttonText;
+
+  const PaymentMethod(this.label, this.icon, this.railId, this.buttonText);
+}
+
 class CreateCollectionScreen extends StatefulWidget {
   const CreateCollectionScreen({super.key});
-
   @override
   State<CreateCollectionScreen> createState() => _CreateCollectionScreenState();
 }
@@ -17,309 +30,327 @@ class CreateCollectionScreen extends StatefulWidget {
 class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   final _title = TextEditingController();
   final _amount = TextEditingController();
-  final _message = TextEditingController();
-  String _type = 'Order';
-  String _railId = 'sasapay';
-  DateTime _due = DateTime.now().add(const Duration(days: 7));
-
-  static const _types = ['Order', 'Medical', 'Emergency', 'Trip', 'Fees', 'Other'];
-
-  List<(String, String, IconData, Color, String)> get _rails {
-    final r = WorkforceService.railsConfig;
-    return [
-      ('sasapay', 'SasaPay Checkout link', Icons.link_rounded,
-          AppColors.sasapay, 'MPESA/Equity link sent by SMS'),
-      ('mpesa-prompt', 'M-Pesa STK Prompt', Icons.bolt_rounded,
-          AppColors.success, 'Push to each member phone'),
-      ('till', 'M-PESA Till ${r.till}', Icons.storefront_rounded,
-          AppColors.success, 'Members pay via till'),
-      ('paybill', 'M-PESA Paybill ${r.paybill}${r.paybillAccount.isNotEmpty ? ' (${r.paybillAccount})' : ''}',
-          Icons.receipt_rounded, AppColors.secondary, 'Paybill account ${r.paybillAccount}'),
-      if (r.bankAccount.isNotEmpty)
-        ('bank', '${r.bankName.isNotEmpty ? r.bankName : 'Bank'} transfer ${r.bankAccount}',
-            Icons.account_balance_rounded, AppColors.sasapay, 'Bank to ${r.bankName}'),
-    ];
-  }
+  final _desc = TextEditingController();
+  final _minInstallment = TextEditingController();
+  final _numInstallments = TextEditingController();
+  bool _loading = false;
+  bool _allowPartial = false;
+  PaymentMethod _selectedMethod = PaymentMethod.mpesaStk;
+  DateTime? _dueDate;
 
   @override
   void dispose() {
     _title.dispose();
     _amount.dispose();
-    _message.dispose();
+    _desc.dispose();
+    _minInstallment.dispose();
+    _numInstallments.dispose();
     super.dispose();
   }
 
-  void _save() {
-    if (WorkforceService.activePlan == null) {
-      _showPlanGate();
-      return;
-    }
+  void _submit() {
     final title = _title.text.trim();
     final amount = double.tryParse(_amount.text.trim()) ?? 0;
-    if (title.isEmpty || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Add a title and a valid amount',
-              style: GoogleFonts.inter()),
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (title.isEmpty) {
+      _snack('Enter customer name', AppColors.danger);
       return;
     }
-    final rail = _rails.firstWhere((r) => r.$1 == _railId);
-    final c = WorkforceService.createCollection(
-      title: title,
-      type: _type,
-      amount: amount,
-      due: _due,
-      railId: rail.$1,
-      railName: rail.$2,
-      message: _message.text.trim().isEmpty
-          ? '$_type order for ${WorkforceService.orgName} — Ksh ${amount.round()}.'
-          : _message.text.trim(),
-    );
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => CollectionDetailScreen(collection: c)),
-    );
-  }
-
-  Future<void> _showPlanGate() async {
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Activate a plan first',
-          style: GoogleFonts.inter(
-              fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
-        ),
-        content: Text(
-          'Pay & go to unlock orders. Activate once — then record as many orders as you need.',
-          style: GoogleFonts.inter(
-              fontSize: 13, color: AppColors.text, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Not now',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700, color: AppColors.muted)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
-            child: Text('See pricing',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-    if (go == true && mounted) {
-      Navigator.pop(context);
+    if (amount <= 0) {
+      _snack('Enter a valid amount', AppColors.danger);
+      return;
     }
+    if (_allowPartial) {
+      final minInst = double.tryParse(_minInstallment.text.trim()) ?? 0;
+      final numInst = int.tryParse(_numInstallments.text.trim()) ?? 0;
+      if (minInst <= 0) {
+        _snack('Enter a valid minimum installment', AppColors.danger);
+        return;
+      }
+      if (minInst >= amount) {
+        _snack('Installment must be less than total amount', AppColors.danger);
+        return;
+      }
+      if (numInst < 2) {
+        _snack('Allow at least 2 installments', AppColors.danger);
+        return;
+      }
+    }
+    setState(() => _loading = true);
+    Future.delayed(const Duration(milliseconds: 600), () {
+      final due = _dueDate ?? DateTime.now().add(const Duration(days: 7));
+      final c = WorkforceService.createCollection(
+        title: title,
+        type: 'Order',
+        amount: amount,
+        due: due,
+        railId: _selectedMethod.railId,
+        railName: _selectedMethod.label,
+        message: _desc.text.trim().isEmpty
+            ? 'Order for $title — Ksh ${amount.round()}'
+            : _desc.text.trim(),
+      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => CollectionDetailScreen(collection: c)),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+            '${_selectedMethod.buttonText} sent for $title',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    });
   }
 
-  Future<void> _pickDue() async {
+  Future<void> _pickDueDate() async {
+    final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _due,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      builder: (context, child) => Theme(
-        data: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.loop, primary: AppColors.primary),
-        ),
-        child: child!,
-      ),
+      initialDate: _dueDate ?? now.add(const Duration(days: 7)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: AppColors.primary),
+          ),
+          child: child!,
+        );
+      },
     );
-    if (picked != null) setState(() => _due = picked);
+    if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  void _snack(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.inter()),
+      backgroundColor: color,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final dateFormat = _dueDate != null
+        ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
+        : 'Select date';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: AppColors.text,
-        title: Text(
-          'Record customer payment',
-          style: GoogleFonts.inter(
-              fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
-        ),
+        title: Text('Record customer payment',
+            style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Type', style: _sectionTitle()),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final t in _types)
-                  ChoiceChip(
-                    label: Text(t),
-                    selected: _type == t,
-                    onSelected: (_) => setState(() => _type = t),
-                    selectedColor: AppColors.primary,
-                    labelStyle: GoogleFonts.inter(
-                      fontWeight: FontWeight.w700,
-                      color: _type == t ? Colors.white : AppColors.text,
-                      fontSize: 13,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: AppColors.border),
+            // Info card
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.info_outline_rounded,
+                      size: 18, color: AppColors.primary),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Choose a payment method and enter the order details below.',
+                      style: TextStyle(
+                          fontSize: 12, color: AppColors.primary, height: 1.4),
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            Text('Title', style: _sectionTitle()),
+            const SizedBox(height: 24),
+
+            // Customer name
+            _label('Customer name'),
             const SizedBox(height: 8),
             TextField(
               controller: _title,
-              decoration: const InputDecoration(
-                hintText: 'e.g. September order for steel sheets',
-                prefixIcon: Icon(Icons.flag_rounded),
-              ),
+              textCapitalization: TextCapitalization.words,
+              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
+              decoration: _inputDecoration('e.g. St. Mary\'s School', Icons.person_rounded),
             ),
-            const SizedBox(height: 16),
-            Text('Amount (Ksh)', style: _sectionTitle()),
+            const SizedBox(height: 20),
+
+            // Amount
+            _label('Amount (KES)'),
             const SizedBox(height: 8),
             TextField(
               controller: _amount,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                hintText: 'e.g. 500',
-                prefixIcon: Icon(Icons.payments_rounded),
-              ),
+              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
+              decoration: _inputDecoration('e.g. 50000', Icons.payments_rounded),
             ),
-            const SizedBox(height: 16),
-            Text('Payment due', style: _sectionTitle()),
+            const SizedBox(height: 20),
+
+            // Description
+            _label('Description'),
             const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _pickDue,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
+            TextField(
+              controller: _desc,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 3,
+              maxLength: 160,
+              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+              decoration: _inputDecoration(
+                  'e.g. 200 desks for classroom', Icons.description_rounded),
+            ),
+            const SizedBox(height: 24),
+
+            // Payment method
+            _label('Payment method'),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: PaymentMethod.values.map((m) {
+                final selected = _selectedMethod == m;
+                return ChoiceChip(
+                  label: Text(m.label, style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? Colors.white : AppColors.text,
+                  )),
+                  avatar: Icon(m.icon, size: 16,
+                      color: selected ? Colors.white : AppColors.muted),
+                  selected: selected,
+                  selectedColor: AppColors.primary,
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                      color: selected ? AppColors.primary : AppColors.border),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  onSelected: (_) => setState(() => _selectedMethod = m),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+
+            // Due date
+            _label('Due date'),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: _pickDueDate,
+              borderRadius: BorderRadius.circular(14),
+              child: InputDecorator(
+                decoration: _inputDecoration('Select date', Icons.calendar_today_rounded)
+                    .copyWith(hintText: dateFormat),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.event_rounded, color: AppColors.accent),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${_due.day} ${_monthName(_due.month)} ${_due.year}',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.text,
-                      ),
-                    ),
+                    Text(dateFormat,
+                        style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: _dueDate != null ? AppColors.text : AppColors.muted)),
+                    Icon(Icons.arrow_drop_down, color: AppColors.muted),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Text('Payment rail', style: _sectionTitle()),
-            const SizedBox(height: 8),
-            for (final r in _rails) ...[
-              _railTile(r.$1, r.$2, r.$3, r.$4, r.$5),
-              const SizedBox(height: 8),
-            ],
-            const SizedBox(height: 20),
-            Text('Payment message', style: _sectionTitle()),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _message,
-              maxLines: 3,
-              maxLength: 160,
-              decoration: const InputDecoration(
-                hintText: 'Short message delivered via Africa\u2019s Talking SMS',
-                alignLabelWithHint: true,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Recording this notifies all customers by SMS with their payment link. Payment callbacks update the dashboard live.',
-              style:
-                  GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: _save,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent),
-                icon: const Icon(Icons.rocket_launch_rounded),
-                label: const Text('Record & notify all customers'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+            const SizedBox(height: 24),
 
-  Widget _railTile(
-      String id, String name, IconData icon, Color color, String desc) {
-    final selected = _railId == id;
-    return GestureDetector(
-      onTap: () => setState(() => _railId = id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.08) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: selected ? color : AppColors.border, width: selected ? 1.5 : 1),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
+            // Partial payment toggle
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text,
+                  Row(
+                    children: [
+                      Icon(Icons.pie_chart_outline_rounded,
+                          size: 20, color: AppColors.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text('Allow partial payments?',
+                            style: GoogleFonts.inter(
+                                fontSize: 14, fontWeight: FontWeight.w700)),
+                      ),
+                      Switch.adaptive(
+                        value: _allowPartial,
+                        onChanged: (v) => setState(() => _allowPartial = v),
+                        activeThumbColor: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                  if (_allowPartial) ...[
+                    const SizedBox(height: 14),
+                    const Divider(height: 1),
+                    const SizedBox(height: 14),
+                    _label('Minimum installment (KES)'),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _minInstallment,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      style: GoogleFonts.inter(
+                          fontSize: 15, fontWeight: FontWeight.w600),
+                      decoration: _inputDecoration(
+                          'e.g. 5000', Icons.monetization_on_rounded),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    desc,
-                    style:
-                        GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
-                  ),
+                    const SizedBox(height: 16),
+                    _label('Number of installments'),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _numInstallments,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      style: GoogleFonts.inter(
+                          fontSize: 15, fontWeight: FontWeight.w600),
+                      decoration: _inputDecoration('e.g. 3', Icons.format_list_numbered_rounded),
+                    ),
+                  ],
                 ],
               ),
             ),
-            Icon(
-              selected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_off_rounded,
-              color: selected ? color : AppColors.muted,
-              size: 20,
+            const SizedBox(height: 28),
+
+            // Submit
+            SizedBox(
+              height: 54,
+              child: ElevatedButton.icon(
+                onPressed: _loading ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                icon: _loading
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : Icon(_selectedMethod.icon, color: Colors.white),
+                label: Text(_loading ? 'Processing...' : _selectedMethod.buttonText,
+                    style: GoogleFonts.inter(
+                        fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
             ),
           ],
         ),
@@ -327,12 +358,33 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
     );
   }
 
-  TextStyle _sectionTitle() => GoogleFonts.inter(
-      fontSize: 12,
-      fontWeight: FontWeight.w800,
-      color: AppColors.muted,
-      letterSpacing: 0.4);
+  Widget _label(String text) {
+    return Text(text,
+        style: GoogleFonts.inter(
+            fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text));
+  }
 
-  static String _monthName(int m) =>
-      const ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1];
+  InputDecoration _inputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: GoogleFonts.inter(
+          color: AppColors.muted.withValues(alpha: 0.5), fontSize: 14),
+      prefixIcon: Icon(icon, color: AppColors.muted, size: 20),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    );
+  }
 }

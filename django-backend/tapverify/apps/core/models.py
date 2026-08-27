@@ -5,6 +5,19 @@ from django.utils import timezone
 import uuid
 import secrets
 
+
+def _gen_receipt_code():
+    return f"TV-{secrets.token_hex(4).upper()}"
+
+def _gen_receipt_token():
+    return secrets.token_urlsafe(16)
+
+def _gen_receipt_pin():
+    return f"{secrets.randbelow(10000):04d}"
+
+def _gen_payment_token():
+    return secrets.token_urlsafe(16)
+
 class Workspace(models.Model):
     WORKSPACE_TYPES = [
         ('chama', 'Chama / Revenue Group'),
@@ -70,7 +83,7 @@ class Member(models.Model):
     name = models.CharField(max_length=200)
     phone = models.CharField(max_length=15, db_index=True)
     member_code = models.CharField(max_length=20, unique=True, db_index=True,
-                                   default=lambda: f"TV-{secrets.token_hex(4).upper()}")
+                                   default=_gen_receipt_code)
     id_number = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     monthly_contribution = models.DecimalField(max_digits=10, decimal_places=2, default=500)
@@ -126,8 +139,8 @@ class VerificationEvent(models.Model):
     gps_accuracy = models.FloatField(null=True, blank=True)
 
     receipt_token = models.CharField(max_length=32, unique=True, db_index=True,
-                                     default=lambda: secrets.token_urlsafe(16))
-    receipt_pin = models.CharField(max_length=4, default=lambda: f"{secrets.randbelow(10000):04d}")
+                                     default=_gen_receipt_token)
+    receipt_pin = models.CharField(max_length=4, default=_gen_receipt_pin)
     sms_status = models.CharField(max_length=20, default='pending')
     sms_message_id = models.CharField(max_length=100, blank=True)
 
@@ -214,7 +227,7 @@ class PaymentLink(models.Model):
     event = models.OneToOneField(VerificationEvent, on_delete=models.SET_NULL, null=True, blank=True, related_name='payment_link')
 
     token = models.CharField(max_length=32, unique=True, db_index=True,
-                             default=lambda: secrets.token_urlsafe(16))
+                             default=_gen_payment_token)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.CharField(max_length=200, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 {% block title %}{{ collection.title }}{% endblock %}
-{% block page_title %}Collection Detail{% endblock %}
+{% block page_title %}Order Detail{% endblock %}
 
 {% block content %}
 <div style="max-width: 960px;">
@@ -23,7 +23,7 @@
                         {% endif %}
                     </div>
                     <p style="font-size: 14px; color: var(--slate-500);">
-                        Ksh {{ collection.amount|floatformat:0 }} per member &middot; Due {{ collection.due|date:"d M Y" }}
+                        Ksh {{ collection.amount|floatformat:0 }} per customer &middot; Due {{ collection.due|date:"d M Y" }}
                     </p>
                 </div>
                 <div class="flex gap-2">
@@ -40,7 +40,7 @@
 
             <div style="margin-top: 24px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span class="text-sm font-semibold" style="color: var(--slate-700);">{{ paid_count }} of {{ total_members }} members paid</span>
+                        <span class="text-sm font-semibold" style="color: var(--slate-700);">{{ paid_count }} of {{ total_members }} customers paid</span>
                     <span class="text-sm font-semibold" style="color: var(--teal-700);">{{ progress }}%</span>
                 </div>
                 <div class="progress-bar" style="height: 10px;">
@@ -68,7 +68,7 @@
     <div class="card">
         <div class="card-header">
             <div class="flex items-center justify-between w-full">
-                <h2>Members ({{ tasks|length }})</h2>
+                <h2>Customers ({{ tasks|length }})</h2>
                 <div class="flex gap-2">
                     <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -146,8 +146,8 @@
             {% if not tasks %}
             <div class="empty-state">
                 <div class="empty-state-icon">&#128101;</div>
-                <h3>No members in this collection</h3>
-                <p>This collection has no payment tasks assigned.</p>
+                <h3>No customers in this order</h3>
+                <p>This order has no payment tasks assigned.</p>
             </div>
             {% endif %}
         </div>
@@ -171,7 +171,7 @@ function copyAllLinks() {
 }
 
 function sendReminders() {
-    if (!confirm('Send reminders to all pending members?')) return;
+    if (!confirm('Send reminders to all pending customers?')) return;
 
     fetch('/api/v1/reminders/send/', {
         method: 'POST',
@@ -188,7 +188,7 @@ function sendReminders() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            showToast('Reminders sent to ' + data.sent + ' members');
+            showToast('Reminders sent to ' + data.sent + ' customers');
         } else {
             showToast('Failed to send reminders');
         }
@@ -217,7 +217,7 @@ function filterTasks() {
 
 function exportCSV() {
     var rows = document.querySelectorAll('#tasksTable tbody tr');
-    var csv = 'Member,Phone,Status,Payment Link\n';
+    var csv = 'Customer,Phone,Status,Payment Link\n';
     for (var i = 0; i < rows.length; i++) {
         if (rows[i].style.display === 'none') continue;
         var cells = rows[i].querySelectorAll('td');

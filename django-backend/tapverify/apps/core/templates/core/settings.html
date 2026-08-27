@@ -26,7 +26,7 @@
                     <div class="form-group">
                         <label class="form-label">Group Type</label>
                         <select class="form-select" name="type">
-                            <option value="chama" {% if workspace.type == 'chama' %}selected{% endif %}>Chama / Welfare Group</option>
+                            <option value="chama" {% if workspace.type == 'chama' %}selected{% endif %}>Chama / Revenue Group</option>
                             <option value="church" {% if workspace.type == 'church' %}selected{% endif %}>Church / Religious</option>
                             <option value="event" {% if workspace.type == 'event' %}selected{% endif %}>Event / Conference</option>
                             <option value="delivery" {% if workspace.type == 'delivery' %}selected{% endif %}>Delivery / Logistics</option>
@@ -45,7 +45,7 @@
                 <h2>Payment Rails</h2>
             </div>
             <div class="card-body">
-                <p class="text-sm text-muted mb-4">Configure how members can pay. At least one payment method must be set up.</p>
+                <p class="text-sm text-muted mb-4">Configure how customers can pay. At least one payment method must be set up.</p>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Till Number</label>
@@ -61,7 +61,7 @@
                     <input class="form-input" type="text" name="account_number" value="{{ workspace.account_number|default:'' }}" placeholder="e.g. Group001">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Default Monthly Contribution (Ksh)</label>
+                    <label class="form-label">Default Monthly Payment (Ksh)</label>
                     <input class="form-input" type="number" name="monthly_amount" value="{{ workspace.monthly_amount|floatformat:0 }}" min="1">
                 </div>
             </div>
@@ -76,7 +76,7 @@
                     <div>
                         <div style="font-weight: 700; color: var(--slate-900);">{{ workspace.get_plan_display }}</div>
                         <div class="text-sm text-muted mt-2">{{ workspace.members.count }} of
-                            {% if workspace.plan == 'free' %}50{% elif workspace.plan == 'basic' %}200{% else %}Unlimited{% endif %} members used
+                            {% if workspace.plan == 'free' %}50{% elif workspace.plan == 'basic' %}200{% else %}Unlimited{% endif %} customers used
                         </div>
                     </div>
                     {% if workspace.plan == 'free' %}
@@ -89,12 +89,12 @@
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
                     <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: 10px; text-align: center; {% if workspace.plan == 'free' %}border-color: var(--teal-500); background: var(--teal-50);{% endif %}">
                         <div style="font-weight: 700; font-size: 14px; color: var(--slate-900);">Free</div>
-                        <div class="text-sm text-muted">50 members</div>
+                        <div class="text-sm text-muted">50 customers</div>
                         <div style="font-weight: 700; color: var(--teal-700); margin-top: 4px;">Ksh 0</div>
                     </div>
                     <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: 10px; text-align: center; {% if workspace.plan == 'basic' %}border-color: var(--teal-500); background: var(--teal-50);{% endif %}">
                         <div style="font-weight: 700; font-size: 14px; color: var(--slate-900);">Basic</div>
-                        <div class="text-sm text-muted">200 members</div>
+                        <div class="text-sm text-muted">200 customers</div>
                         <div style="font-weight: 700; color: var(--teal-700); margin-top: 4px;">Ksh 1,000/mo</div>
                     </div>
                     <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: 10px; text-align: center; {% if workspace.plan == 'pro' %}border-color: var(--teal-500); background: var(--teal-50);{% endif %}">

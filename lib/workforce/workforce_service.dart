@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'workforce_models.dart';
 
-/// TapVerify — core service layer.
+/// TapVerify — core service layer. Revenue proof for manufacturing SMEs.
 ///
-/// This is the single source of truth for the collector app. It manages:
-/// - Universal identity (collectors: SACCO treasurer, church, school, individual)
-/// - Collection lifecycle (create, notify, pay, verify, streak, badge)
+/// This is the single source of truth for the business owner app. It manages:
+/// - Universal identity (business owners: manufacturer, workshop, jua kali)
+/// - Order lifecycle (create, notify, pay, verify, streak, badge)
 /// - Rails configuration (Till, Paybill, Bank, SasaPay)
 /// - Subscription plans (Pay & go)
 /// - In-memory state; in production this talks to the Django API.
@@ -23,9 +23,9 @@ class WorkforceService {
         name: 'Wanjiru Wambui',
         phone: '254701234567',
         pin: '1234',
-        position: 'SACCO Treasurer',
+        position: 'Business Owner',
         kind: UserKind.organization,
-        orgName: 'Green Valley SACCO',
+        orgName: "Peter's Metal Works",
         kycApproved: true,
         termsAccepted: true,
       ),
@@ -34,9 +34,9 @@ class WorkforceService {
         name: 'Peter Maina',
         phone: '254722345678',
         pin: '1234',
-        position: 'Church Treasurer',
+        position: 'Workshop Manager',
         kind: UserKind.organization,
-        orgName: 'Umoja Church',
+        orgName: "Grace's Woodworks",
         kycApproved: true,
         termsAccepted: true,
       ),
@@ -45,9 +45,9 @@ class WorkforceService {
         name: 'Grace Otieno',
         phone: '254744567890',
         pin: '1234',
-        position: 'School Bursar',
+        position: 'Production Lead',
         kind: UserKind.organization,
-        orgName: 'Sunrise Academy',
+        orgName: "John's Fabrication",
         kycApproved: true,
         termsAccepted: true,
       ),
@@ -56,9 +56,9 @@ class WorkforceService {
         name: 'Mary Njeri',
         phone: '254733456789',
         pin: '1234',
-        position: 'Collector',
+        position: 'Business Owner',
         kind: UserKind.individual,
-        orgName: 'Personal collection',
+        orgName: 'Personal orders',
         termsAccepted: true,
       ),
     ];
@@ -106,7 +106,7 @@ class WorkforceService {
 
   static String collectorDisplay() {
     final u = currentUser;
-    if (u == null) return 'Collector';
+    if (u == null) return 'Business Owner';
     return '${u.name} · ${u.position}';
   }
 
@@ -287,13 +287,13 @@ class WorkforceService {
     required String railId,
     required String railName,
     required String message,
-    List<Map<String, String>> members = const [],
+    List<Map<String, String>> customers = const [],
   }) {
     final tasks = <String, WfPaymentTask>{};
     final rail = railName;
-    for (int i = 0; i < members.length; i++) {
-      final m = members[i];
-      final name = m['name'] ?? 'Member ${i + 1}';
+    for (int i = 0; i < customers.length; i++) {
+      final m = customers[i];
+      final name = m['name'] ?? 'Customer ${i + 1}';
       final phone = m['phone'] ?? '';
       final memberId = 'w-${i + 1}';
       final member = WfMember(
@@ -338,7 +338,7 @@ class WorkforceService {
     return WfMember(
       id: id,
       code: id.replaceFirst('w-', '').padLeft(2, '0'),
-      name: 'Member ${id.replaceFirst("w-", "")}',
+      name: 'Customer ${id.replaceFirst("w-", "")}',
       phone: '2547${id.replaceFirst("w-", "").padLeft(8, "0")}',
       department: 'General',
       avatarHue: (int.tryParse(id.replaceFirst('w-', '')) ?? 0) * 31 % 360,

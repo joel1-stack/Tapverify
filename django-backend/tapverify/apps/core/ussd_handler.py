@@ -1,9 +1,9 @@
 """
 Africa's Talking USSD handler for TapVerify.
 
-Members without smartphones dial *384*123# to:
+Customers without smartphones dial *384*123# to:
   1. Check payment status
-  2. View streak
+  2. View payment history
   3. Request payment link via SMS
   4. View payment history
 
@@ -62,8 +62,8 @@ def ussd_handler(request):
         return HttpResponse(
             _format_ussd_response(
                 "Welcome to TapVerify\n"
-                "1. Check Status\n"
-                "2. My Streak\n"
+                "1. Check Revenue\n"
+                "2. My Payment History\n"
                 "3. Pay Now\n"
                 "4. History"
             )
@@ -124,7 +124,7 @@ def ussd_handler(request):
             return HttpResponse(
                 _format_ussd_response(
                     "No payment history yet.\n"
-                    "Pay your first contribution to start!",
+                    "Pay your first order to start!",
                     is_end=True
                 )
             )

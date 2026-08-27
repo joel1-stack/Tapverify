@@ -5,10 +5,9 @@ import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 import 'app_background.dart';
-import 'notification_center.dart';
 
-/// How the collector actually receives money. Members pay into these account
-/// details — the collector never touches cash. In production SasaPay handles
+/// How the business owner actually receives money. Customers pay into these account
+/// details — the business owner never touches cash. In production SasaPay handles
 /// checkout links; USSD, SMS and Avalanche badges ride on top.
 class CollectionSettingsScreen extends StatefulWidget {
   const CollectionSettingsScreen({super.key});
@@ -62,13 +61,6 @@ class _CollectionSettingsScreenState extends State<CollectionSettingsScreen> {
       sasapayMerchant: _sasapayMerchant.text.trim(),
       sasapayAccount: _sasapayAccount.text.trim(),
     ));
-    NotificationCenter.instance.notify(
-      title: 'Collection details saved',
-      body:
-          'Members will pay into these Till / Paybill / bank details from now on.',
-      icon: Icons.settings_rounded,
-      color: AppColors.primary,
-    );
     Navigator.pop(context);
   }
 

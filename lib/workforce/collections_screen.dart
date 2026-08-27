@@ -5,7 +5,7 @@ import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 import 'collection_detail_screen.dart';
 
-/// Collections tab — every obligation, active and archived.
+/// Orders tab — every order, active and archived.
 class CollectionsScreen extends StatefulWidget {
   const CollectionsScreen({super.key});
 
@@ -121,7 +121,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Ksh ${c.amount} · ${c.railName} · ${c.tasks.length} members',
+              'Ksh ${c.amount} · ${c.railName} · ${c.tasks.length} customers',
               style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
             ),
             const SizedBox(height: 12),

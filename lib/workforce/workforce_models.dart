@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
 
-/// TapVerify — data models.
+/// TapVerify — data models. Revenue proof for manufacturing SMEs.
 ///
-/// Core idea: an OBLIGATION is created by a collector, every member gets a
+/// Core idea: an order is recorded by a business owner, every customer gets a
 /// payment task that moves through the 9-state lifecycle
 /// CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED → STREAK → BADGE →
 /// REWARD → ARCHIVED, and every state transition is recorded as evidence.
 
-/// Every collector is a person — a SACCO treasurer, a church secretary, a
-/// school bursar or an individual running one collection.
+/// Every business owner is a person — a manufacturer, a workshop manager,
+/// a production lead or an individual running one business.
 enum UserKind { organization, individual }
 
 class TapVerifyUser {
@@ -36,13 +36,13 @@ class TapVerifyUser {
   bool termsAccepted;
 
   bool get isCollector => kind == UserKind.individual || !isWorker;
-  bool get isWorker => position.toLowerCase().contains('worker');
+  bool get isWorker => position.toLowerCase().contains('business_owner');
 
   String get roleLabel => isCollector ? 'Collector · $position' : position;
 }
 
-/// How the collector actually receives money. Members pay into THESE account
-/// details — the collector never touches cash directly. Partner APIs (SasaPay,
+/// How the business owner actually receives money. Customers pay into THESE account
+/// details — the business owner never touches cash directly. Partner APIs (SasaPay,
 /// SasaPay takes the checkout link rails in production.
 class RailsConfig {
   RailsConfig({
@@ -71,8 +71,8 @@ class RailsConfig {
       ].where((b) => b).length;
 }
 
-/// A purchased plan (Pay & go). Once active, the collector can raise and run
-/// collections; they can log in later, edit the description and raise again.
+/// A purchased plan (Pay & go). Once active, the business owner can raise and run
+/// orders; they can log in later, edit the description and raise again.
 class ActivePlan {
   ActivePlan({
     required this.name,
@@ -86,7 +86,7 @@ class ActivePlan {
 }
 
 /// The 9-state transaction lifecycle. Every payment task lives in exactly one
-/// of these states; transitions are what the collector watches in real time.
+/// of these states; transitions are what the business owner watches in real time.
 enum WfPaymentState {
   created('CREATED', 'Task created', Icons.create_rounded, AppColors.muted),
   notified('NOTIFIED', 'SMS/USSD sent', Icons.notifications_active_rounded,
@@ -113,7 +113,7 @@ enum WfPaymentState {
   final Color color;
 }
 
-/// A member on the collector's roster.
+/// A customer on the business owner's roster.
 class WfMember {
   const WfMember({
     required this.id,
@@ -140,7 +140,7 @@ class WfMember {
   final double onTimePct;
 }
 
-/// A member × obligation payment task. `rail` + `txnRef` are the evidence of
+/// A customer × order payment task. `rail` + `txnRef` are the evidence of
 /// how the money actually moved.
 class WfPaymentTask {
   WfPaymentTask({
@@ -160,7 +160,7 @@ class WfPaymentTask {
   DateTime? paidAt;
 }
 
-/// An obligation / collection raised by the collector.
+/// An order raised by the business owner.
 class WfCollection {
   WfCollection({
     required this.id,

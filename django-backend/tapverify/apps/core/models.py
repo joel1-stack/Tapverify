@@ -1,3 +1,4 @@
+"""TapVerify — data models. Revenue proof for manufacturing SMEs."""
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -6,7 +7,7 @@ import secrets
 
 class Workspace(models.Model):
     WORKSPACE_TYPES = [
-        ('chama', 'Chama / Welfare Group'),
+        ('chama', 'Chama / Revenue Group'),
         ('church', 'Church / Religious'),
         ('event', 'Event / Conference'),
         ('delivery', 'Delivery / Logistics'),
@@ -239,9 +240,9 @@ class PaymentLink(models.Model):
 
 
 class Collection(models.Model):
-    """An obligation raised by a foreman against the whole workforce.
+    """An order raised by a manager against the whole workforce.
 
-    Mirrors the mobile `WfCollection`: every worker gets a PaymentTask that
+    Mirrors the mobile `WfCollection`: every customer gets a PaymentTask that
     moves through the 9-state lifecycle below.
     """
 
@@ -280,7 +281,7 @@ class Collection(models.Model):
 
 
 class PaymentTask(models.Model):
-    """One member's task inside a Collection — the 9-state lifecycle.
+    """One customer's task inside a Collection — the 9-state lifecycle.
 
     CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED → STREAK → BADGE →
     REWARD → ARCHIVED. `rail` + `txn_ref` are the evidence of how money moved.

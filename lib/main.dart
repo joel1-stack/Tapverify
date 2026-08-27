@@ -3,9 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'workforce/workforce_login_screen.dart';
 
-/// TapVerify — verified payment receipts for Kenyan chamas, SACCOs, churches,
-/// schools and individuals. Members pay via WhatsApp links or USSD; collectors
-/// track everything in the app or on the web dashboard.
+/// TapVerify — verified revenue history for manufacturing SMEs, jua kali
+/// workshops, and businesses. Customers pay via WhatsApp links or USSD;
+/// business owners track everything in the app or on the web dashboard.
 void main() {
   runApp(const TapVerifyApp());
 }

@@ -4,7 +4,7 @@ import '../constants.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
 
-/// Members — the collector's roster, with on-time records and streaks.
+/// Customers — the business owner's roster, with on-time records and streaks.
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
 
@@ -57,7 +57,7 @@ class _MembersScreenState extends State<MembersScreen> {
             controller: _query,
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
-              hintText: 'Search member or code',
+              hintText: 'Search customers...',
               prefixIcon: Icon(Icons.search_rounded),
               isDense: true,
               contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -106,7 +106,7 @@ class _MembersScreenState extends State<MembersScreen> {
                       ),
                       SizedBox(height: 8),
                       Center(
-                        child: Text('No members found',
+                        child: Text('No customers found',
                             style: TextStyle(color: AppColors.muted)),
                       ),
                     ],

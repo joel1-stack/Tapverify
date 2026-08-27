@@ -6,7 +6,7 @@ import '../workforce/workforce_service.dart';
 import 'create_collection_screen.dart';
 import 'collection_detail_screen.dart';
 
-/// Treasurer landing tab — live overview of the group's obligations.
+/// Business owner landing tab — live overview of the business's orders.
 class TreasurerDashboardScreen extends StatefulWidget {
   const TreasurerDashboardScreen({super.key});
 
@@ -41,7 +41,7 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
             Row(
               children: [
                 Text(
-                  'ACTIVE COLLECTIONS',
+                  'ACTIVE ORDERS',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -84,7 +84,7 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
                 style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Raise a new collection'),
+                label: const Text('Raise a new order'),
               ),
             ),
           ],
@@ -160,13 +160,17 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
                                 size: 13, color: Colors.white),
                             const SizedBox(width: 5),
                             Text(
-                              '${WorkforceService.currentUser?.position ?? 'Treasurer'} · ${WorkforceService.currentUser?.orgName ?? WorkforceService.orgName}',
+                              '${WorkforceService.currentUser?.name ?? WorkforceService.collectorDisplay()}',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                                 letterSpacing: 0.2,
                               ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '· verified revenue',
                             ),
                           ],
                         ),
@@ -189,8 +193,8 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
 
   Widget _statRow(Map<String, dynamic> s) {
     final cards = [
-      ('${s['members']}', 'Members', Icons.people_rounded, AppColors.primary),
-      ('Ksh ${_fmt(s['collected'])}', 'Collected', Icons.payments_rounded,
+      ('${s['members']}', 'Customers', Icons.people_rounded, AppColors.primary),
+      ('Ksh ${_fmt(s['collected'])}', 'Revenue verified', Icons.payments_rounded,
           AppColors.accent),
       ('${s['paidMembers']}/${s['members']}', 'Paid in', Icons.check_circle_rounded,
           AppColors.gold),
@@ -258,7 +262,7 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Collection rate',
+                  'Fulfillment rate',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -288,7 +292,7 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            '$reminders members are still waiting on reminders — resend them from any collection.',
+            '$reminders customers are still waiting on payments — resend them from any order.',
             style: GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
           ),
         ],
@@ -407,13 +411,13 @@ class TreasurerDashboardState extends State<TreasurerDashboardScreen> {
           const Icon(Icons.receipt_long_rounded, size: 34, color: AppColors.muted),
           const SizedBox(height: 8),
           Text(
-            'No active collections yet.',
+            'No active orders yet.',
             style: GoogleFonts.inter(
                 fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text),
           ),
           const SizedBox(height: 4),
           Text(
-            'Raise a welfare levy, medical top-up or emergency to get started.',
+            'Record a customer payment to get started.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
           ),

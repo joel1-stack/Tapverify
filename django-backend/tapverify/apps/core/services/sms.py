@@ -93,7 +93,7 @@ def build_reminder_sms(member, workspace, reminder_type, amount_due):
         f"TapVerify — Reminder\n\n"
         f"Hello {member.name},\n"
         f"{workspace.name} meeting is coming up.\n\n"
-        f"Your contribution: Ksh {amount_due:,.0f}\n"
+        f"Your order payment: Ksh {amount_due:,.0f}\n"
     )
 
     if workspace.till_number:

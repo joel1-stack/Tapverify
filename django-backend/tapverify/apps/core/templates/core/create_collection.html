@@ -1,12 +1,12 @@
 {% extends "core/base.html" %}
-{% block title %}New Collection{% endblock %}
-{% block page_title %}New Collection{% endblock %}
+{% block title %}Record Customer Payment{% endblock %}
+{% block page_title %}Record Customer Payment{% endblock %}
 
 {% block content %}
 <div style="max-width: 720px;">
     <div class="mb-8">
-        <h1 style="font-size: 26px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px;">Create Collection</h1>
-        <p style="font-size: 15px; color: var(--slate-500); margin-top: 4px;">Set up a new collection and send payment links to your members.</p>
+        <h1 style="font-size: 26px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px;">Record Customer Payment</h1>
+        <p style="font-size: 15px; color: var(--slate-500); margin-top: 4px;">Set up a new order and send payment links to your customers.</p>
     </div>
 
     <form method="POST" action="{% url 'web-create-collection' %}">
@@ -14,27 +14,27 @@
 
         <div class="card mb-6">
             <div class="card-header">
-                <h2>Collection Details</h2>
+                <h2>Order Details</h2>
             </div>
             <div class="card-body">
                 <div class="form-group">
-                    <label class="form-label" for="title">Collection Title</label>
+                    <label class="form-label" for="title">Order / Customer name</label>
                     <input class="form-input" type="text" id="title" name="title"
-                           placeholder="e.g. January Welfare Contribution" required>
+                           placeholder="e.g. January Order Payment" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="type">Type</label>
                         <select class="form-select" id="type" name="type">
-                            <option value="welfare">Welfare</option>
+                            <option value="welfare">Order</option>
                             <option value="medical">Medical</option>
                             <option value="emergency">Emergency</option>
                             <option value="trip">Trip</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="amount">Amount per Member (Ksh)</label>
+                        <label class="form-label" for="amount">Amount (Ksh)</label>
                         <input class="form-input" type="number" id="amount" name="amount"
                                placeholder="500" min="1" step="1" required>
                     </div>
@@ -57,9 +57,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="message">Message to Members</label>
+                    <label class="form-label" for="message">Message to Customers</label>
                     <textarea class="form-textarea" id="message" name="message" rows="4"
-                              placeholder="Personal message to accompany the payment link...">Hi {name}, your {type} contribution of Ksh {amount} is due on {due_date}. Please pay using the link below:</textarea>
+                              placeholder="Personal message to accompany the payment link...">Hi {name}, your {type} payment of Ksh {amount} is due on {due_date}. Please pay using the link below:</textarea>
                     <p class="form-hint">Use {name}, {amount}, {type}, {due_date} as placeholders.</p>
                 </div>
             </div>
@@ -68,7 +68,7 @@
         <div class="card mb-6">
             <div class="card-header">
                 <div class="flex items-center justify-between w-full">
-                    <h2>Select Members</h2>
+                    <h2>Select Customers</h2>
                     <div class="flex items-center gap-3">
                         <span class="text-sm text-muted" id="selectedCount">0 selected</span>
                         <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll()">Select All</button>
@@ -122,9 +122,9 @@
                 {% else %}
                 <div class="empty-state">
                     <div class="empty-state-icon">&#128101;</div>
-                    <h3>No members yet</h3>
-                    <p>Add members to your group before creating a collection.</p>
-                    <a href="{% url 'web-members' %}" class="btn btn-primary">Add Members</a>
+                    <h3>No customers yet</h3>
+                    <p>Add customers to your group before creating an order.</p>
+                    <a href="{% url 'web-members' %}" class="btn btn-primary">Add Customers</a>
                 </div>
                 {% endif %}
             </div>
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var typeSelect = document.getElementById('type');
     typeSelect.addEventListener('change', function() {
         var typeName = typeSelect.options[typeSelect.selectedIndex].text;
-        msg.value = 'Hi {name}, your ' + typeName.toLowerCase() + ' contribution of Ksh {amount} is due on {due_date}. Please pay using the link below:';
+        msg.value = 'Hi {name}, your ' + typeName.toLowerCase() + ' payment of Ksh {amount} is due on {due_date}. Please pay using the link below:';
     });
 });
 </script>

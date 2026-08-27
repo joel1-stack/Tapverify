@@ -4,11 +4,10 @@ import '../constants.dart';
 import '../services/receipt_pdf.dart';
 import '../workforce/workforce_models.dart';
 import '../workforce/workforce_service.dart';
-import 'notification_center.dart';
 
-/// Collection detail — the proof center. Shows the 9-state lifecycle, how much
+/// Order detail — the proof center. Shows the 9-state lifecycle, how much
 /// is in, who paid (with rail evidence + transfer reference), and lets the
-/// treasurer remind, simulate a payment and verify proof.
+/// business owner remind, simulate a payment and verify proof.
 class CollectionDetailScreen extends StatefulWidget {
   const CollectionDetailScreen({required this.collection});
 
@@ -65,7 +64,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     if (target.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Everyone has paid in this collection',
+          content: Text('Everyone has paid in this order',
               style: GoogleFonts.inter()),
           backgroundColor: AppColors.accent,
           behavior: SnackBarBehavior.floating,
@@ -75,20 +74,12 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       );
       return;
     }
-    final first = target.first;
-    final w = WorkforceService.memberById(first.workerId);
     setState(() {
       for (final t in target.take(1)) {
         WorkforceService.payNow(c, t.workerId);
         WorkforceService.verify(c, t.workerId);
       }
     });
-    NotificationCenter.instance.notify(
-      title: 'Payment recorded',
-      body: '${w?.name ?? 'A member'} paid Ksh ${_fmt(c.amount)} for ${c.title} — proof verified.',
-      icon: Icons.check_circle_rounded,
-      color: AppColors.success,
-    );
   }
 
   void _remindPending() {
@@ -103,23 +94,17 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       }
     });
     if (n > 0) {
-      NotificationCenter.instance.notify(
-        title: 'Reminder sent',
-        body: 'SMS reminder sent to $n members for ${c.title}.',
-        icon: Icons.notifications_active_rounded,
-        color: AppColors.accent,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('SMS reminder sent to $n customers',
+              style: GoogleFonts.inter()),
+          backgroundColor: AppColors.accent,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('SMS reminder sent to $n members',
-            style: GoogleFonts.inter()),
-        backgroundColor: AppColors.accent,
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   Future<void> _shareSummary() async {
@@ -136,15 +121,15 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         collectorName: u?.name ?? WorkforceService.collectorDisplay(),
         collectorRole: u?.position ?? 'Collector',
         collectorOrg: u?.orgName ?? WorkforceService.orgName,
-        memberName: 'All members · ${c.paidCount}/${c.tasks.length} paid',
+        memberName: 'All customers · ${c.paidCount}/${c.tasks.length} paid',
         obligation: c.title,
         amount: 'Ksh ${_fmt(c.collected)} collected of Ksh ${_fmt(c.amount * c.tasks.length)}',
         rail: c.railName,
         transferId: firstRef ?? '—',
         state: c.closed ? 'ARCHIVED' : 'IN PROGRESS',
         termsNote: u?.termsAccepted == true
-            ? 'Collector has accepted the TapVerify terms.'
-            : 'TapVerify terms apply to this collection.',
+            ? 'Business owner has accepted the TapVerify terms.'
+            : 'TapVerify terms apply to this order.',
       ),
       filename: 'TapVerify_${c.title.replaceAll(' ', '_')}.pdf',
     );
@@ -217,7 +202,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                 Row(
                   children: [
                     Text(
-                      'WHO PAID · ${c.tasks.length} MEMBERS',
+                      'WHO PAID · ${c.tasks.length} CUSTOMERS',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -241,7 +226,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                   controller: _query,
                   onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
-                    hintText: 'Search member, code or department',
+                    hintText: 'Search customer, code or department',
                     prefixIcon: Icon(Icons.search_rounded),
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -569,7 +554,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
           const Icon(Icons.search_off_rounded, size: 30, color: AppColors.muted),
           const SizedBox(height: 8),
           Text(
-            'No members match this filter.',
+            'No customers match this filter.',
             style: GoogleFonts.inter(
                 fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text),
           ),
@@ -633,11 +618,11 @@ class _LifecycleStrip extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'Every payment is an obligation that can be tracked from creation to proof. In production the proof layer is a signed webhook / Avalanche attestation.',
-            style: GoogleFonts.inter(
-                fontSize: 10.5, color: AppColors.muted, height: 1.5),
-          ),
+                  Text(
+                    'Every payment is an order that can be tracked from creation to proof. In production the proof layer is a signed webhook / Avalanche attestation.',
+                    style: GoogleFonts.inter(
+                        fontSize: 10.5, color: AppColors.muted, height: 1.5),
+                  ),
         ],
       ),
     );

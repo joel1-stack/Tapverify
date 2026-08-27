@@ -4,10 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../workforce/workforce_service.dart';
 import 'collection_detail_screen.dart';
-import 'notification_center.dart';
-import 'pricing_screen.dart';
 
-/// Treasurer creates a new obligation. Rail selection is UI-only for now; real
+/// Business owner records a new customer payment. Rail selection is UI-only for now; real
 /// payment keys are wired server-side later.
 class CreateCollectionScreen extends StatefulWidget {
   const CreateCollectionScreen({super.key});
@@ -20,11 +18,11 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   final _title = TextEditingController();
   final _amount = TextEditingController();
   final _message = TextEditingController();
-  String _type = 'Welfare';
+  String _type = 'Order';
   String _railId = 'sasapay';
   DateTime _due = DateTime.now().add(const Duration(days: 7));
 
-  static const _types = ['Welfare', 'Medical', 'Emergency', 'Trip', 'Fees', 'Other'];
+  static const _types = ['Order', 'Medical', 'Emergency', 'Trip', 'Fees', 'Other'];
 
   List<(String, String, IconData, Color, String)> get _rails {
     final r = WorkforceService.railsConfig;
@@ -80,18 +78,12 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
       railId: rail.$1,
       railName: rail.$2,
       message: _message.text.trim().isEmpty
-          ? '$_type collection for ${WorkforceService.orgName} — Ksh ${amount.round()}.'
+          ? '$_type order for ${WorkforceService.orgName} — Ksh ${amount.round()}.'
           : _message.text.trim(),
     );
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => CollectionDetailScreen(collection: c)),
-    );
-    NotificationCenter.instance.notify(
-      title: 'Collection raised',
-      body: '${title} · Ksh ${amount.round()} per member — notified by SMS.',
-      icon: Icons.campaign_rounded,
-      color: AppColors.accent,
     );
   }
 
@@ -106,7 +98,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         content: Text(
-          'Pay & go to unlock collections. Activate once — then raise as many collections as you need.',
+          'Pay & go to unlock orders. Activate once — then record as many orders as you need.',
           style: GoogleFonts.inter(
               fontSize: 13, color: AppColors.text, height: 1.5),
         ),
@@ -127,10 +119,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
       ),
     );
     if (go == true && mounted) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const PricingScreen()),
-      );
+      Navigator.pop(context);
     }
   }
 
@@ -160,7 +149,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
         elevation: 0,
         foregroundColor: AppColors.text,
         title: Text(
-          'New collection',
+          'Record customer payment',
           style: GoogleFonts.inter(
               fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
@@ -200,12 +189,12 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
             TextField(
               controller: _title,
               decoration: const InputDecoration(
-                hintText: 'e.g. September welfare levy',
+                hintText: 'e.g. September order for steel sheets',
                 prefixIcon: Icon(Icons.flag_rounded),
               ),
             ),
             const SizedBox(height: 16),
-            Text('Amount per member (Ksh)', style: _sectionTitle()),
+            Text('Amount (Ksh)', style: _sectionTitle()),
             const SizedBox(height: 8),
             TextField(
               controller: _amount,
@@ -217,7 +206,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Deadline', style: _sectionTitle()),
+            Text('Payment due', style: _sectionTitle()),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _pickDue,
@@ -252,7 +241,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               const SizedBox(height: 8),
             ],
             const SizedBox(height: 20),
-            Text('SMS message to members', style: _sectionTitle()),
+            Text('Payment message', style: _sectionTitle()),
             const SizedBox(height: 8),
             TextField(
               controller: _message,
@@ -265,7 +254,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Raising this notifies all members by SMS with their payment link. Payment callbacks update the dashboard live.',
+              'Recording this notifies all customers by SMS with their payment link. Payment callbacks update the dashboard live.',
               style:
                   GoogleFonts.inter(fontSize: 11.5, color: AppColors.muted, height: 1.4),
             ),
@@ -277,7 +266,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
                 style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent),
                 icon: const Icon(Icons.rocket_launch_rounded),
-                label: const Text('Raise & notify all members'),
+                label: const Text('Record & notify all customers'),
               ),
             ),
           ],

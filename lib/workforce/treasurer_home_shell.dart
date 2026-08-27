@@ -8,9 +8,8 @@ import 'collections_screen.dart';
 import 'members_screen.dart';
 import 'workforce_more_screen.dart';
 import 'workforce_login_screen.dart';
-import 'notification_bell.dart';
 
-/// 3-tab shell: Dashboard / Collections / Members.
+/// 3-tab shell: Dashboard / Orders / Customers.
 /// Drawer holds: Settings, Sign out.
 class TreasurerHomeShell extends StatefulWidget {
   const TreasurerHomeShell({super.key, this.user});
@@ -62,7 +61,7 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
               ),
           ],
         ),
-        actions: [const NotificationBell(), const SizedBox(width: 4)],
+        actions: [const SizedBox(width: 4)],
       ),
       drawer: _drawer(),
       body: IndexedStack(
@@ -94,12 +93,12 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
             NavigationDestination(
               icon: Icon(Icons.receipt_long_outlined),
               selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primary),
-              label: 'Collections',
+              label: 'Orders',
             ),
             NavigationDestination(
               icon: Icon(Icons.people_outline_rounded),
               selectedIcon: Icon(Icons.people_rounded, color: AppColors.primary),
-              label: 'Members',
+              label: 'Customers',
             ),
           ],
         ),
@@ -107,7 +106,7 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
     );
   }
 
-  static const _titles = ['Dashboard', 'Collections', 'Members'];
+  static const _titles = ['Dashboard', 'Orders', 'Customers'];
 
   Widget _drawer() {
     return Drawer(
@@ -158,7 +157,7 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
                 context: context,
                 applicationName: 'TapVerify',
                 applicationVersion: '2.0.0',
-                children: [Text('Group Collection Operating System', style: GoogleFonts.inter())],
+                children: [Text('Revenue proof for manufacturing SMEs', style: GoogleFonts.inter())],
               );
             }),
             const Spacer(),

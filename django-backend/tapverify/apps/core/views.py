@@ -66,7 +66,7 @@ class StaffLoginView(generics.GenericAPIView):
 
 
 # ───────────────────────────────────────────────
-# MEMBERS
+# CUSTOMERS
 # ───────────────────────────────────────────────
 
 class MemberListView(generics.ListAPIView):
@@ -316,13 +316,13 @@ class SendRemindersView(generics.GenericAPIView):
 
 
 # ───────────────────────────────────────────────
-# PAYMENT LINKS — Member pays on their own phone
+# PAYMENT LINKS — Customer pays on their own phone
 # ───────────────────────────────────────────────
 
 class PaymentLinkCreateView(generics.GenericAPIView):
     """
     POST /api/v1/payment-link/create/
-    Creates a payment link so the MEMBER can pay on their own phone via SasaPay.
+    Creates a payment link so the CUSTOMER can pay on their own phone via SasaPay.
     """
     def post(self, request):
         workspace_id = request.data.get('workspace_id')
@@ -374,13 +374,13 @@ class PaymentLinkCreateView(generics.GenericAPIView):
                 'amount': str(amount),
                 'member': member.name,
                 'status': 'link_created',
-                'message': 'Payment link created. Member can pay when ready.',
+                'message': 'Payment link created. Customer can pay when ready.',
             })
 
 
 def payment_link_view(request, token):
     """
-    Member opens payment link on their phone.
+    Customer opens payment link on their phone.
     Shows amount + group name + PAY NOW button.
     Auto-refreshes via JS polling to show confirmation.
     """
@@ -410,7 +410,7 @@ def payment_link_view(request, token):
 def payment_link_pay(request, token):
     """
     POST /p/<token>/pay/
-    Initiates SasaPay checkout for the member.
+    Initiates SasaPay checkout for the customer.
     """
     pl = get_object_or_404(PaymentLink, token=token, status='pending')
 
@@ -620,7 +620,7 @@ def create_collection_view(request):
         member_ids = request.POST.getlist('members')
 
         if not all([title, amount, due, member_ids]):
-            messages.error(request, 'Please fill all required fields and select at least one member.')
+            messages.error(request, 'Please fill all required fields and select at least one customer.')
             return render(request, 'core/create_collection.html', {'members': members})
 
         from django.utils.dateparse import parse_datetime
@@ -661,7 +661,7 @@ def create_collection_view(request):
                 description=f'{title} — {workspace.name}',
             )
 
-        messages.success(request, f'Collection "{title}" created with {len(member_ids)} members.')
+        messages.success(request, f'Order "{title}" created with {len(member_ids)} customers.')
         return redirect('web-collection-detail', collection_id=collection.id)
 
     return render(request, 'core/create_collection.html', {'members': members})
@@ -751,7 +751,7 @@ def members_view(request):
 
             if name and phone:
                 if Member.objects.filter(workspace=workspace, phone=phone).exists():
-                    messages.error(request, f'A member with phone {phone} already exists.')
+                    messages.error(request, f'A customer with phone {phone} already exists.')
                 else:
                     Member.objects.create(
                         workspace=workspace,
@@ -808,7 +808,7 @@ def settings_view(request):
 
 @login_required
 def generate_links_view(request, collection_id):
-    """Generate SasaPay checkout links for all pending members in a collection."""
+    """Generate SasaPay checkout links for all pending customers in an order."""
     try:
         staff = request.user.staff
     except Staff.DoesNotExist:
@@ -873,7 +873,7 @@ def generate_links_view(request, collection_id):
 
 @login_required
 def remind_pending_view(request, collection_id):
-    """Send SMS reminders to all pending members."""
+    """Send SMS reminders to all pending customers."""
     try:
         staff = request.user.staff
     except Staff.DoesNotExist:

@@ -123,7 +123,7 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
                       style: GoogleFonts.inter(
                           fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
                   const SizedBox(height: 2),
-                  Text('Kariobangi, Nairobi',
+                  Text('Westlands, Nairobi',
                       style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
                   const SizedBox(height: 6),
                   Container(
@@ -280,8 +280,8 @@ class _SettingsScreen extends StatelessWidget {
           _actionRow(Icons.business_rounded, 'Business name', "Peter's Metal Works", onTap: () {
             _showEditDialog(context, 'Business name', "Peter's Metal Works");
           }),
-          _actionRow(Icons.location_on_rounded, 'Location', 'Kariobangi, Nairobi', onTap: () {
-            _showEditDialog(context, 'Location', 'Kariobangi, Nairobi');
+          _actionRow(Icons.location_on_rounded, 'Location', 'Westlands, Nairobi', onTap: () {
+            _showEditDialog(context, 'Location', 'Westlands, Nairobi');
           }),
           _actionRow(Icons.category_rounded, 'Type', 'Manufacturer', onTap: () {
             _showEditDialog(context, 'Business type', 'Manufacturer');

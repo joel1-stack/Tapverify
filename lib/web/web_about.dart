@@ -116,7 +116,7 @@ class WebAboutPage extends StatelessWidget {
                 height: 1.1)),
         const SizedBox(height: 16),
         Text(
-          'Born in Kariobangi, Nairobi. Built for every jua kali welder, '
+          'Born in Westlands, Nairobi. Built for every jua kali welder, '
           'every mama mboga, every SACCO that deserves to be seen by lenders.',
           textAlign: narrow ? TextAlign.center : TextAlign.left,
           style: GoogleFonts.inter(
@@ -164,7 +164,7 @@ class WebAboutPage extends StatelessWidget {
             Positioned(
               bottom: 24,
               left: 24,
-              child: Text('Kariobangi, Nairobi — 2024',
+              child:               Text('Westlands, Nairobi — 2024',
                   style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -466,13 +466,53 @@ class WebAboutPage extends StatelessWidget {
     spacing: 30,
     runSpacing: 12,
     children: [
-      _footerCol('Product', ['Features', 'Pricing', 'Dashboard']),
-      _footerCol('Company', ['About', 'Contact', 'Careers']),
-      _footerCol('Legal', ['Privacy', 'Terms', 'Security']),
+      _footerCol(context, 'Product', [
+        ('Features', () => Navigator.pop(context)),
+        ('Pricing', () => Navigator.pop(context)),
+        ('Dashboard', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WebLoginPage()))),
+      ]),
+      _footerCol(context, 'Company', [
+        ('About', () {}),
+        ('Contact', () => Navigator.pushReplacementNamed(context, '/contact')),
+        ('Careers', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('We\'re hiring! Check our website for open positions.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+      ]),
+      _footerCol(context, 'Legal', [
+        ('Privacy', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Privacy policy coming soon.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+        ('Terms', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Terms of service coming soon.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+        ('Security', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Security information coming soon.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+      ]),
     ],
   );
 
-  Widget _footerCol(String title, List<String> links) => Column(
+  Widget _footerCol(BuildContext context, String title, List<(String, VoidCallback)> links) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(title,
@@ -482,8 +522,11 @@ class WebAboutPage extends StatelessWidget {
       for (final l in links)
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text(l,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+          child: GestureDetector(
+            onTap: l.$2,
+            child: Text(l.$1,
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+          ),
         ),
     ],
   );

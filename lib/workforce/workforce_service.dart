@@ -164,7 +164,7 @@ class WorkforceService {
     final now = DateTime.now();
     final orders = [
       ('Order #1048 — St. Mary\'s School', 'School furniture', 50000.0, 3, 15, true),
-      ('Order #1049 — Kariobangi Hardware', 'Steel supplies', 35000.0, 2, 12, true),
+      ('Order #1049 — Westlands Hardware', 'Steel supplies', 35000.0, 2, 12, true),
       ('Order #1050 — Eastlands Academy', '200 desks', 45000.0, 4, 10, true),
       ('Order #1051 — Pumani Construction', 'Roofing materials', 80000.0, 1, 5, false),
       ('Order #1052 — Donholm Furniture', 'Chairs batch', 25000.0, 3, 20, false),

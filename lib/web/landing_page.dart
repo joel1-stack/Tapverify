@@ -312,7 +312,7 @@ class _WebLandingPageState extends State<WebLandingPage>
         ),
         const SizedBox(height: 16),
         Text(
-          'A jua kali welder in Kariobangi can now walk into a bank with '
+          'A jua kali welder in Westlands can now walk into a bank with '
           'Ksh 2 million in verified transactions instead of a notebook.',
           textAlign: narrow ? TextAlign.center : TextAlign.left,
           style: GoogleFonts.inter(
@@ -1149,7 +1149,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: Colors.white)),
-                      Text('Metal Works, Kariobangi',
+                      Text('Metal Works, Westlands',
                           style: GoogleFonts.inter(
                               fontSize: 12, color: Colors.white70)),
                     ],
@@ -1547,16 +1547,37 @@ class _WebLandingPageState extends State<WebLandingPage>
                           _footerSocial(),
                         ])),
                     Expanded(flex: 2, child: _footerCol('Product', [
-                      _FooterLink('Features', () {}),
-                      _FooterLink('Pricing', () {}),
+                      _FooterLink('Features', _goToLogin),
+                      _FooterLink('Pricing', _goToLogin),
                       _FooterLink('Dashboard', _goToDemo),
-                      _FooterLink('API Docs', () {}),
+                      _FooterLink('API Docs', () {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('API documentation coming soon!', style: GoogleFonts.inter()),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ));
+                      }),
                     ])),
                     Expanded(flex: 2, child: _footerCol('Company', [
                       _FooterLink('About', () => Navigator.pushNamed(context, '/about')),
                       _FooterLink('Contact', () => Navigator.pushNamed(context, '/contact')),
-                      _FooterLink('Blog', () {}),
-                      _FooterLink('Careers', () {}),
+                      _FooterLink('Blog', () {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Blog coming soon!', style: GoogleFonts.inter()),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ));
+                      }),
+                      _FooterLink('Careers', () {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('We\'re hiring! Check our website for open positions.', style: GoogleFonts.inter()),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ));
+                      }),
                     ])),
                     Expanded(flex: 3, child: _footerContact()),
                   ]),
@@ -1676,6 +1697,7 @@ class _AnimatedCardState extends State<_AnimatedCard>
   late AnimationController _ctrl;
   late Animation<double> _opacity;
   late Animation<Offset> _slide;
+  bool _hovering = false;
 
   @override
   void initState() {
@@ -1700,9 +1722,20 @@ class _AnimatedCardState extends State<_AnimatedCard>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _opacity,
-      child: SlideTransition(position: _slide, child: widget.child),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        transform: _hovering
+            ? (Matrix4.identity()..setEntry(3, 2, 0.001)..rotateX(0.02)..rotateY(-0.02)..scaledByDouble(1.02, 1.02, 1.02, 1.0))
+            : Matrix4.identity()..setEntry(3, 2, 0.001),
+        transformAlignment: Alignment.center,
+        child: FadeTransition(
+          opacity: _opacity,
+          child: SlideTransition(position: _slide, child: widget.child),
+        ),
+      ),
     );
   }
 }

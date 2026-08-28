@@ -215,7 +215,7 @@ class _TreasurerDashboardScreenState extends State<TreasurerDashboardScreen> {
                     Text("Peter's Metal Works",
                         style: GoogleFonts.inter(
                             fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
-                    Text('Kariobangi, Nairobi',
+                    Text('Westlands, Nairobi',
                         style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
                   ],
                 ),

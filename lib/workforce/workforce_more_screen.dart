@@ -50,7 +50,7 @@ class WorkforceMoreScreen extends StatelessWidget {
           _section('BUSINESS'),
           const SizedBox(height: 8),
           _tile(Icons.business_rounded, "Peter's Metal Works",
-              'Manufacturer · Kariobangi', AppColors.muted, null),
+              'Manufacturer · Westlands', AppColors.muted, null),
           const SizedBox(height: 24),
 
           // Account

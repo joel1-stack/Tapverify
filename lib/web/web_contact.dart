@@ -177,7 +177,7 @@ class _WebContactPageState extends State<WebContactPage> {
       Icons.location_on_rounded,
       'Location',
       'Nairobi, Kenya',
-      'Kariobangi, Nairobi',
+      'Westlands, Nairobi',
       AppColors.deep,
       () {},
     ),
@@ -450,7 +450,7 @@ class _WebContactPageState extends State<WebContactPage> {
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: AppColors.text)),
-              Text('Kariobangi, Nairobi',
+              Text('Westlands, Nairobi',
                   style: GoogleFonts.inter(
                       fontSize: 14, color: AppColors.muted)),
             ],
@@ -493,13 +493,53 @@ class _WebContactPageState extends State<WebContactPage> {
     spacing: 30,
     runSpacing: 12,
     children: [
-      _footerCol('Product', ['Features', 'Pricing', 'Dashboard']),
-      _footerCol('Company', ['About', 'Contact', 'Careers']),
-      _footerCol('Legal', ['Privacy', 'Terms', 'Security']),
+      _footerCol(context, 'Product', [
+        ('Features', () => Navigator.pop(context)),
+        ('Pricing', () => Navigator.pop(context)),
+        ('Dashboard', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WebLoginPage()))),
+      ]),
+      _footerCol(context, 'Company', [
+        ('About', () => Navigator.pushReplacementNamed(context, '/about')),
+        ('Contact', () {}),
+        ('Careers', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('We\'re hiring! Check our website for open positions.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+      ]),
+      _footerCol(context, 'Legal', [
+        ('Privacy', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Privacy policy coming soon.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+        ('Terms', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Terms of service coming soon.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+        ('Security', () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Security information coming soon.', style: GoogleFonts.inter()),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }),
+      ]),
     ],
   );
 
-  Widget _footerCol(String title, List<String> links) => Column(
+  Widget _footerCol(BuildContext context, String title, List<(String, VoidCallback)> links) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(title,
@@ -509,8 +549,11 @@ class _WebContactPageState extends State<WebContactPage> {
       for (final l in links)
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text(l,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+          child: GestureDetector(
+            onTap: l.$2,
+            child: Text(l.$1,
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+          ),
         ),
     ],
   );

@@ -460,7 +460,7 @@ class _WebDashboardState extends State<WebDashboard> {
                     Text("Peter's Metal Works",
                         style: GoogleFonts.inter(
                             fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
-                    Text('Kariobangi, Nairobi',
+                    Text('Westlands, Nairobi',
                         style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
                   ],
                 ),
@@ -1088,7 +1088,16 @@ class _WebDashboardState extends State<WebDashboard> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          final whatsappUrl = 'https://wa.me/?text=${Uri.encodeComponent('Pay here: $paymentLink')}';
+                          Clipboard.setData(ClipboardData(text: whatsappUrl));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('WhatsApp link copied! Paste in WhatsApp to share.', style: GoogleFonts.inter()),
+                            backgroundColor: const Color(0xFF25D366),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ));
+                        },
                         icon: const Icon(Icons.share_rounded, size: 16),
                         label: Text('WhatsApp',
                             style: GoogleFonts.inter(
@@ -1343,7 +1352,14 @@ class _WebDashboardState extends State<WebDashboard> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('PDF report generated and downloaded.', style: GoogleFonts.inter()),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ));
+              },
               icon: const Icon(Icons.share_rounded, size: 20),
               label: Text('Share as PDF',
                   style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700)),
@@ -1451,7 +1467,14 @@ class _WebDashboardState extends State<WebDashboard> {
           SizedBox(
             width: double.infinity, height: 52,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Credit profile link copied to clipboard!', style: GoogleFonts.inter()),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ));
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -1633,6 +1656,247 @@ class _WebDashboardState extends State<WebDashboard> {
             emoji: '\u2b1c', name: '12-Month Payer', tier: 'Gold',
             color: AppColors.border, date: '6 months to unlock',
             tx: '', status: 'LOCKED', verified: false,
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.account_balance_rounded, size: 18, color: AppColors.gold),
+                    const SizedBox(width: 8),
+                    Text('YOUR BADGES → REAL VALUE', style: GoogleFonts.inter(
+                        fontSize: 11, fontWeight: FontWeight.w800,
+                        color: AppColors.muted, letterSpacing: 0.5)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(children: [
+                              const Text('\ud83e\udd48', style: TextStyle(fontSize: 24)),
+                              const SizedBox(width: 8),
+                              Text('Bronze Badge', style: GoogleFonts.inter(
+                                  fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text)),
+                            ]),
+                            const SizedBox(height: 6),
+                            Text('3-Month Payer', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                            const SizedBox(height: 8),
+                            Text('Ksh 2,000', style: GoogleFonts.inter(
+                                fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                            Text('SACCO credit', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.arrow_forward_rounded, color: AppColors.success, size: 20),
+                    ),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('SACCO Credit', style: GoogleFonts.inter(
+                                fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success)),
+                            const SizedBox(height: 6),
+                            Text('Convert badge to real', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                            Text(' SACCO savings credit', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    title: Text('Convert Badge to Credit', style: GoogleFonts.inter(
+                                        fontSize: 16, fontWeight: FontWeight.w800)),
+                                    content: Text('Convert your Bronze badge to Ksh 2,000 SACCO credit? This will be added to your savings account.',
+                                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, height: 1.5)),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx),
+                                          child: Text('Cancel', style: GoogleFonts.inter(color: AppColors.muted))),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                            content: Text('Badge converted! Ksh 2,000 added to SACCO credit.', style: GoogleFonts.inter()),
+                                            backgroundColor: AppColors.success,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          ));
+                                        },
+                                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+                                        child: Text('Convert', style: GoogleFonts.inter(
+                                            fontWeight: FontWeight.w700, color: Colors.white)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text('Convert to Credit', style: GoogleFonts.inter(
+                                    fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(children: [
+                              const Text('\ud83e\udd47', style: TextStyle(fontSize: 24)),
+                              const SizedBox(width: 8),
+                              Text('Silver Badge', style: GoogleFonts.inter(
+                                  fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text)),
+                            ]),
+                            const SizedBox(height: 6),
+                            Text('6-Month Payer', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                            const SizedBox(height: 8),
+                            Text('Ksh 5,000', style: GoogleFonts.inter(
+                                fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.gold)),
+                            Text('SACCO credit', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.arrow_forward_rounded, color: AppColors.success, size: 20),
+                    ),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('SACCO Credit', style: GoogleFonts.inter(
+                                fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success)),
+                            const SizedBox(height: 6),
+                            Text('Higher tier = more', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                            Text(' credit & lower rates', style: GoogleFonts.inter(
+                                fontSize: 11, color: AppColors.muted)),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    title: Text('Convert Silver Badge', style: GoogleFonts.inter(
+                                        fontSize: 16, fontWeight: FontWeight.w800)),
+                                    content: Text('Convert your Silver badge to Ksh 5,000 SACCO credit? You also qualify for priority loan processing.',
+                                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, height: 1.5)),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx),
+                                          child: Text('Cancel', style: GoogleFonts.inter(color: AppColors.muted))),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                            content: Text('Badge converted! Ksh 5,000 added to SACCO credit.', style: GoogleFonts.inter()),
+                                            backgroundColor: AppColors.success,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          ));
+                                        },
+                                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.gold),
+                                        child: Text('Convert', style: GoogleFonts.inter(
+                                            fontWeight: FontWeight.w700, color: Colors.white)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text('Convert to Credit', style: GoogleFonts.inter(
+                                    fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(children: [
+                    Icon(Icons.celebration_rounded, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('Gold Badge (12-Month) = Ksh 15,000 SACCO credit + lowest loan rates!', style: GoogleFonts.inter(
+                        fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary))),
+                  ]),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           Container(
@@ -2031,7 +2295,7 @@ class _WebDashboardState extends State<WebDashboard> {
             _settingsSection('BUSINESS'),
             const SizedBox(height: 8),
             _settingsActionRow(Icons.business_rounded, 'Business name', "Peter's Metal Works"),
-            _settingsActionRow(Icons.location_on_rounded, 'Location', 'Kariobangi, Nairobi'),
+            _settingsActionRow(Icons.location_on_rounded, 'Location', 'Westlands, Nairobi'),
             _settingsActionRow(Icons.category_rounded, 'Type', 'Manufacturer'),
             const SizedBox(height: 24),
             _settingsSection('ACCOUNT'),
@@ -2056,6 +2320,27 @@ class _WebDashboardState extends State<WebDashboard> {
             _settingsActionRow(Icons.info_outline_rounded, 'Version', '2.0.0'),
             _settingsActionRow(Icons.description_rounded, 'Terms', 'View terms'),
             _settingsActionRow(Icons.privacy_tip_rounded, 'Privacy', 'View privacy policy'),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity, height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Settings saved successfully!', style: GoogleFonts.inter()),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.save_rounded, color: Colors.white),
+                label: Text('Save Settings', style: GoogleFonts.inter(
+                    fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ),
           ],
         ),
       ),
@@ -2637,7 +2922,7 @@ class _WebUssdSimulator extends StatefulWidget {
   State<_WebUssdSimulator> createState() => _WebUssdSimulatorState();
 }
 
-enum _UssdState { start, loginPin, mainMenu, clockInConfirm, clockOutConfirm, balance, incidentCategory, incidentDesc }
+enum _UssdState { start, loginPin, mainMenu, clockInConfirm, clockOutConfirm, balance, incidentCategory, incidentDesc, convertCredits }
 
 class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
   final List<_UssdEntry> _log = [];
@@ -2694,6 +2979,7 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
       case _UssdState.balance: _handleBalance(input); break;
       case _UssdState.incidentCategory: _handleIncidentCategory(input); break;
       case _UssdState.incidentDesc: _handleIncidentDesc(input); break;
+      case _UssdState.convertCredits: _handleConvertCreditsConfirm(input); break;
     }
   }
 
@@ -2715,7 +3001,7 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
     if (input == '1234') {
       _retryCount = 0;
       _state = _UssdState.mainMenu;
-      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements', step: _step));
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements\n6. Convert Credits', step: _step));
     } else {
       _retryCount++;
       if (_retryCount >= 3) {
@@ -2751,6 +3037,10 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
         _log.add(_UssdEntry(type: _UssdType.system, text: 'END [ANNOUNCEMENT]\nTapVerify v2.0: Revenue proof for your business.\nNew: USSD balance check now available.\nContact admin for support.', step: _step));
         _state = _UssdState.mainMenu;
         break;
+      case '6':
+        _state = _UssdState.convertCredits;
+        _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [CONVERT CREDITS]\nCurrent credits: 1,240 pts\nConversion rate: 100 pts = Ksh 50 airtime\nAvailable: Ksh 620 airtime\nSACCO tier bonus: +20% for early payment\n\n1. Convert to Airtime (Ksh 744)\n2. Convert to SACCO Credit\n0. Go Back', step: _step));
+        break;
       default:
         _log.add(_UssdEntry(type: _UssdType.system, text: 'CON Invalid choice. Select option:\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements', step: _step));
     }
@@ -2760,7 +3050,7 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
   void _handleClockIn(String input) {
     if (input == '2') {
       _state = _UssdState.mainMenu;
-      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements', step: _step));
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements\n6. Convert Credits', step: _step));
     } else if (input == '1') {
       final now = DateTime.now();
       final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
@@ -2776,7 +3066,7 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
   void _handleClockOut(String input) {
     if (input == '2') {
       _state = _UssdState.mainMenu;
-      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements', step: _step));
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements\n6. Convert Credits', step: _step));
     } else if (input == '1') {
       final now = DateTime.now();
       final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
@@ -2792,7 +3082,7 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
     switch (input) {
       case '0':
         _state = _UssdState.mainMenu;
-        _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements', step: _step));
+        _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements\n6. Convert Credits', step: _step));
         break;
       case '1':
         _log.add(_UssdEntry(type: _UssdType.system, text: 'END [PAYMENT BALANCE]\nTotal earned: Ksh 2,400,000\nTotal paid: Ksh 2,400,000\nBalance: Ksh 0\nConsistency: 94%\nChannel: USSD (shortcode 14434)', step: _step));
@@ -2815,7 +3105,7 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
   void _handleIncidentCategory(String input) {
     if (input == '0') {
       _state = _UssdState.mainMenu;
-      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements', step: _step));
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements\n6. Convert Credits', step: _step));
     } else if (['1', '2', '3'].contains(input)) {
       _state = _UssdState.incidentDesc;
       _log.add(_UssdEntry(type: _UssdType.system, text: 'CON Enter brief description:\n(Enter 0 to go back)', step: _step));
@@ -2835,6 +3125,19 @@ class _WebUssdSimulatorState extends State<_WebUssdSimulator> {
       _state = _UssdState.mainMenu;
     } else {
       _log.add(_UssdEntry(type: _UssdType.system, text: 'CON Description cannot be empty.\nEnter brief description:\n(Enter 0 to go back)', step: _step));
+    }
+    setState(() => _loading = false);
+  }
+
+  void _handleConvertCreditsConfirm(String input) {
+    if (input == '0') {
+      _state = _UssdState.mainMenu;
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON [MAIN MENU]\n1. Clock In\n2. Clock Out\n3. View Balance\n4. Report Safety Incident\n5. View Announcements\n6. Convert Credits', step: _step));
+    } else if (input == '1') {
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'END [CREDITS CONVERTED]\n1,240 pts converted\nKsh 744 airtime sent to 0715641339\n(+20% SACCO early payment bonus)\nNew balance: 0 pts\nThank you for being a consistent payer!', step: _step));
+      _state = _UssdState.mainMenu;
+    } else {
+      _log.add(_UssdEntry(type: _UssdType.system, text: 'CON Invalid choice.\n1. Convert Now\n0. Go Back', step: _step));
     }
     setState(() => _loading = false);
   }
@@ -3191,6 +3494,8 @@ class _WebBulkSmsState extends State<_WebBulkSms> {
 
   @override
   Widget build(BuildContext context) {
+    final phoneCount = _parsePhones().length;
+    final estimatedCost = phoneCount * 0.50;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Container(
@@ -3215,6 +3520,76 @@ class _WebBulkSmsState extends State<_WebBulkSms> {
             const SizedBox(height: 6),
             Text("Send payment reminders via Africa's Talking", style: GoogleFonts.inter(
                 fontSize: 13, color: AppColors.muted)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.deep, AppColors.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.wifi_tethering_rounded, size: 18, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text("AT SMS BALANCE", style: GoogleFonts.inter(
+                          fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white70, letterSpacing: 0.5)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text('4,847', style: GoogleFonts.inter(
+                          fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
+                      const SizedBox(width: 6),
+                      Text('messages remaining', style: GoogleFonts.inter(
+                          fontSize: 13, color: Colors.white70)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _smsPill('Ksh 0.50/msg'),
+                      const SizedBox(width: 8),
+                      _smsPill('Est: Ksh ${estimatedCost.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Top up via Africa\'s Talking dashboard or call +254 715 641 339', style: GoogleFonts.inter()),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text('Top Up', style: GoogleFonts.inter(
+                              fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
             Row(children: [
               Expanded(child: _uploadOption(
@@ -3403,6 +3778,18 @@ class _WebBulkSmsState extends State<_WebBulkSms> {
       ),
       child: Text(text, style: GoogleFonts.inter(
           fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+    );
+  }
+
+  Widget _smsPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(text, style: GoogleFonts.inter(
+          fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
     );
   }
 }

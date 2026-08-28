@@ -9,6 +9,7 @@ import 'revenue_report_screen.dart';
 import 'credit_profile_screen.dart';
 import 'evidence_console_screen.dart';
 import 'bulk_sms_screen.dart';
+import 'badges_screen.dart';
 
 /// 3-tab shell: Dashboard / Orders / Customers.
 class TreasurerHomeShell extends StatefulWidget {
@@ -139,6 +140,16 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
             const SizedBox(height: 8),
 
             // Revenue tools
+            _drawerItem(Icons.emoji_events_rounded, 'My Badges', () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const BadgesScreen()));
+            }),
+            _drawerItem(Icons.shield_rounded, 'Payer Score', () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const BadgesScreen()));
+            }),
             _drawerItem(Icons.bar_chart_rounded, 'Revenue Report', () {
               Navigator.pop(context);
               Navigator.push(context,

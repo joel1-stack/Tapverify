@@ -183,10 +183,37 @@ class _WebDashboardState extends State<WebDashboard> {
               const SizedBox(width: 16),
               _statCard('Consistency', '94%', AppColors.gold, Icons.trending_up_rounded),
               const SizedBox(width: 16),
-              _statCard('Customers', '12', AppColors.secondary, Icons.people_rounded),
+              _statCard('Trust Score', '87/100', AppColors.deep, Icons.shield_rounded),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // Revenue milestone + Streak + Trust score row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: _milestoneWidget()),
+              const SizedBox(width: 16),
+              Expanded(flex: 2, child: _streakWidget()),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Trust score + Lender-ready
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 2, child: _trustScoreWidget()),
+              const SizedBox(width: 16),
+              Expanded(flex: 3, child: _lenderChecklistWidget()),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Badges row
+          _badgesWidget(),
+          const SizedBox(height: 16),
+
           // Recent orders
           Container(
             width: double.infinity,
@@ -203,6 +230,296 @@ class _WebDashboardState extends State<WebDashboard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _milestoneWidget() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('REVENUE JOURNEY', style: GoogleFonts.inter(
+              fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text('Ksh 2.4M', style: GoogleFonts.inter(
+                  fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.primary)),
+              Text(' / 5M', style: GoogleFonts.inter(
+                  fontSize: 16, color: AppColors.muted)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: 0.48,
+              minHeight: 10,
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('TRUSTED', style: GoogleFonts.inter(
+                    fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary)),
+              ),
+              const Spacer(),
+              Text('Ksh 2.6M to Champion', style: GoogleFonts.inter(
+                  fontSize: 11, color: AppColors.muted)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _streakWidget() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('RECORDING STREAK', style: GoogleFonts.inter(
+              fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text('🔥', style: const TextStyle(fontSize: 32)),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('12 Days', style: GoogleFonts.inter(
+                      fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.text)),
+                  Text('Record: 18 days', style: GoogleFonts.inter(
+                      fontSize: 12, color: AppColors.muted)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.card_giftcard_rounded, size: 16, color: AppColors.success),
+                const SizedBox(width: 6),
+                Text('Ksh 50 airtime at 15 days', style: GoogleFonts.inter(
+                    fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.success)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _trustScoreWidget() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('TRUST SCORE', style: GoogleFonts.inter(
+              fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text('87', style: GoogleFonts.inter(
+                  fontSize: 40, fontWeight: FontWeight.w900, color: AppColors.text)),
+              Text(' / 100', style: GoogleFonts.inter(
+                  fontSize: 18, color: AppColors.muted)),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text('EXCELLENT', style: GoogleFonts.inter(
+                fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.success)),
+          ),
+          const SizedBox(height: 12),
+          _trustRow('Verification', '98%'),
+          _trustRow('Response', '4.2h'),
+          _trustRow('Growth', '+23%'),
+        ],
+      ),
+    );
+  }
+
+  Widget _trustRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_rounded, size: 12, color: AppColors.success),
+          const SizedBox(width: 6),
+          Text(label, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+          const Spacer(),
+          Text(value, style: GoogleFonts.inter(
+              fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text)),
+        ],
+      ),
+    );
+  }
+
+  Widget _lenderChecklistWidget() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.checklist_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('LENDER-READY CHECKLIST', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _checkItem(true, 'Verified Ksh 100K+ revenue'),
+          _checkItem(true, '30+ days of payment history'),
+          _checkItem(true, 'Zero disputed payments'),
+          _checkItem(false, '6-month consistency streak — 2 months to go'),
+          _checkItem(false, 'Connect SACCO account'),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.celebration_rounded, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text('You are 2 checks away from a Lender-Ready Profile!', style: GoogleFonts.inter(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _checkItem(bool checked, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(
+            checked ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+            size: 18,
+            color: checked ? AppColors.success : AppColors.muted,
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: GoogleFonts.inter(
+              fontSize: 13, fontWeight: FontWeight.w600,
+              color: checked ? AppColors.text : AppColors.muted))),
+        ],
+      ),
+    );
+  }
+
+  Widget _badgesWidget() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 18, color: AppColors.gold),
+              const SizedBox(width: 8),
+              Text('MY BADGES', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+              const Spacer(),
+              Text('Payer Score: 847/1000', style: GoogleFonts.inter(
+                  fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _badgeTile('🥇', '6-Month Payer', 'Silver', 'MINTED', true, '0x7e8b...c4d2'),
+              const SizedBox(width: 16),
+              _badgeTile('🥈', '3-Month Payer', 'Bronze', 'MINTED', true, '0x3f2a...b91c'),
+              const SizedBox(width: 16),
+              _badgeTile('⬜', '12-Month Payer', 'Gold', 'LOCKED', false, ''),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _badgeTile(String emoji, String name, String tier, String status, bool active, String tx) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFF8FAFC) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: active ? AppColors.gold.withOpacity(0.3) : AppColors.border,
+            width: active ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 28)),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.success.withOpacity(0.1) : AppColors.border.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(status, style: GoogleFonts.inter(
+                      fontSize: 8, fontWeight: FontWeight.w800,
+                      color: active ? AppColors.success : AppColors.muted)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(name, style: GoogleFonts.inter(
+                fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.text)),
+            Text(tier, style: GoogleFonts.inter(
+                fontSize: 11, color: AppColors.muted)),
+            if (tx.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(tx, style: GoogleFonts.inter(
+                  fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primary)),
+            ],
+          ],
+        ),
       ),
     );
   }

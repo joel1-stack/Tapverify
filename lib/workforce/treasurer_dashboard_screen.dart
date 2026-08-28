@@ -7,6 +7,7 @@ import 'create_collection_screen.dart';
 import 'collection_detail_screen.dart';
 import 'revenue_report_screen.dart';
 import 'credit_profile_screen.dart';
+import 'badges_screen.dart';
 
 /// Dashboard — clean overview with 3 stats, quick actions, and recent orders.
 class TreasurerDashboardScreen extends StatefulWidget {
@@ -57,8 +58,20 @@ class _TreasurerDashboardScreenState extends State<TreasurerDashboardScreen> {
             ),
             const SizedBox(height: 16),
 
-            // ── Rate bar ──
-            _rateBar(stats),
+            // ── Revenue milestone progress ──
+            _milestoneProgress(),
+            const SizedBox(height: 12),
+
+            // ── Consistency streak ──
+            _streakCard(),
+            const SizedBox(height: 12),
+
+            // ── Trust score ──
+            _trustScoreCard(),
+            const SizedBox(height: 12),
+
+            // ── Lender-ready checklist ──
+            _lenderChecklist(),
             const SizedBox(height: 16),
 
             // ── Quick actions ──
@@ -83,6 +96,32 @@ class _TreasurerDashboardScreenState extends State<TreasurerDashboardScreen> {
                     AppColors.deep,
                     () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const CreditProfileScreen())),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _quickAction(
+                    Icons.emoji_events_rounded,
+                    'My Badges',
+                    'On-chain attestation',
+                    AppColors.gold,
+                    () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const BadgesScreen())),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _quickAction(
+                    Icons.shield_rounded,
+                    'Payer Score',
+                    'Universal reputation',
+                    AppColors.success,
+                    () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const BadgesScreen())),
                   ),
                 ),
               ],
@@ -229,6 +268,222 @@ class _TreasurerDashboardScreenState extends State<TreasurerDashboardScreen> {
                 style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _milestoneProgress() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('YOUR REVENUE JOURNEY', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+              const Spacer(),
+              Text('💎 Trusted', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: 0.48,
+              minHeight: 10,
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text('Ksh 2.4M', style: GoogleFonts.inter(
+                  fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
+              Text(' / 5M', style: GoogleFonts.inter(
+                  fontSize: 13, color: AppColors.muted)),
+              const Spacer(),
+              Text('Ksh 2.6M to Champion', style: GoogleFonts.inter(
+                  fontSize: 11, color: AppColors.muted)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('🎯 Next unlock: Credit Profile Export at Ksh 5M', style: GoogleFonts.inter(
+              fontSize: 11, color: AppColors.muted)),
+        ],
+      ),
+    );
+  }
+
+  Widget _streakCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Text('🔥', style: const TextStyle(fontSize: 28)),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('12-Day Recording Streak', style: GoogleFonts.inter(
+                    fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.text)),
+                Text('Record payments every day to keep it alive', style: GoogleFonts.inter(
+                    fontSize: 11, color: AppColors.muted)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('RECORD: 18', style: GoogleFonts.inter(
+                  fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.muted)),
+              Text('🎁 Ksh 50 airtime at 15 days', style: GoogleFonts.inter(
+                  fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.success)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _trustScoreCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('TRUST SCORE', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('EXCELLENT', style: GoogleFonts.inter(
+                    fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.success)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text('87', style: GoogleFonts.inter(
+                  fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.text)),
+              Text(' / 100', style: GoogleFonts.inter(
+                  fontSize: 16, color: AppColors.muted)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _trustBar('Verification', '98%'),
+              const SizedBox(width: 12),
+              _trustBar('Response', '4.2h'),
+              const SizedBox(width: 12),
+              _trustBar('Growth', '+23%'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _trustBar(String label, String value) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted)),
+          Text(value, style: GoogleFonts.inter(
+              fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.text)),
+        ],
+      ),
+    );
+  }
+
+  Widget _lenderChecklist() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.checklist_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('LENDER-READY CHECKLIST', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.5)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _checkItem(true, 'Verified Ksh 100K+ revenue'),
+          _checkItem(true, '30+ days of payment history'),
+          _checkItem(true, 'Zero disputed payments'),
+          _checkItem(false, '6-month consistency streak — 2 months to go'),
+          _checkItem(false, 'Connect SACCO account'),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.celebration_rounded, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text('You are 2 checks away from a Lender-Ready Profile!', style: GoogleFonts.inter(
+                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _checkItem(bool checked, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(
+            checked ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+            size: 18,
+            color: checked ? AppColors.success : AppColors.muted,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: GoogleFonts.inter(
+              fontSize: 12, fontWeight: FontWeight.w600,
+              color: checked ? AppColors.text : AppColors.muted))),
+        ],
       ),
     );
   }

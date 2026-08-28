@@ -3039,6 +3039,81 @@ class _WebBulkSmsState extends State<_WebBulkSms> {
     return parts.map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
   }
 
+  void _showSampleCsv() {
+    final sample = 'phone,name,amount,order\n0712345678,John Kamau,15000,Steel Bars\n0723456789,Mary Wanjiku,8500,Cement Bags\n0734567890,James Ochieng,22000,Iron Sheets\n0745678901,Sarah Nyambura,12000,Welding Rods\n0756789012,Peter Mwangi,35000,Aluminum Windows';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(children: [
+          const Icon(Icons.table_chart_rounded, color: AppColors.success, size: 22),
+          const SizedBox(width: 10),
+          Text('CSV Format Template', style: GoogleFonts.inter(
+              fontSize: 16, fontWeight: FontWeight.w800)),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Your CSV should have these columns:', style: GoogleFonts.inter(
+                fontSize: 13, color: AppColors.muted)),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A2E),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(sample,
+                  style: GoogleFonts.firaCode(
+                      fontSize: 11, color: AppColors.success, height: 1.5)),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(children: [
+                const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text(
+                  'Columns: phone (required), name, amount, order. '
+                  'Phone numbers in format 07XXXXXXXX or 254XXXXXXXXX.',
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                )),
+              ]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Close', style: GoogleFonts.inter(color: AppColors.muted)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Sample format shown — create a CSV with these columns',
+                    style: GoogleFonts.inter()),
+                backgroundColor: AppColors.primary,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ));
+            },
+            icon: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            label: Text('Got it', style: GoogleFonts.inter(
+                fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _uploadCsv() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -3159,6 +3234,24 @@ class _WebBulkSmsState extends State<_WebBulkSms> {
                 },
               )),
             ]),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _showSampleCsv,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                ),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.download_rounded, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text('Download Sample CSV Template', style: GoogleFonts.inter(
+                      fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                ]),
+              ),
+            ),
             const SizedBox(height: 20),
             Text('PHONE NUMBERS', style: GoogleFonts.inter(
                 fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.6)),

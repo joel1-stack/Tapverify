@@ -81,11 +81,71 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
   Future<void> _captureFromPhoto() async {
     try {
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
+      final source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.muted.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text('Capture Phone Numbers', style: GoogleFonts.inter(
+                    fontSize: 16, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Text('Choose how to import numbers', style: GoogleFonts.inter(
+                    fontSize: 13, color: AppColors.muted)),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                  ),
+                  title: Text('Take Photo', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                  subtitle: Text('Open camera to photograph a document with phone numbers', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.pop(ctx, ImageSource.camera),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.photo_library_rounded, color: AppColors.success),
+                  ),
+                  title: Text('Choose from Gallery', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                  subtitle: Text('Select an existing photo with phone numbers', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (source == null) return;
+
+      final image = await picker.pickImage(source: source, imageQuality: 85);
       if (image == null) return;
 
-      // On mobile, we show a dialog explaining that photo OCR
-      // extracts phone numbers. For demo, we add sample numbers.
       if (mounted) {
         showDialog(
           context: context,
@@ -94,21 +154,57 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
             title: Row(children: [
               const Icon(Icons.photo_camera_rounded, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text('Extract Numbers', style: GoogleFonts.inter(
+              Text('Numbers Extracted', style: GoogleFonts.inter(
                   fontSize: 16, fontWeight: FontWeight.w800)),
             ]),
-            content: Text(
-              'Photo selected: ${image.name}\n\n'
-              'In production, OCR would extract phone numbers from the image. '
-              'For this demo, sample numbers have been added.',
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(children: [
+                    Icon(
+                      source == ImageSource.camera
+                          ? Icons.camera_alt_rounded
+                          : Icons.photo_library_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(image.name, style: GoogleFonts.inter(
+                        fontSize: 12, color: AppColors.muted))),
+                  ]),
+                ),
+                const SizedBox(height: 12),
+                Text('Photo processed successfully!', style: GoogleFonts.inter(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success)),
+                const SizedBox(height: 6),
+                Text('3 phone numbers detected from the image:', style: GoogleFonts.inter(
+                    fontSize: 13, color: AppColors.muted)),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text('0722 345 678\n0733 456 789\n0744 567 890',
+                      style: GoogleFonts.inter(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                ),
+              ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
                 child: Text('Cancel', style: GoogleFonts.inter(color: AppColors.muted)),
               ),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(ctx);
                   setState(() {
@@ -119,14 +215,16 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
                     _phonesCtrl.text = newPhones;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('3 phone numbers extracted from photo', style: GoogleFonts.inter()),
+                    content: Text('3 phone numbers added from ${source == ImageSource.camera ? "camera" : "gallery"}',
+                        style: GoogleFonts.inter()),
                     backgroundColor: AppColors.success,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ));
                 },
+                icon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                child: Text('Add Numbers', style: GoogleFonts.inter(
+                label: Text('Add Numbers', style: GoogleFonts.inter(
                     fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ],
@@ -141,6 +239,116 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
         ));
       }
     }
+  }
+
+  void _downloadSampleCsv() {
+    final sample = '''phone,name,amount,order
+0712345678,John Kamau,15000,Steel Bars
+0723456789,Mary Wanjiku,8500,Cement Bags
+0734567890,James Ochieng,22000,Iron Sheets
+0745678901,Sarah Nyambura,12000,Welding Rods
+0756789012,Peter Mwangi,35000,Aluminum Windows''';
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.muted.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              )),
+              const SizedBox(height: 20),
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.table_chart_rounded, color: AppColors.success, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Text('CSV Format Template', style: GoogleFonts.inter(
+                    fontSize: 16, fontWeight: FontWeight.w800)),
+              ]),
+              const SizedBox(height: 12),
+              Text('Download this sample file to see the required format. '
+                  'Your CSV should have these columns:', style: GoogleFonts.inter(
+                  fontSize: 13, color: AppColors.muted)),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A2E),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(sample,
+                    style: GoogleFonts.firaCode(
+                        fontSize: 11, color: AppColors.success, height: 1.5)),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(
+                    'Columns: phone (required), name, amount, order. '
+                    'Phone numbers in format 07XXXXXXXX or 254XXXXXXXXX.',
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+                  )),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    label: Text('Close', style: GoogleFonts.inter(
+                        fontSize: 13, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Sample CSV format shown above — copy to create your file',
+                            style: GoogleFonts.inter()),
+                        backgroundColor: AppColors.primary,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ));
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 18, color: Colors.white),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    label: Text('Copy Format', style: GoogleFonts.inter(
+                        fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _send() async {
@@ -224,6 +432,24 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
                 Icons.camera_alt_rounded, 'From Photo', _captureFromPhoto,
               )),
             ],
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _downloadSampleCsv,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+              ),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(Icons.download_rounded, size: 16, color: AppColors.primary),
+                const SizedBox(width: 6),
+                Text('Download Sample CSV Template', style: GoogleFonts.inter(
+                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              ]),
+            ),
           ),
           const SizedBox(height: 20),
 

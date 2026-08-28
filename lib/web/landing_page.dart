@@ -114,11 +114,13 @@ class _WebLandingPageState extends State<WebLandingPage>
           _socialProof(narrow, pad),
           _howItWorks(narrow, pad),
           _features(narrow, pad),
+          _mobileShowcase(narrow, pad),
           _liveDemo(narrow, pad),
           _pricing(narrow, pad),
           _testimonial(narrow, pad),
           _cta(narrow, pad),
-          _footer(narrow, pad),
+          _newsletter(narrow, pad),
+          _curvedFooter(narrow, pad),
         ],
       ),
     );
@@ -1209,67 +1211,457 @@ class _WebLandingPageState extends State<WebLandingPage>
     );
   }
 
-  SliverToBoxAdapter _footer(bool narrow, double pad) {
+  SliverToBoxAdapter _mobileShowcase(bool narrow, double pad) {
     return SliverToBoxAdapter(
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: pad, vertical: 40),
-        color: const Color(0xFF0F172A),
-        child: narrow
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.asset(AppAssets.logoFull, height: 36),
-                  const SizedBox(height: 20),
-                  _footerLinks(),
-                  const SizedBox(height: 20),
-                  Text('© 2026 TapVerify. All rights reserved.',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: Colors.white54)),
-                ],
-              )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.asset(AppAssets.logoFull, height: 36),
-                  const SizedBox(width: 40),
-                  Expanded(child: _footerLinks()),
-                  Text('© 2026 TapVerify. All rights reserved.',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: Colors.white54)),
-                ],
-              ),
+        padding: EdgeInsets.symmetric(horizontal: pad, vertical: 80),
+        color: const Color(0xFFF0FDFA),
+        child: Column(children: [
+          Text('Your Business in Your Pocket',
+              style: GoogleFonts.inter(
+                  fontSize: narrow ? 28 : 36,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.text)),
+          const SizedBox(height: 8),
+          Text('Download TapVerify — the mobile app that turns payments into proof',
+              style: GoogleFonts.inter(
+                  fontSize: 16, color: AppColors.muted)),
+          const SizedBox(height: 50),
+          narrow
+              ? Column(children: [
+                  _mobileFeature(
+                      'Record Payments Instantly',
+                      'Tap to record any customer payment — M-Pesa, cash, card, or bank. '
+                          'Each payment gets a unique SasaPay checkout link.',
+                      Icons.touch_app_rounded,
+                      AppColors.primary,
+                      'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&h=400&fit=crop'),
+                  const SizedBox(height: 24),
+                  _mobileFeature(
+                      'Build Revenue History',
+                      'Over months, watch your verified revenue grow. '
+                          'Every payment is cryptographically signed and tamper-proof.',
+                      Icons.timeline_rounded,
+                      AppColors.success,
+                      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=400&fit=crop'),
+                  const SizedBox(height: 24),
+                  _mobileFeature(
+                      'Get Funded',
+                      'Walk into any bank with a dashboard showing Ksh 2M+ in verified transactions. '
+                          'Loan approved in days, not months.',
+                      Icons.account_balance_rounded,
+                      AppColors.gold,
+                      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=500&h=400&fit=crop'),
+                ])
+              : Column(children: [
+                  _mobileFeatureRow(
+                      'Record Payments Instantly',
+                      'Tap to record any customer payment — M-Pesa, cash, card, or bank. '
+                          'Each payment gets a unique SasaPay checkout link.',
+                      Icons.touch_app_rounded,
+                      AppColors.primary,
+                      'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=600&h=400&fit=crop',
+                      true),
+                  const SizedBox(height: 30),
+                  _mobileFeatureRow(
+                      'Build Revenue History',
+                      'Over months, watch your verified revenue grow. '
+                          'Every payment is cryptographically signed and tamper-proof.',
+                      Icons.timeline_rounded,
+                      AppColors.success,
+                      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop',
+                      false),
+                  const SizedBox(height: 30),
+                  _mobileFeatureRow(
+                      'Get Funded',
+                      'Walk into any bank with a dashboard showing Ksh 2M+ in verified transactions. '
+                          'Loan approved in days, not months.',
+                      Icons.account_balance_rounded,
+                      AppColors.gold,
+                      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop',
+                      true),
+                ]),
+          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.deep]),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.phone_android_rounded, color: Colors.white, size: narrow ? 24 : 28),
+              const SizedBox(width: 12),
+              Text('Download TapVerify on Android & iOS',
+                  style: GoogleFonts.inter(
+                      fontSize: narrow ? 16 : 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white)),
+            ]),
+          ),
+        ]),
       ),
     );
   }
 
-  Widget _footerLinks() => Wrap(
-        spacing: 30,
-        runSpacing: 12,
-        children: [
-          _footerCol('Product', ['Features', 'Pricing', 'Dashboard', 'API']),
-          _footerCol('Company', ['About', 'Blog', 'Careers', 'Contact']),
-          _footerCol('Legal', ['Privacy', 'Terms', 'Security']),
-        ],
-      );
-
-  Widget _footerCol(String title, List<String> links) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white)),
-          const SizedBox(height: 12),
-          for (final l in links)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(l,
+  Widget _mobileFeature(String title, String desc, IconData icon, Color color, String imageUrl) {
+    return _AnimatedCard(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: color.withValues(alpha: 0.12),
+                blurRadius: 20,
+                offset: const Offset(0, 8)),
+          ],
+        ),
+        child: Column(children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Image.network(imageUrl,
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                    height: 180,
+                    color: color.withValues(alpha: 0.1),
+                    child: Icon(icon, size: 50, color: color.withValues(alpha: 0.3)))),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(height: 12),
+              Text(title,
                   style: GoogleFonts.inter(
-                      fontSize: 13, color: Colors.white54)),
-            ),
-        ],
-      );
+                      fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.text)),
+              const SizedBox(height: 6),
+              Text(desc,
+                  style: GoogleFonts.inter(
+                      fontSize: 13, color: AppColors.muted, height: 1.5)),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _mobileFeatureRow(String title, String desc, IconData icon, Color color, String imageUrl, bool reverse) {
+    return _AnimatedCard(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: color.withValues(alpha: 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 10)),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: reverse
+            ? Row(children: [
+                Expanded(
+                  flex: 5,
+                  child: Image.network(imageUrl,
+                      height: 280,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                          height: 280,
+                          color: color.withValues(alpha: 0.1),
+                          child: Icon(icon, size: 60, color: color.withValues(alpha: 0.3)))),
+                ),
+                Expanded(
+                  flex: 5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Container(
+                        width: 48, height: 48,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(title,
+                          style: GoogleFonts.inter(
+                              fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
+                      const SizedBox(height: 8),
+                      Text(desc,
+                          style: GoogleFonts.inter(
+                              fontSize: 14, color: AppColors.muted, height: 1.6)),
+                    ]),
+                  ),
+                ),
+              ])
+            : Row(children: [
+                Expanded(
+                  flex: 5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Container(
+                        width: 48, height: 48,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(title,
+                          style: GoogleFonts.inter(
+                              fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
+                      const SizedBox(height: 8),
+                      Text(desc,
+                          style: GoogleFonts.inter(
+                              fontSize: 14, color: AppColors.muted, height: 1.6)),
+                    ]),
+                  ),
+                ),
+                Expanded(
+                  flex: 5,
+                  child: Image.network(imageUrl,
+                      height: 280,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                          height: 280,
+                          color: color.withValues(alpha: 0.1),
+                          child: Icon(icon, size: 60, color: color.withValues(alpha: 0.3)))),
+                ),
+              ]),
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _newsletter(bool narrow, double pad) {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: pad, vertical: 60),
+        color: AppColors.primary,
+        child: Column(children: [
+          Text('Stay Updated',
+              style: GoogleFonts.inter(
+                  fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white)),
+          const SizedBox(height: 8),
+          Text('Get product updates, tips, and success stories.',
+              style: GoogleFonts.inter(
+                  fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
+          const SizedBox(height: 24),
+          Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Row(children: [
+              Expanded(
+                child: TextField(
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Enter your email',
+                    hintStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.5)),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.15),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Subscribed! Check your email for confirmation.',
+                        style: GoogleFonts.inter()),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                ),
+                child: Text('Subscribe',
+                    style: GoogleFonts.inter(
+                        fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _curvedFooter(bool narrow, double pad) {
+    return SliverToBoxAdapter(
+      child: ClipPath(
+        clipper: _CurvedFooterClipper(),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(pad, 80, pad, 40),
+          color: const Color(0xFF0F172A),
+          child: narrow
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Image.asset(AppAssets.logoFull, height: 36),
+                    const SizedBox(height: 12),
+                    Text('Verifiable revenue history for manufacturing SMEs.',
+                        style: GoogleFonts.inter(
+                            fontSize: 13, color: Colors.white54, height: 1.5)),
+                    const SizedBox(height: 24),
+                    _footerLinks(),
+                    const SizedBox(height: 24),
+                    _footerContact(),
+                    const SizedBox(height: 20),
+                    _footerSocial(),
+                    const SizedBox(height: 20),
+                    const Divider(color: Color(0xFF1E293B)),
+                    const SizedBox(height: 16),
+                    Text('© 2026 TapVerify. All rights reserved.',
+                        style: GoogleFonts.inter(fontSize: 12, color: Colors.white54)),
+                  ],
+                )
+              : Column(children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(flex: 3, child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Image.asset(AppAssets.logoFull, height: 36),
+                          const SizedBox(height: 12),
+                          Text('Verifiable revenue history for\nmanufacturing SMEs.',
+                              style: GoogleFonts.inter(
+                                  fontSize: 14, color: Colors.white54, height: 1.5)),
+                          const SizedBox(height: 20),
+                          _footerSocial(),
+                        ])),
+                    Expanded(flex: 2, child: _footerCol('Product', [
+                      _FooterLink('Features', () {}),
+                      _FooterLink('Pricing', () {}),
+                      _FooterLink('Dashboard', _goToDemo),
+                      _FooterLink('API Docs', () {}),
+                    ])),
+                    Expanded(flex: 2, child: _footerCol('Company', [
+                      _FooterLink('About', () => Navigator.pushNamed(context, '/about')),
+                      _FooterLink('Contact', () => Navigator.pushNamed(context, '/contact')),
+                      _FooterLink('Blog', () {}),
+                      _FooterLink('Careers', () {}),
+                    ])),
+                    Expanded(flex: 3, child: _footerContact()),
+                  ]),
+                  const SizedBox(height: 30),
+                  const Divider(color: Color(0xFF1E293B)),
+                  const SizedBox(height: 16),
+                  Row(children: [
+                    Text('© 2026 TapVerify. All rights reserved.',
+                        style: GoogleFonts.inter(fontSize: 12, color: Colors.white54)),
+                    const Spacer(),
+                    Text('Built in Nairobi, Kenya 🇰🇪',
+                        style: GoogleFonts.inter(fontSize: 12, color: Colors.white54)),
+                  ]),
+                ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _footerCol(String title, List<_FooterLink> links) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title,
+          style: GoogleFonts.inter(
+              fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+      const SizedBox(height: 14),
+      for (final l in links)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GestureDetector(
+            onTap: l.onTap,
+            child: Text(l.label,
+                style: GoogleFonts.inter(
+                    fontSize: 13, color: Colors.white54)),
+          ),
+        ),
+    ],
+  );
+
+  Widget _footerContact() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('Get in Touch',
+          style: GoogleFonts.inter(
+              fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+      const SizedBox(height: 14),
+      _contactRow(Icons.chat_rounded, 'WhatsApp: 0715 641 339', AppColors.success),
+      const SizedBox(height: 8),
+      _contactRow(Icons.email_rounded, 'info@tapverify.co.ke', AppColors.primary),
+      const SizedBox(height: 8),
+      _contactRow(Icons.phone_rounded, '+254 715 641 339', AppColors.gold),
+    ],
+  );
+
+  Widget _contactRow(IconData icon, String text, Color color) => Row(children: [
+    Icon(icon, size: 14, color: color),
+    const SizedBox(width: 8),
+    Text(text, style: GoogleFonts.inter(fontSize: 12, color: Colors.white54)),
+  ]);
+
+  Widget _footerSocial() => Row(children: [
+    _socialIcon(Icons.language_rounded, () {}),
+    const SizedBox(width: 12),
+    _socialIcon(Icons.chat_rounded, () {}),
+    const SizedBox(width: 12),
+    _socialIcon(Icons.email_rounded, () {}),
+  ]);
+
+  Widget _socialIcon(IconData icon, VoidCallback onTap) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      width: 36, height: 36,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(icon, size: 18, color: Colors.white54),
+    ),
+  );
+
+  Widget _footerLinks() => Wrap(
+    spacing: 30,
+    runSpacing: 12,
+    children: [
+      _footerColSimple('Product', ['Features', 'Pricing', 'Dashboard']),
+      _footerColSimple('Company', ['About', 'Contact', 'Careers']),
+      _footerColSimple('Legal', ['Privacy', 'Terms', 'Security']),
+    ],
+  );
+
+  Widget _footerColSimple(String title, List<String> links) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title,
+          style: GoogleFonts.inter(
+              fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+      const SizedBox(height: 12),
+      for (final l in links)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(l,
+              style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+        ),
+    ],
+  );
 }
 
 class _AnimatedCard extends StatefulWidget {
@@ -1402,4 +1794,26 @@ class _PlanData {
   final Color iconColor;
   _PlanData(this.name, this.price, this.period, this.features, this.popular,
       this.icon, this.iconColor);
+}
+
+class _FooterLink {
+  final String label;
+  final VoidCallback onTap;
+  _FooterLink(this.label, this.onTap);
+}
+
+class _CurvedFooterClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, 60);
+    path.quadraticBezierTo(size.width / 2, 0, size.width, 60);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

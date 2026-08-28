@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'workforce/splash_screen.dart';
 import 'web/landing_page.dart';
+import 'web/web_about.dart';
+import 'web/web_contact.dart';
 
 void main() {
   runApp(const TapVerifyApp());
@@ -79,6 +81,12 @@ class TapVerifyApp extends StatelessWidget {
         ),
       ),
       home: kIsWeb ? const WebLandingPage() : const SplashScreen(),
+      routes: kIsWeb
+          ? {
+              '/about': (_) => const WebAboutPage(),
+              '/contact': (_) => const WebContactPage(),
+            }
+          : {},
     );
   }
 }

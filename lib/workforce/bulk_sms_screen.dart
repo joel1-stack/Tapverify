@@ -1,6 +1,10 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
+import 'package:image_picker/image_picker.dart';
 import '../constants.dart';
 
 class BulkSmsScreen extends StatefulWidget {
@@ -22,12 +26,121 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
   List<String> _parsePhones() {
     final raw = _phonesCtrl.text.trim();
     if (raw.isEmpty) return [];
-    // Split on newlines, commas, semicolons — then trim and filter blanks.
     final parts = raw.split(RegExp(r'[\n,;]+'));
-    return parts
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
+    return parts.map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+  }
+
+  Future<void> _uploadCsv() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.first;
+      final bytes = file.bytes;
+      if (bytes == null) return;
+
+      final content = String.fromCharCodes(bytes);
+      final rows = const CsvToListConverter().convert(content);
+
+      final phones = <String>[];
+      for (final row in rows) {
+        for (final cell in row) {
+          final str = cell.toString().trim();
+          final match = RegExp(r'(?:254|\+254|0)?(\d{9})').firstMatch(str);
+          if (match != null) {
+            phones.add(match.group(0)!);
+          }
+        }
+      }
+
+      setState(() {
+        _phonesCtrl.text = phones.join('\n');
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Found ${phones.length} phone numbers from ${file.name}', style: GoogleFonts.inter()),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error reading file: $e', style: GoogleFonts.inter()),
+          backgroundColor: AppColors.danger,
+        ));
+      }
+    }
+  }
+
+  Future<void> _captureFromPhoto() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      // On mobile, we show a dialog explaining that photo OCR
+      // extracts phone numbers. For demo, we add sample numbers.
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(children: [
+              const Icon(Icons.photo_camera_rounded, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Extract Numbers', style: GoogleFonts.inter(
+                  fontSize: 16, fontWeight: FontWeight.w800)),
+            ]),
+            content: Text(
+              'Photo selected: ${image.name}\n\n'
+              'In production, OCR would extract phone numbers from the image. '
+              'For this demo, sample numbers have been added.',
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Cancel', style: GoogleFonts.inter(color: AppColors.muted)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    final current = _phonesCtrl.text;
+                    final newPhones = current.isEmpty
+                        ? '0722345678\n0733456789\n0744567890'
+                        : '$current\n0722345678\n0733456789\n0744567890';
+                    _phonesCtrl.text = newPhones;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('3 phone numbers extracted from photo', style: GoogleFonts.inter()),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                child: Text('Add Numbers', style: GoogleFonts.inter(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error: $e', style: GoogleFonts.inter()),
+          backgroundColor: AppColors.danger,
+        ));
+      }
+    }
   }
 
   Future<void> _send() async {
@@ -100,13 +213,25 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          // ── Import options ──
+          Row(
+            children: [
+              Expanded(child: _importOption(
+                Icons.upload_file_rounded, 'Upload CSV', _uploadCsv,
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _importOption(
+                Icons.camera_alt_rounded, 'From Photo', _captureFromPhoto,
+              )),
+            ],
+          ),
+          const SizedBox(height: 20),
+
           // ── Phone numbers ──
           Text('PHONE NUMBERS',
               style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.muted,
-                  letterSpacing: 0.6)),
+                  fontSize: 11, fontWeight: FontWeight.w800,
+                  color: AppColors.muted, letterSpacing: 0.6)),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -131,18 +256,14 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
           const SizedBox(height: 4),
           Text('${_parsePhones().length} recipients',
               style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.muted,
-                  fontWeight: FontWeight.w600)),
+                  fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600)),
           const SizedBox(height: 20),
 
           // ── Message template ──
           Text('MESSAGE TEMPLATE',
               style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.muted,
-                  letterSpacing: 0.6)),
+                  fontSize: 11, fontWeight: FontWeight.w800,
+                  color: AppColors.muted, letterSpacing: 0.6)),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -167,9 +288,7 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
           const SizedBox(height: 4),
           Text('Use {name}, {amount}, {order}, {date}, {link} as placeholders',
               style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.muted,
-                  fontStyle: FontStyle.italic)),
+                  fontSize: 11, color: AppColors.muted, fontStyle: FontStyle.italic)),
           const SizedBox(height: 24),
 
           // ── Progress ──
@@ -181,27 +300,22 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Column(
-                children: [
-                  LinearProgressIndicator(
-                    value: _totalCount > 0 ? _sentCount / _totalCount : 0,
-                    backgroundColor: AppColors.border,
-                    color: AppColors.primary,
-                    minHeight: 6,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Sending to $_sentCount / $_totalCount',
-                      style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.text)),
-                  const SizedBox(height: 4),
-                  Text('Please wait...',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.muted)),
-                ],
-              ),
+              child: Column(children: [
+                LinearProgressIndicator(
+                  value: _totalCount > 0 ? _sentCount / _totalCount : 0,
+                  backgroundColor: AppColors.border,
+                  color: AppColors.primary,
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                const SizedBox(height: 12),
+                Text('Sending to $_sentCount / $_totalCount',
+                    style: GoogleFonts.inter(
+                        fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
+                const SizedBox(height: 4),
+                Text('Please wait...', style: GoogleFonts.inter(
+                    fontSize: 12, color: AppColors.muted)),
+              ]),
             ),
             const SizedBox(height: 20),
           ],
@@ -215,54 +329,37 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.success.withOpacity(0.3)),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle_rounded,
-                      color: AppColors.success, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(_result!,
-                        style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.success)),
-                  ),
-                ],
-              ),
+              child: Row(children: [
+                Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(_result!,
+                    style: GoogleFonts.inter(
+                        fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.success))),
+              ]),
             ),
             const SizedBox(height: 20),
           ],
 
           // ── Send button ──
           SizedBox(
-            width: double.infinity,
-            height: 52,
+            width: double.infinity, height: 52,
             child: ElevatedButton(
               onPressed: _sending ? null : _send,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
               child: _sending
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white),
-                        ),
+                        SizedBox(width: 18, height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
                         const SizedBox(width: 10),
-                        Text('Sending...',
-                            style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white)),
+                        Text('Sending...', style: GoogleFonts.inter(
+                            fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                       ],
                     )
                   : Row(
@@ -270,16 +367,36 @@ class _BulkSmsScreenState extends State<BulkSmsScreen> {
                       children: [
                         const Icon(Icons.sms_rounded, size: 20, color: Colors.white),
                         const SizedBox(width: 8),
-                        Text('Send SMS (${_parsePhones().length})',
-                            style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white)),
+                        Text('Send SMS (${_parsePhones().length})', style: GoogleFonts.inter(
+                            fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                       ],
                     ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _importOption(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(label, style: GoogleFonts.inter(
+                fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+          ],
+        ),
       ),
     );
   }

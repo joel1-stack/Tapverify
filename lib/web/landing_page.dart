@@ -226,7 +226,7 @@ class _WebLandingPageState extends State<WebLandingPage>
           fit: StackFit.expand,
           children: [
             Image.network(
-              'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop',
+              'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=800&h=600&fit=crop',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
                 color: AppColors.primary.withOpacity(0.1),
@@ -322,15 +322,15 @@ class _WebLandingPageState extends State<WebLandingPage>
 
   List<_StepData> _steps() => [
     _StepData('1', 'Record Payment', 'Business owner records a customer payment.', AppColors.primary,
-        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop'),
+        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop'),
     _StepData('2', 'Generate Link', 'SasaPay checkout link generated per order.', AppColors.secondary,
-        'https://images.unsplash.com/photo-1556745753-b2904692b3cd?w=400&h=300&fit=crop'),
+        'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?w=400&h=300&fit=crop'),
     _StepData('3', 'Customer Pays', 'Link shared via WhatsApp or SMS.', AppColors.success,
-        'https://images.unsplash.com/photo-1611262588024-d25151a65097?w=400&h=300&fit=crop'),
+        'https://images.unsplash.com/photo-1556742111-a301076d9d18?w=400&h=300&fit=crop'),
     _StepData('4', 'Webhook Verifies', 'SasaPay callback confirms payment.', AppColors.deep,
-        'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop'),
+        'https://images.unsplash.com/photo-1563986768609-322da13575f2?w=400&h=300&fit=crop'),
     _StepData('5', 'Revenue Proof', 'Verified credit profile emerges.', AppColors.gold,
-        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop'),
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop'),
   ];
 
   Widget _stepCard(_StepData s) {
@@ -419,17 +419,17 @@ class _WebLandingPageState extends State<WebLandingPage>
 
   List<_FeatureData> _featuresList() => [
     _FeatureData(Icons.payment_rounded, 'Multi-Rail Payments', 'M-Pesa, SasaPay, Airtel, Card, Bank.',
-        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop', AppColors.primary),
+        'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=400&h=300&fit=crop', AppColors.primary),
     _FeatureData(Icons.verified_rounded, 'Cryptographic Proof', 'HMAC-SHA512 signed webhooks.',
-        'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop', AppColors.success),
+        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop', AppColors.success),
     _FeatureData(Icons.receipt_long_rounded, 'SMS Receipts', "Automatic receipts via Africa's Talking.",
-        'https://images.unsplash.com/photo-1611262588024-d25151a65097?w=400&h=300&fit=crop', AppColors.secondary),
+        'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=400&h=300&fit=crop', AppColors.secondary),
     _FeatureData(Icons.phone_android_rounded, 'USSD Access', 'Check balance via *384*123#.',
-        'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=300&fit=crop', AppColors.deep),
+        'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=400&h=300&fit=crop', AppColors.deep),
     _FeatureData(Icons.stacked_bar_chart_rounded, 'Revenue Dashboard', 'Bar charts and consistency scores.',
-        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop', AppColors.gold),
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop', AppColors.gold),
     _FeatureData(Icons.emoji_events_rounded, 'Badge System', 'Bronze, Silver, Gold on-chain attestation.',
-        'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&h=300&fit=crop', AppColors.accent),
+        'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=400&h=300&fit=crop', AppColors.accent),
   ];
 
   Widget _featureCard(_FeatureData f) {

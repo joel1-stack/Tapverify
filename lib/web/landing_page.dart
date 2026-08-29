@@ -28,7 +28,7 @@ class _WebLandingPageState extends State<WebLandingPage>
 
   int _visibleNavItems = 0;
 
-  static const _heroText = 'Turn M-Pesa Chaos Into Revenue Proof';
+  static const _heroText = "Replaced The Treasurer's Notebook With 5 Screens";
 
   @override
   void initState() {
@@ -285,7 +285,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                     color: AppColors.accent, shape: BoxShape.circle),
               ),
               const SizedBox(width: 6),
-              Text('AT Hackathon 2026 — Track 3',
+              Text('Team1 Mini Hack · Cohort 2',
                   style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -312,7 +312,7 @@ class _WebLandingPageState extends State<WebLandingPage>
         ),
         const SizedBox(height: 16),
         Text(
-          'A jua kali welder in Westlands can now walk into a bank with '
+          'A chama treasurer in Westlands can now walk into a SACCO with '
           'Ksh 2 million in verified transactions instead of a notebook.',
           textAlign: narrow ? TextAlign.center : TextAlign.left,
           style: GoogleFonts.inter(
@@ -535,20 +535,20 @@ class _WebLandingPageState extends State<WebLandingPage>
   }
 
   List<_StepData> _steps() => [
-        _StepData('1', 'Record Payment',
-            'Business owner records a customer payment.', AppColors.gold,
+        _StepData('1', 'Open Notebook',
+            'Treasurer opens the app and sees who paid.', AppColors.gold,
             'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop'),
-        _StepData('2', 'Generate Link',
-            'SasaPay checkout link generated per order.', Colors.white,
+        _StepData('2', 'Ask for Payment',
+            'One tap sends payment links to all members.', Colors.white,
             'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?w=400&h=300&fit=crop'),
-        _StepData('3', 'Customer Pays',
-            'Link shared via WhatsApp or SMS.', AppColors.success,
+        _StepData('3', 'Members Pay',
+            'Links shared via SMS. Members tap to pay.', AppColors.success,
             'https://images.unsplash.com/photo-1556742111-a301076d9d18?w=400&h=300&fit=crop'),
-        _StepData('4', 'Webhook Verifies',
-            'SasaPay callback confirms payment.', AppColors.accent,
+        _StepData('4', 'Proof Builds',
+            'Every payment creates a verified record.', AppColors.accent,
             'https://images.unsplash.com/photo-1563986768609-322da13575f2?w=400&h=300&fit=crop'),
-        _StepData('5', 'Revenue Proof',
-            'Verified credit profile emerges.', Colors.white,
+        _StepData('5', 'Group Badge',
+            'Walk into SACCO with one Avalanche proof.', Colors.white,
             'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop'),
       ];
 
@@ -668,28 +668,28 @@ class _WebLandingPageState extends State<WebLandingPage>
   }
 
   List<_FeatureData> _featuresList() => [
-        _FeatureData(Icons.payment_rounded, 'Multi-Rail Payments',
-            'M-Pesa, SasaPay, Airtel, Card, Bank.',
+        _FeatureData(Icons.groups_rounded, '5-Page App',
+            'Home, Collect, Person, Proof, Me.',
             'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=400&h=300&fit=crop',
             AppColors.primary),
-        _FeatureData(Icons.verified_rounded, 'Cryptographic Proof',
-            'HMAC-SHA512 signed webhooks.',
+        _FeatureData(Icons.verified_rounded, 'Avalanche Proof',
+            'One Gold Group Badge on-chain.',
             'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop',
             AppColors.success),
-        _FeatureData(Icons.receipt_long_rounded, 'SMS Receipts',
-            "Automatic receipts via Africa's Talking.",
+        _FeatureData(Icons.sms_rounded, 'SMS Payment Links',
+            "Auto-send via Africa's Talking.",
             'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=400&h=300&fit=crop',
             AppColors.secondary),
-        _FeatureData(Icons.phone_android_rounded, 'USSD Access',
-            'Check balance via *384*123#.',
+        _FeatureData(Icons.lock_rounded, 'SasaPay Integration',
+            'Secure sandbox payments.',
             'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=400&h=300&fit=crop',
             AppColors.deep),
-        _FeatureData(Icons.stacked_bar_chart_rounded, 'Revenue Dashboard',
-            'Bar charts and consistency scores.',
+        _FeatureData(Icons.emoji_events_rounded, 'Group Badges',
+            'Bronze, Silver, Gold milestones.',
             'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
             AppColors.gold),
-        _FeatureData(Icons.emoji_events_rounded, 'Badge System',
-            'Bronze, Silver, Gold on-chain attestation.',
+        _FeatureData(Icons.share_rounded, 'Share to WhatsApp',
+            'Send proof to SACCO officers.',
             'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=400&h=300&fit=crop',
             AppColors.accent),
       ];
@@ -777,7 +777,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                   fontWeight: FontWeight.w800,
                   color: AppColors.text)),
           const SizedBox(height: 8),
-          Text('Real-time dashboard with verified revenue tracking',
+          Text('Real-time chama dashboard with Avalanche proof',
               style: GoogleFonts.inter(
                   fontSize: 16, color: AppColors.muted)),
           const SizedBox(height: 40),
@@ -796,13 +796,13 @@ class _WebLandingPageState extends State<WebLandingPage>
               ),
               child: Column(children: [
                 Row(children: [
-                  _demoStat('Ksh 2.4M', 'Revenue', AppColors.primary),
+                  _demoStat('Ksh 288K', 'Collected', AppColors.primary),
                   const SizedBox(width: 16),
-                  _demoStat('48', 'Payments', AppColors.success),
+                  _demoStat('12', 'Members', AppColors.success),
                   const SizedBox(width: 16),
-                  _demoStat('94%', 'Consistency', AppColors.gold),
+                  _demoStat('83%', 'Consistency', AppColors.gold),
                   const SizedBox(width: 16),
-                  _demoStat('87/100', 'Trust', AppColors.deep),
+                  _demoStat('12mo', 'Streak', AppColors.deep),
                 ]),
                 const SizedBox(height: 24),
                 Row(
@@ -813,7 +813,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Revenue Journey',
+                          Text('Collection Progress',
                               style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -822,7 +822,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
-                                value: 0.48,
+                                value: 0.83,
                                 minHeight: 12,
                                 backgroundColor:
                                     AppColors.primary.withValues(alpha: 0.1),
@@ -830,7 +830,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                                     const AlwaysStoppedAnimation(AppColors.primary)),
                           ),
                           const SizedBox(height: 6),
-                          Text('Ksh 2.4M / 5M to Champion',
+                          Text('Ksh 288K / 348K this month',
                               style: GoogleFonts.inter(
                                   fontSize: 11, color: AppColors.muted)),
                         ],
@@ -842,19 +842,19 @@ class _WebLandingPageState extends State<WebLandingPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Trust Score',
+                          Text('Group Streak',
                               style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.muted)),
                           const SizedBox(height: 8),
                           Row(children: [
-                            Text('87',
+                            Text('12',
                                 style: GoogleFonts.inter(
                                     fontSize: 36,
                                     fontWeight: FontWeight.w900,
                                     color: AppColors.text)),
-                            Text(' / 100',
+                            Text(' months',
                                 style: GoogleFonts.inter(
                                     fontSize: 14, color: AppColors.muted)),
                           ]),
@@ -966,26 +966,26 @@ class _WebLandingPageState extends State<WebLandingPage>
 
   List<_PlanData> _plans() => [
         _PlanData(
-            'Starter',
+            'Chama',
             'KES 1,500',
             '/month',
-            ['1 business', '50 verified payments', 'SMS receipts', 'Basic dashboard'],
+            ['1 group', '12 members', 'Payment tracking', 'SMS reminders'],
             false,
-            Icons.rocket_launch_rounded,
+            Icons.groups_rounded,
             AppColors.muted),
         _PlanData(
-            'Growth',
+            'SACCO',
             'KES 3,500',
             '/month',
-            ['1 business', '500 verified payments', 'USSD access', 'Credit profile', 'Priority support'],
+            ['1 SACCO', '500 members', 'All features', 'Avalanche proof', 'Priority support'],
             true,
-            Icons.trending_up_rounded,
+            Icons.account_balance_rounded,
             AppColors.primary),
         _PlanData(
-            'Enterprise',
+            'Federation',
             'KES 8,000',
             '/month',
-            ['5 businesses', 'Unlimited payments', 'All features', 'API access', 'Dedicated support'],
+            ['5 groups', 'Unlimited members', 'All features', 'API access', 'Dedicated support'],
             false,
             Icons.diamond_rounded,
             AppColors.gold),
@@ -1119,8 +1119,8 @@ class _WebLandingPageState extends State<WebLandingPage>
               const SizedBox(height: 20),
               Text(
                 '"Before TapVerify, I had a notebook of payments. '
-                'Now I walk into a bank with Ksh 2.4 million in verified transactions. '
-                'They gave me a loan in 3 days instead of 3 months."',
+                'Now I walk into the SACCO with Ksh 288K in verified transactions. '
+                'They approved our group loan in 3 days instead of 3 months."',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                     fontSize: narrow ? 16 : 20,
@@ -1149,7 +1149,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: Colors.white)),
-                      Text('Metal Works, Westlands',
+                      Text('Treasurer, Kamau Welfare',
                           style: GoogleFonts.inter(
                               fontSize: 12, color: Colors.white70)),
                     ],
@@ -1172,13 +1172,13 @@ class _WebLandingPageState extends State<WebLandingPage>
               colors: [AppColors.deep, AppColors.primary, Color(0xFF16A34A)]),
         ),
         child: Column(children: [
-          Text('Ready to Verify Your Revenue?',
+          Text("Ready to Replace Your Treasurer's Notebook?",
               style: GoogleFonts.inter(
                   fontSize: narrow ? 24 : 36,
                   fontWeight: FontWeight.w800,
                   color: Colors.white)),
           const SizedBox(height: 12),
-          Text('Start free. Upgrade when you grow.',
+          Text('5 screens. One Avalanche proof. Zero learning curve.',
               style: GoogleFonts.inter(
                   fontSize: 16, color: Colors.white70)),
           const SizedBox(height: 30),
@@ -1217,66 +1217,66 @@ class _WebLandingPageState extends State<WebLandingPage>
         padding: EdgeInsets.symmetric(horizontal: pad, vertical: 80),
         color: const Color(0xFFF0FDFA),
         child: Column(children: [
-          Text('Your Business in Your Pocket',
+          Text('Your Group in Your Pocket',
               style: GoogleFonts.inter(
                   fontSize: narrow ? 28 : 36,
                   fontWeight: FontWeight.w900,
                   color: AppColors.text)),
           const SizedBox(height: 8),
-          Text('Download TapVerify — the mobile app that turns payments into proof',
+          Text('Download TapVerify — the app that replaces your treasurer notebook',
               style: GoogleFonts.inter(
                   fontSize: 16, color: AppColors.muted)),
           const SizedBox(height: 50),
           narrow
               ? Column(children: [
                   _mobileFeature(
-                      'Record Payments Instantly',
-                      'Tap to record any customer payment — M-Pesa, cash, card, or bank. '
-                          'Each payment gets a unique SasaPay checkout link.',
-                      Icons.touch_app_rounded,
+                      'See Who Paid',
+                      'Red dots for unpaid, green for paid. '
+                          'One screen replaces your entire paper notebook.',
+                      Icons.groups_rounded,
                       AppColors.primary,
                       'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&h=400&fit=crop'),
                   const SizedBox(height: 24),
                   _mobileFeature(
-                      'Build Revenue History',
-                      'Over months, watch your verified revenue grow. '
-                          'Every payment is cryptographically signed and tamper-proof.',
-                      Icons.timeline_rounded,
+                      'Ask for Payment',
+                      'One tap sends SMS payment links to all members. '
+                          'No manual messages needed.',
+                      Icons.sms_rounded,
                       AppColors.success,
                       'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=400&fit=crop'),
                   const SizedBox(height: 24),
                   _mobileFeature(
-                      'Get Funded',
-                      'Walk into any bank with a dashboard showing Ksh 2M+ in verified transactions. '
-                          'Loan approved in days, not months.',
-                      Icons.account_balance_rounded,
+                      'Share Group Proof',
+                      'Walk into SACCO with one Avalanche badge. '
+                          'Gold Group Badge on-chain.',
+                      Icons.emoji_events_rounded,
                       AppColors.gold,
                       'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=500&h=400&fit=crop'),
                 ])
               : Column(children: [
                   _mobileFeatureRow(
-                      'Record Payments Instantly',
-                      'Tap to record any customer payment — M-Pesa, cash, card, or bank. '
-                          'Each payment gets a unique SasaPay checkout link.',
-                      Icons.touch_app_rounded,
+                      'See Who Paid',
+                      'Red dots for unpaid, green for paid. '
+                          'One screen replaces your entire paper notebook.',
+                      Icons.groups_rounded,
                       AppColors.primary,
                       'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=600&h=400&fit=crop',
                       true),
                   const SizedBox(height: 30),
                   _mobileFeatureRow(
-                      'Build Revenue History',
-                      'Over months, watch your verified revenue grow. '
-                          'Every payment is cryptographically signed and tamper-proof.',
-                      Icons.timeline_rounded,
+                      'Ask for Payment',
+                      'One tap sends SMS payment links to all members. '
+                          'No manual messages needed.',
+                      Icons.sms_rounded,
                       AppColors.success,
                       'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop',
                       false),
                   const SizedBox(height: 30),
                   _mobileFeatureRow(
-                      'Get Funded',
-                      'Walk into any bank with a dashboard showing Ksh 2M+ in verified transactions. '
-                          'Loan approved in days, not months.',
-                      Icons.account_balance_rounded,
+                      'Share Group Proof',
+                      'Walk into SACCO with one Avalanche badge. '
+                          'Gold Group Badge on-chain.',
+                      Icons.emoji_events_rounded,
                       AppColors.gold,
                       'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop',
                       true),
@@ -1517,7 +1517,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                   children: [
                     Image.asset(AppAssets.logoFull, height: 36),
                     const SizedBox(height: 12),
-                    Text('Verifiable revenue history for manufacturing SMEs.',
+                    Text('Replaced the treasurer\'s notebook with 5 screens.',
                         style: GoogleFonts.inter(
                             fontSize: 13, color: Colors.white54, height: 1.5)),
                     const SizedBox(height: 24),
@@ -1540,7 +1540,7 @@ class _WebLandingPageState extends State<WebLandingPage>
                         children: [
                           Image.asset(AppAssets.logoFull, height: 36),
                           const SizedBox(height: 12),
-                          Text('Verifiable revenue history for\nmanufacturing SMEs.',
+                          Text('Replaced the treasurer\'s notebook\nwith 5 screens.',
                               style: GoogleFonts.inter(
                                   fontSize: 14, color: Colors.white54, height: 1.5)),
                           const SizedBox(height: 20),
@@ -1779,11 +1779,11 @@ class _AnimatedCounterRowState extends State<_AnimatedCounterRow>
           mainAxisAlignment:
               widget.narrow ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            _counter('Ksh ${(2400000 * v).round()}+', 'Verified Revenue'),
+            _counter('Ksh ${(288000 * v).round()}+', 'Collected'),
             SizedBox(width: widget.narrow ? 20 : 30),
-            _counter('${(94 * v).round()}%', 'Consistency'),
+            _counter('${(83 * v).round()}%', 'Consistency'),
             SizedBox(width: widget.narrow ? 20 : 30),
-            _counter('${(48 * v).round()}', 'Transactions'),
+            _counter('${(12 * v).round()}', 'Members'),
           ],
         );
       },

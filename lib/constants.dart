@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Central design tokens for TapVerify — Revenue proof for manufacturing SMEs.
+/// Central design tokens for TapVerify — Replaces the treasurer's notebook with 5 screens.
 ///
 /// Brand palette: Trust Teal as the money-movement / navigation system, with
 /// partner-rail tints so LOOP, SasaPay, Africa's Talking and Avalanche read

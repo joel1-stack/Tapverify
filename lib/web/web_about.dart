@@ -107,7 +107,7 @@ class WebAboutPage extends StatelessWidget {
                   fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
         ),
         const SizedBox(height: 24),
-        Text('We Believe Every\nBusiness Deserves\nRevenue Proof',
+        Text('We Believe Every\nChama Deserves\nGroup Proof',
             textAlign: narrow ? TextAlign.center : TextAlign.left,
             style: GoogleFonts.inter(
                 fontSize: narrow ? 32 : 44,
@@ -116,8 +116,8 @@ class WebAboutPage extends StatelessWidget {
                 height: 1.1)),
         const SizedBox(height: 16),
         Text(
-          'Born in Westlands, Nairobi. Built for every jua kali welder, '
-          'every mama mboga, every SACCO that deserves to be seen by lenders.',
+          'Born in Westlands, Nairobi. Built for every chama treasurer, '
+          'every SACCO officer, every group that deserves to be seen by lenders.',
           textAlign: narrow ? TextAlign.center : TextAlign.left,
           style: GoogleFonts.inter(
               fontSize: 16, color: AppColors.muted, height: 1.6),
@@ -206,8 +206,8 @@ class WebAboutPage extends StatelessWidget {
     _StoryItem(
       Icons.lightbulb_rounded,
       'The Problem',
-      'Peter Kaunda had Ksh 2.4 million in revenue but no proof. '
-          'Banks saw a notebook. They saw risk. His loan was denied.',
+      'Peter Kaunda had Ksh 288K in chama contributions but no proof. '
+          'The SACCO saw a notebook. They saw risk. His loan was denied.',
       AppColors.accent,
     ),
     _StoryItem(
@@ -272,8 +272,8 @@ class WebAboutPage extends StatelessWidget {
                 fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)),
         const SizedBox(height: 16),
         Text(
-          'Turn informal payment chaos into lender-ready revenue proof.\n'
-          'Every jua kali business deserves access to credit.',
+          "Replace the treasurer's notebook with 5 screens.\n"
+          'Every chama deserves access to group proof.',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
               fontSize: 18, color: Colors.white70, height: 1.6),
@@ -407,7 +407,7 @@ class WebAboutPage extends StatelessWidget {
             colors: [AppColors.deep, AppColors.primary, Color(0xFF16A34A)]),
       ),
       child: Column(children: [
-        Text('Join the Revenue Revolution',
+        Text('Join the Chama Revolution',
             style: GoogleFonts.inter(
                 fontSize: narrow ? 24 : 36,
                 fontWeight: FontWeight.w800,

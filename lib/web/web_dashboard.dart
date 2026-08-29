@@ -19,23 +19,15 @@ class _WebDashboardState extends State<WebDashboard> {
   WfCollection? _selectedOrder;
 
   static const _navItems = [
-    _NavItem(Icons.dashboard_rounded, 'Dashboard'),
-    _NavItem(Icons.add_circle_rounded, 'New Order'),
-    _NavItem(Icons.receipt_long_rounded, 'Orders'),
-    _NavItem(Icons.people_rounded, 'Customers'),
-    _NavItem(Icons.bar_chart_rounded, 'Revenue'),
-    _NavItem(Icons.shield_rounded, 'Credit Profile'),
-    _NavItem(Icons.phone_android_rounded, 'USSD Simulator'),
-    _NavItem(Icons.sms_rounded, 'Bulk SMS'),
-    _NavItem(Icons.emoji_events_rounded, 'Badges'),
-    _NavItem(Icons.verified_rounded, 'Evidence Console'),
+    _NavItem(Icons.dashboard_rounded, 'Group'),
+    _NavItem(Icons.add_circle_rounded, 'Collect'),
+    _NavItem(Icons.people_rounded, 'Members'),
+    _NavItem(Icons.verified_rounded, 'Proof'),
     _NavItem(Icons.settings_rounded, 'Settings'),
   ];
 
   static const _titles = [
-    'Dashboard', 'New Order', 'Orders', 'Customers', 'Revenue',
-    'Credit Profile', 'USSD Simulator', 'Bulk SMS', 'My Badges',
-    'Evidence Console', 'Settings',
+    'Group Overview', 'Collect Payment', 'Members', 'Group Proof', 'Settings',
   ];
 
   void _navigateTo(int index) {
@@ -261,15 +253,9 @@ class _WebDashboardState extends State<WebDashboard> {
     switch (_selectedNav) {
       case 0: return _dashboardBody();
       case 1: return _newOrderBody();
-      case 2: return _ordersBody();
-      case 3: return _customersBody();
-      case 4: return _revenueBody();
-      case 5: return _creditBody();
-      case 6: return _ussdBody();
-      case 7: return _bulkSmsBody();
-      case 8: return _badgesBody();
-      case 9: return _evidenceConsoleBody();
-      case 10: return _settingsBody();
+      case 2: return _customersBody();
+      case 3: return _evidenceConsoleBody();
+      case 4: return _settingsBody();
       default: return _dashboardBody();
     }
   }
@@ -330,13 +316,13 @@ class _WebDashboardState extends State<WebDashboard> {
             children: [
               _statCard(
                   'Ksh ${_fmt(stats['collected'])}',
-                  'Verified revenue',
+                  'Total collected',
                   Icons.payments_rounded,
                   AppColors.primary),
               const SizedBox(width: 10),
               _statCard(
-                  '${stats['totalTransactions']}',
-                  'Verified transactions',
+                  '${stats['paidMembers']}/${stats['members']}',
+                  'Members paid',
                   Icons.check_circle_rounded,
                   AppColors.success),
               const SizedBox(width: 10),
@@ -359,39 +345,25 @@ class _WebDashboardState extends State<WebDashboard> {
           Row(
             children: [
               Expanded(child: _quickAction(
-                Icons.bar_chart_rounded, 'Revenue Report', 'Monthly breakdown', AppColors.primary,
-                () => _navigateTo(4),
+                Icons.verified_rounded, 'Group Proof', 'Avalanche attestation', AppColors.primary,
+                () => _navigateTo(3),
               )),
               const SizedBox(width: 10),
               Expanded(child: _quickAction(
-                Icons.credit_score_rounded, 'Credit Profile', 'Lender-ready proof', AppColors.deep,
-                () => _navigateTo(5),
-              )),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: _quickAction(
-                Icons.emoji_events_rounded, 'My Badges', 'On-chain attestation', AppColors.gold,
-                () => _navigateTo(8),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: _quickAction(
-                Icons.shield_rounded, 'Payer Score', 'Universal reputation', AppColors.success,
-                () => _navigateTo(8),
+                Icons.emoji_events_rounded, 'Group Badge', 'Gold/Silver/Bronze', AppColors.gold,
+                () => _navigateTo(3),
               )),
             ],
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              Text('RECENT ORDERS',
+              Text('MEMBERS',
                   style: GoogleFonts.inter(
                       fontSize: 12, fontWeight: FontWeight.w800,
                       color: AppColors.muted, letterSpacing: 0.6)),
               const Spacer(),
-              Text('${active.length}',
+              Text('${stats['members']}',
                   style: GoogleFonts.inter(
                       fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary)),
             ],

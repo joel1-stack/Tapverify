@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
 
-/// TapVerify — data models. Revenue proof for manufacturing SMEs.
+/// TapVerify — data models. Replaces the treasurer's notebook.
 ///
 /// Core idea: an order is recorded by a business owner, every customer gets a
 /// payment task that moves through the 9-state lifecycle

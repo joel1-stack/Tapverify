@@ -251,17 +251,6 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {},
-                child: Text('Forgot PIN?',
-                    style: GoogleFonts.inter(
-                        fontSize: 12, fontWeight: FontWeight.w700,
-                        color: AppColors.primary)),
-              ),
-            ),
-            const SizedBox(height: 8),
 
             // ── Sign in button ──
             SizedBox(

@@ -512,7 +512,7 @@ class WebPayerPage extends StatelessWidget {
                 const SizedBox(height: 24),
                 Image.asset(AppAssets.logoFull, height: 32),
                 const SizedBox(height: 12),
-                Text('Verifiable revenue history for\nmanufacturing SMEs.',
+                Text("Replaced the treasurer's notebook with 5 screens.",
                     style: GoogleFonts.inter(fontSize: 13, color: Colors.white54, height: 1.5)),
                 const SizedBox(height: 20),
                 const Divider(color: Color(0xFF1E293B)),
@@ -551,7 +551,7 @@ class WebPayerPage extends StatelessWidget {
                         children: [
                           Image.asset(AppAssets.logoFull, height: 32),
                           const SizedBox(height: 12),
-                          Text('Verifiable revenue history for\nmanufacturing SMEs.',
+                          Text("Replaced the treasurer's notebook with 5 screens.",
                               style: GoogleFonts.inter(
                                   fontSize: 14, color: Colors.white54, height: 1.5)),
                         ],

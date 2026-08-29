@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'workforce_models.dart';
 
-/// TapVerify — core service layer. Revenue proof for manufacturing SMEs.
+/// TapVerify — core service layer. Replaces the treasurer's notebook.
 ///
 /// This is the single source of truth for the business owner app. It manages:
 /// - Universal identity (business owners: manufacturer, workshop, jua kali)

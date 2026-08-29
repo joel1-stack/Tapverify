@@ -90,11 +90,11 @@ class _SplashScreenState extends State<SplashScreen>
                       const SizedBox(height: 12),
                       Text(
                         _progress < 0.3
-                            ? 'Connecting to SasaPay...'
+                            ? 'Connecting to your group...'
                             : _progress < 0.6
-                                ? 'Verifying Africa\'s Talking...'
+                                ? 'Loading member records...'
                                 : _progress < 0.9
-                                    ? 'Loading your revenue...'
+                                    ? 'Preparing payment proof...'
                                     : 'Ready',
                         style: GoogleFonts.inter(
                             fontSize: 12, color: AppColors.muted),

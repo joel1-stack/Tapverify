@@ -158,7 +158,10 @@ class WorkforceService {
   // ── Collections & Tasks ────────────────────────────────────────────────
   static final List<WfCollection> collections = _seedDemoData();
   static final List<WfBadge> badges = _buildBadges();
+  static final List<WfMember> _members = _seedMembers();
   static int _seq = 200;
+
+  static List<WfMember> members() => _members;
 
   static List<WfCollection> _seedDemoData() {
     final now = DateTime.now();
@@ -271,19 +274,18 @@ class WorkforceService {
       collections.where((c) => c.closed).toList();
 
   static Map<String, dynamic> stats() {
-    // Demo: 48 verified payments, Ksh 2.4M, 94% consistency
     return {
-      'members': 48,
+      'members': _members.length,
       'activeCollections': activeCollections.length,
-      'collected': 2400000.0,
-      'expected': 2550000.0,
-      'rate': 94.0,
-      'paidMembers': 43,
-      'pendingReminders': 5,
+      'collected': 288000,
+      'expected': 348000,
+      'rate': 83.0,
+      'paidMembers': 10,
+      'pendingReminders': 2,
       'streakLeaders': 12,
-      'totalTransactions': 48,
-      'avgTransaction': 50000.0,
-      'consistency': 94.0,
+      'totalTransactions': 36,
+      'avgTransaction': 500,
+      'consistency': 83.0,
     };
   }
 
@@ -381,6 +383,49 @@ class WorkforceService {
       if (t != null) out.add((collection: c, task: t));
     }
     return out;
+  }
+
+  // Members for chama groups
+  static List<WfMember> _seedMembers() {
+    final now = DateTime.now();
+    return [
+      WfMember(
+        id: 'w-1', code: '01', name: 'John Kamau', phone: '0712 345 678',
+        department: 'General', avatarHue: 30, memberSince: '2025',
+        currentStreak: 7, bestStreak: 7, onTimePct: 100,
+        status: 'NOT PAID', amount: 500, daysLate: 2, streakMonths: 7,
+      ),
+      WfMember(
+        id: 'w-2', code: '02', name: 'Mary Wanjiku', phone: '0723 456 789',
+        department: 'General', avatarHue: 60, memberSince: '2025',
+        currentStreak: 7, bestStreak: 7, onTimePct: 100,
+        status: 'NOT PAID', amount: 500, daysLate: 1, streakMonths: 7,
+      ),
+      WfMember(
+        id: 'w-3', code: '03', name: 'Peter Ochieng', phone: '0734 567 890',
+        department: 'General', avatarHue: 90, memberSince: '2025',
+        currentStreak: 7, bestStreak: 7, onTimePct: 100,
+        status: 'PAID', amount: 500, daysLate: 0, paidDate: now.subtract(const Duration(days: 1)), streakMonths: 7,
+      ),
+      WfMember(
+        id: 'w-4', code: '04', name: 'Joel Kaunda', phone: '0715 641 339',
+        department: 'General', avatarHue: 120, memberSince: '2025',
+        currentStreak: 7, bestStreak: 7, onTimePct: 100,
+        status: 'PAID', amount: 500, daysLate: 0, paidDate: now.subtract(const Duration(days: 2)), streakMonths: 7,
+      ),
+      WfMember(
+        id: 'w-5', code: '05', name: 'Grace Mwangi', phone: '0745 678 901',
+        department: 'General', avatarHue: 150, memberSince: '2025',
+        currentStreak: 7, bestStreak: 7, onTimePct: 100,
+        status: 'PAID', amount: 500, daysLate: 0, paidDate: now.subtract(const Duration(days: 3)), streakMonths: 7,
+      ),
+      WfMember(
+        id: 'w-6', code: '06', name: 'James Otieno', phone: '0756 789 012',
+        department: 'General', avatarHue: 180, memberSince: '2025',
+        currentStreak: 7, bestStreak: 7, onTimePct: 100,
+        status: 'PAID', amount: 500, daysLate: 0, paidDate: now.subtract(const Duration(days: 4)), streakMonths: 7,
+      ),
+    ];
   }
 
 }

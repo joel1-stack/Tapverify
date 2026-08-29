@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
-import 'workforce_register_screen.dart';
 import 'treasurer_home_shell.dart';
 
 class WorkforceLoginScreen extends StatefulWidget {
@@ -288,23 +287,6 @@ class _WorkforceLoginScreenState extends State<WorkforceLoginScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Don't have an account? ",
-                    style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const WorkforceRegisterScreen())),
-                  child: Text('Sign up',
-                      style: GoogleFonts.inter(
-                          fontSize: 13, fontWeight: FontWeight.w800,
-                          color: AppColors.primary)),
-                ),
-              ],
-            ),
             const SizedBox(height: 20),
           ],
         ),

@@ -126,6 +126,11 @@ class WfMember {
     required this.currentStreak,
     required this.bestStreak,
     required this.onTimePct,
+    this.status = 'PENDING',
+    this.amount = 0,
+    this.daysLate = 0,
+    this.paidDate,
+    this.streakMonths = 0,
   });
 
   final String id;
@@ -138,6 +143,11 @@ class WfMember {
   final int currentStreak;
   final int bestStreak;
   final double onTimePct;
+  final String status;
+  final int amount;
+  final int daysLate;
+  final DateTime? paidDate;
+  final int streakMonths;
 }
 
 /// A customer × order payment task. `rail` + `txnRef` are the evidence of

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import 'home_screen.dart';
@@ -6,7 +7,6 @@ import 'proof_screen.dart';
 import 'collect_screen.dart';
 import 'workforce_login_screen.dart';
 
-/// 3-tab shell: Home / Proof / Me
 class TreasurerHomeShell extends StatefulWidget {
   const TreasurerHomeShell({super.key});
   @override
@@ -15,70 +15,36 @@ class TreasurerHomeShell extends StatefulWidget {
 
 class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
   int _index = 0;
-  final _pages = const [
-    HomeScreen(),
-    ProofScreen(),
-    _MeScreen(),
-  ];
-
-  static const _titles = ['Home', 'Proof', 'Me'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: AppColors.text,
-        title: Text(
-          _titles[_index],
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800),
-        ),
-        centerTitle: false,
-        actions: [
-          if (_index == 0) ...[
-            IconButton(
-              icon: const Icon(Icons.add_rounded, size: 26),
-              color: AppColors.primary,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CollectScreen()),
-              ),
-            ),
-          ],
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: IndexedStack(
+        index: _index,
+        children: [
+          SafeArea(child: HomeScreen()),
+          SafeArea(child: ProofScreen()),
+          SafeArea(child: const _MeScreen()),
         ],
       ),
-      body: IndexedStack(index: _index, children: _pages),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: AppColors.border)),
+          border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
         ),
-        child: NavigationBar(
-          selectedIndex: _index,
-          backgroundColor: Colors.white,
-          indicatorColor: AppColors.primary.withOpacity(0.12),
-          height: 64,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (i) => setState(() => _index = i),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
-              label: 'Home',
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navItem(0, Icons.home_rounded, 'Home'),
+                _navItem(1, Icons.verified_user_rounded, 'Proof'),
+                _navItem(2, Icons.person_rounded, 'Me'),
+              ],
             ),
-            NavigationDestination(
-              icon: Icon(Icons.verified_user_outlined),
-              selectedIcon: Icon(Icons.verified_user_rounded, color: AppColors.primary),
-              label: 'Proof',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded, color: AppColors.primary),
-              label: 'Me',
-            ),
-          ],
+          ),
         ),
       ),
       floatingActionButton: _index == 0
@@ -86,76 +52,99 @@ class _TreasurerHomeShellState extends State<TreasurerHomeShell> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: const CircleBorder(),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CollectScreen()),
-              ),
+              elevation: 4,
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const CollectScreen())),
               child: const Icon(Icons.add_rounded, size: 28),
             )
           : null,
     );
   }
+
+  Widget _navItem(int i, IconData icon, String label) {
+    final selected = _index == i;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _index = i);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 24, color: selected ? AppColors.primary : AppColors.muted),
+            const SizedBox(height: 2),
+            Text(label,
+                style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? AppColors.primary : AppColors.muted)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// Me page - Profile & Settings
 class _MeScreen extends StatelessWidget {
   const _MeScreen();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: AppColors.text,
-        title: Text('Me',
-            style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800)),
-      ),
+      backgroundColor: const Color(0xFFF1F5F9),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          const SizedBox(height: 20),
           // Profile card
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 Container(
                   width: 72, height: 72,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppColors.deep, AppColors.primary]),
+                    gradient: const LinearGradient(
+                        colors: [AppColors.deep, AppColors.primary]),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Center(
-                    child: Text('PM',
+                    child: Text('PK',
                         style: GoogleFonts.inter(
                             fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 Text('Peter Kaunda',
                     style: GoogleFonts.inter(
-                        fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+                        fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
                 const SizedBox(height: 4),
                 Text('Treasurer · Kamau Welfare',
-                    style: GoogleFonts.inter(
-                        fontSize: 13, color: AppColors.muted)),
+                    style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
                 const SizedBox(height: 16),
-                // Streak
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('🔥', style: const TextStyle(fontSize: 16)),
+                      const Text('🔥', style: TextStyle(fontSize: 16)),
                       const SizedBox(width: 6),
                       Text('12 collections in a row',
                           style: GoogleFonts.inter(
@@ -163,33 +152,33 @@ class _MeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text('🏅 Trusted Treasurer',
                     style: GoogleFonts.inter(
                         fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.gold)),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           // Settings
           Text('SETTINGS',
               style: GoogleFonts.inter(
                   fontSize: 11, fontWeight: FontWeight.w800,
-                  color: AppColors.muted, letterSpacing: 0.6)),
-          const SizedBox(height: 8),
-
+                  color: AppColors.muted, letterSpacing: 0.8)),
+          const SizedBox(height: 10),
           _settingRow(Icons.group_rounded, 'Group name', 'Kamau Welfare'),
           _settingRow(Icons.phone_rounded, 'Phone', '0715 641 339'),
-          _settingRow(Icons.lock_outline_rounded, 'Change PIN', null, onTap: () {}),
-          _settingRow(Icons.help_outline_rounded, 'Help', null, onTap: () {}),
+          _settingRow(Icons.lock_outline_rounded, 'Change PIN', null),
+          _settingRow(Icons.help_outline_rounded, 'Help', null),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            height: 46,
+            height: 50,
             child: OutlinedButton.icon(
               onPressed: () {
+                HapticFeedback.lightImpact();
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const WorkforceLoginScreen()),
@@ -197,12 +186,12 @@ class _MeScreen extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.logout_rounded, size: 18),
-              label: Text('🚪 LOG OUT',
+              label: Text('LOG OUT',
                   style: GoogleFonts.inter(
                       fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.danger)),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.danger),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                side: const BorderSide(color: AppColors.danger, width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),
@@ -211,35 +200,38 @@ class _MeScreen extends StatelessWidget {
     );
   }
 
-  Widget _settingRow(IconData icon, String title, String? value, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: AppColors.muted),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(title,
-                  style: GoogleFonts.inter(
-                      fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
-            ),
-            if (value != null) ...[
-              Text(value,
-                  style: GoogleFonts.inter(
-                      fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
-              const SizedBox(width: 8),
-            ],
-            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
+  Widget _settingRow(IconData icon, String title, String? value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.muted),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(title,
+                style: GoogleFonts.inter(
+                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
+          ),
+          if (value != null) ...[
+            Text(value,
+                style: GoogleFonts.inter(
+                    fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.muted)),
+            const SizedBox(width: 8),
           ],
-        ),
+          const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
+        ],
       ),
     );
   }

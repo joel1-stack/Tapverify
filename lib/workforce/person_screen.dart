@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../constants.dart';
 import '../workforce/workforce_models.dart';
 
-/// Person page - Individual member detail
 class PersonScreen extends StatelessWidget {
   final WfMember member;
-  
   const PersonScreen({super.key, required this.member});
+
+  void _sendReminder(BuildContext context) {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Reminder SMS sent to ${member.name}',
+          style: GoogleFonts.inter(color: Colors.white)),
+      backgroundColor: AppColors.primary,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
+  }
+
+  void _shareReceipt(BuildContext context) {
+    HapticFeedback.lightImpact();
+    final msg = 'Payment receipt for ${member.name}\n'
+        'Amount: Ksh ${_fmt(member.amount)}\n'
+        'Group: Kamau Welfare\n'
+        'Date: ${_formatDate(member.paidDate!)}\n'
+        'TapVerify — Verified payment';
+    Share.share(msg);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,13 +36,20 @@ class PersonScreen extends StatelessWidget {
     final badge = _getBadge(member.streakMonths);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: AppColors.text,
         title: Text(member.name,
             style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800)),
+        actions: [
+          if (isPaid)
+            IconButton(
+              icon: const Icon(Icons.share_rounded),
+              onPressed: () => _shareReceipt(context),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -31,11 +58,17 @@ class PersonScreen extends StatelessWidget {
           children: [
             // Profile card
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -46,7 +79,9 @@ class PersonScreen extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           isPaid ? AppColors.success : AppColors.danger,
-                          isPaid ? AppColors.success.withValues(alpha: 0.7) : AppColors.danger.withValues(alpha: 0.7),
+                          isPaid
+                              ? AppColors.success.withValues(alpha: 0.7)
+                              : AppColors.danger.withValues(alpha: 0.7),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
@@ -59,24 +94,23 @@ class PersonScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  
-                  // Name and phone
+                  const SizedBox(height: 14),
                   Text(member.name,
                       style: GoogleFonts.inter(
                           fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
                   const SizedBox(height: 4),
                   Text(member.phone,
-                      style: GoogleFonts.inter(
-                          fontSize: 14, color: AppColors.muted)),
+                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted)),
                   const SizedBox(height: 16),
-                  
-                  // Status
+
+                  // Status badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isPaid ? AppColors.success.withValues(alpha: 0.12) : AppColors.danger.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      color: isPaid
+                          ? AppColors.success.withValues(alpha: 0.12)
+                          : AppColors.danger.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -90,69 +124,67 @@ class PersonScreen extends StatelessWidget {
                         Text(
                           isPaid ? 'PAID ✓' : 'NOT PAID',
                           style: GoogleFonts.inter(
-                              fontSize: 13, fontWeight: FontWeight.w700, 
+                              fontSize: 13, fontWeight: FontWeight.w700,
                               color: isPaid ? AppColors.success : AppColors.danger),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   if (!isPaid && member.daysLate > 0) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      '${member.daysLate} days late',
-                      style: GoogleFonts.inter(
-                          fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.danger),
-                    ),
-                  ],
-                  
-                  if (isPaid) ...[
-                    const SizedBox(height: 16),
-                    // Payment info
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Ksh ${_fmt(member.amount)}',
-                            style: GoogleFonts.inter(
-                                fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Paid on ${_formatDate(member.paidDate!)}',
-                          style: GoogleFonts.inter(
-                              fontSize: 12, color: AppColors.muted),
-                        ),
-                      ],
-                    ),
+                    const SizedBox(height: 10),
+                    Text('${member.daysLate} days late',
+                        style: GoogleFonts.inter(
+                            fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.danger)),
                   ],
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-            // If paid, show streak and badge
+            // Payment info (if paid)
             if (isPaid) ...[
-              Text('PAYMENT HISTORY',
-                  style: GoogleFonts.inter(
-                      fontSize: 11, fontWeight: FontWeight.w800,
-                      color: AppColors.muted, letterSpacing: 0.6)),
-              const SizedBox(height: 8),
-              
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('Ksh ${_fmt(member.amount)}',
+                          style: GoogleFonts.inter(
+                              fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Paid on ${_formatDate(member.paidDate!)}',
+                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Streak card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFCD34D)),
+                  color: const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFFDBA74)),
                 ),
                 child: Column(
                   children: [
@@ -168,80 +200,84 @@ class PersonScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text('with Kamau Welfare',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: const Color(0xFFB45309))),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text('ACTIVE',
-                          style: GoogleFonts.inter(
-                              fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
-                    ),
+                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFB45309))),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              
+              const SizedBox(height: 16),
+
               // Badge card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
-                    Text(badge['emoji']!, style: const TextStyle(fontSize: 32)),
-                    const SizedBox(height: 6),
-                    Text(badge['name']!, 
-                        style: GoogleFonts.inter(
-                            fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
-                    const SizedBox(height: 2),
-                    Text('Payer Badge',
-                        style: GoogleFonts.inter(
-                            fontSize: 11, color: AppColors.muted)),
+                    Text(badge['emoji']!, style: const TextStyle(fontSize: 36)),
                     const SizedBox(height: 8),
-                    Text('Tx: ${badge['tx']}',
+                    Text(badge['name']!,
                         style: GoogleFonts.inter(
-                            fontSize: 10, color: AppColors.text)),
+                            fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text)),
+                    const SizedBox(height: 4),
+                    Text('Payer Badge',
+                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text('Tx: ${badge['tx']}',
+                          style: GoogleFonts.inter(
+                              fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.gold)),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
             ],
+            const SizedBox(height: 20),
 
-            // Actions
+            // Action button
             if (!isPaid) ...[
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.sms_rounded),
-                label: Text('📱 SEND REMINDER SMS',
-                    style: GoogleFonts.inter(
-                        fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  minimumSize: const Size.fromHeight(46),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              SizedBox(
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: () => _sendReminder(context),
+                  icon: const Icon(Icons.sms_rounded, size: 20),
+                  label: Text('SEND REMINDER SMS',
+                      style: GoogleFonts.inter(
+                          fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
                 ),
               ),
             ],
-            
             if (isPaid) ...[
-              OutlinedButton.icon(
-                onPressed: () => Share.share('Payment receipt for ${member.name}: Ksh ${_fmt(member.amount)}'),
-                icon: const Icon(Icons.share_rounded),
-                label: Text('📤 SHARE RECEIPT',
-                    style: GoogleFonts.inter(
-                        fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary),
-                  minimumSize: const Size.fromHeight(46),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              SizedBox(
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () => _shareReceipt(context),
+                  icon: const Icon(Icons.share_rounded, size: 20),
+                  label: Text('SHARE RECEIPT',
+                      style: GoogleFonts.inter(
+                          fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.primary, width: 1.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
               ),
             ],
@@ -270,6 +306,7 @@ class PersonScreen extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

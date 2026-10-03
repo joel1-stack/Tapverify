@@ -43,6 +43,11 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # The Pages site was never enabled, so this step 404s now that the
+          # build finally passes. Let the action turn it on (GITHUB_TOKEN
+          # carries pages:write).
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

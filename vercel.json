@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "",
-  "buildCommand": "bash -c 'export PATH=\"$PATH:$HOME/flutter/bin\" && if [ ! -d \"$HOME/flutter\" ]; then git clone --depth 1 -b stable https://github.com/flutter/flutter.git $HOME/flutter; fi && flutter config --no-analytics && flutter pub get && flutter build web --release --dart-define=API_BASE_URL=https://api.tvrfy.co.ke'",
+  "buildCommand": "bash -c 'export PATH=\"$PATH:$HOME/flutter/bin\"; if [ ! -d \"$HOME/flutter\" ]; then git clone --depth 1 -b 3.38.9 https://github.com/flutter/flutter.git \"$HOME/flutter\" || exit 1; fi; flutter config --no-analytics || true; flutter pub get && flutter build web --release --dart-define=API_BASE_URL=https://api.tvrfy.co.ke'",
   "outputDirectory": "build/web",
   "framework": null
 }

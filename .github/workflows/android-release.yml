@@ -18,6 +18,9 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          # Same pin as flutter-web.yml: build with the version the code
+          # targets, not whatever stable happens to be that day.
+          flutter-version: '3.38.9'
           channel: stable
 
       - name: Get dependencies

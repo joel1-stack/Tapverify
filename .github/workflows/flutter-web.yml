@@ -24,13 +24,22 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          # Pinned to the version this codebase is developed against.
+          # A rolling `stable` channel changed under us and broke the build.
+          flutter-version: '3.38.9'
           channel: stable
 
       - name: Get dependencies
         run: flutter pub get
 
       - name: Build web (release)
-        run: flutter build web --release --base-href=/Tapverify/
+        run: |
+          set -o pipefail
+          if ! flutter build web --release --base-href=/Tapverify/ 2>&1 | tee build.log; then
+            echo "::error::Flutter web build failed. Last lines of the build log:"
+            tail -n 20 build.log | sed 's/%/%25/g; s/^/::error::/'
+            exit 1
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

@@ -1,105 +1,101 @@
-import requests
+"""Africa's Talking SMS sending + all V1 message templates.
+
+Message wording follows the V1 product documentation exactly:
+invites per payout method, reminders, OTP codes, payment confirmations.
+"""
 import logging
+
+import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-class AfricasTalkingSMSService:
-    BASE_URL = "https://api.africastalking.com/version1/messaging"
-
-    def __init__(self):
-        self.username = settings.AFRICASTALKING_USERNAME
-        self.api_key = settings.AFRICASTALKING_API_KEY
-        self.sender_id = getattr(settings, 'AFRICASTALKING_SENDER_ID', 'TAPVERIFY')
-
-    def _headers(self):
-        return {
-            'apiKey': self.api_key,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-        }
-
-    def send_sms(self, to, message, sender_id=None):
-        if not self.username or not self.api_key:
-            logger.error("Africa's Talking credentials not configured")
-            return False, None, "Credentials not configured"
-
-        payload = {
-            'username': self.username,
-            'to': to,
-            'message': message,
-            'from': sender_id or self.sender_id,
-        }
-
-        try:
-            resp = requests.post(
-                f"{self.BASE_URL}",
-                data=payload,
-                headers=self._headers(),
-                timeout=30
-            )
-            data = resp.json()
-
-            if data.get('SMSMessageData', {}).get('Recipients', []):
-                recipient = data['SMSMessageData']['Recipients'][0]
-                status = recipient.get('status')
-                message_id = recipient.get('messageId')
-
-                if status == 'Success':
-                    return True, message_id, None
-                else:
-                    return False, message_id, f"Status: {status}"
-            else:
-                return False, None, "No recipients in response"
-
-        except Exception as e:
-            logger.exception("SMS send failed")
-            return False, None, str(e)
-
-    def send_bulk(self, recipients, message):
-        results = []
-        for r in recipients:
-            personalized = message.replace("{name}", r.get('name', ''))
-            success, msg_id, error = self.send_sms(r['phone'], personalized)
-            results.append((r['phone'], success, msg_id, error))
-        return results
+PROD_URL = 'https://api.africastalking.com/version1/messaging'
+SANDBOX_URL = 'https://api.sandbox.africastalking.com/version1/messaging'
 
 
-def build_receipt_sms(event):
-    ws = event.workspace
-    member = event.member
+def _messaging_url():
+    return SANDBOX_URL if settings.AFRICASTALKING_SANDBOX else PROD_URL
 
-    msg = (
-        f"TapVerify — Payment Confirmed\n\n"
-        f"Hello {member.name},\n"
-        f"Ksh {event.amount:,.0f} received by {ws.name}.\n\n"
-        f"Collected by: {event.verifier.name if event.verifier else 'System'}\n"
-        f"Date: {event.created_at.strftime('%d %b %Y, %I:%M %p')}\n"
+
+def send_sms(to, message):
+    """Send one SMS. Returns (ok, message_id, error)."""
+    username = settings.AFRICASTALKING_USERNAME
+    api_key = settings.AFRICASTALKING_API_KEY
+    if not username or not api_key:
+        logger.warning('Africa\'s Talking not configured - SMS to %s skipped', to)
+        return False, None, 'not_configured'
+    payload = {
+        'username': username,
+        'to': to,
+        'message': message,
+        'from': settings.AFRICASTALKING_SENDER_ID,
+    }
+    try:
+        resp = requests.post(
+            _messaging_url(),
+            data=payload,
+            headers={
+                'apiKey': api_key,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+            },
+            timeout=30,
+        )
+        data = resp.json()
+        recipients = data.get('SMSMessageData', {}).get('Recipients', [])
+        if not recipients:
+            return False, None, 'no_recipients'
+        first = recipients[0]
+        ok = first.get('status') == 'Success'
+        return ok, first.get('messageId'), (None if ok else first.get('status'))
+    except Exception as e:  # noqa: BLE001
+        logger.exception('SMS send failed')
+        return False, None, str(e)
+
+
+def member_pay_link(member):
+    return f'{settings.PAYMENT_LINK_BASE}/p/{member.pay_code}/'
+
+
+def fmt_amount(amount):
+    return f'{amount:,.0f}'
+
+
+# --- Templates (wording per V1 product doc) ---
+
+def build_invite_sms(collection, member):
+    link = member_pay_link(member)
+    head = f'TapVerify\n{collection.title}, KES {fmt_amount(collection.amount)}\n\n'
+    if collection.payout_method == collection.TILL:
+        body = (f'Pay to Till: {collection.till_number}\n'
+                f'(Use your full name as reference)\n')
+    elif collection.payout_method == collection.PAYBILL:
+        body = (f'Paybill: {collection.paybill_number}\n'
+                f'Account: {collection.paybill_account or "Your Name"}\n')
+    elif collection.payout_method == collection.PERSONAL:
+        body = (f'Send to: {collection.personal_phone}\n'
+                f'(Use your name as reference)\n')
+    else:  # BANK
+        body = (f'Bank: {collection.bank_details}\n'
+                f'(Use your name as reference)\n')
+    return f'{head}{body}\nOr pay here: {link}'
+
+
+def build_reminder_sms(collection, member):
+    return (
+        f'Reminder from TapVerify\n'
+        f'{collection.title}, KES {fmt_amount(collection.amount)} is still unpaid.\n\n'
+        f'Pay here: {member_pay_link(member)}'
     )
 
-    if event.gps_lat and event.gps_lng:
-        msg += f"Location: Verified\n\n"
 
-    msg += (
-        f"\nReceipt: {settings.RECEIPT_BASE_URL}/r/{event.receipt_token}\n"
-        f"PIN: {event.receipt_pin}\n\n"
-        f"Save this SMS as proof of payment."
+def build_otp_sms(code):
+    return f'Your TapVerify login code is {code}. It expires in 10 minutes.'
+
+
+def build_payment_confirmation_sms(collection, member):
+    return (
+        f'Your payment of KES {fmt_amount(member.paid_amount or collection.amount)} '
+        f'for {collection.title} has been received. Thank you.'
     )
-    return msg
-
-
-def build_reminder_sms(member, workspace, reminder_type, amount_due):
-    msg = (
-        f"TapVerify — Reminder\n\n"
-        f"Hello {member.name},\n"
-        f"{workspace.name} meeting is coming up.\n\n"
-        f"Your order payment: Ksh {amount_due:,.0f}\n"
-    )
-
-    if workspace.till_number:
-        msg += f"Pay via M-Pesa Till: {workspace.till_number}\n"
-    elif workspace.paybill_number:
-        msg += f"Pay via M-Pesa Paybill: {workspace.paybill_number} (Acc: {workspace.account_number or member.member_code})\n"
-
-    msg += f"\nOr bring cash to the meeting. See you there!"
-    return msg

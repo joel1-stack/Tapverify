@@ -1,64 +1,42 @@
 from django.contrib import admin
-from .models import (Workspace, Staff, Member, VerificationEvent, MpesaTransaction,
-                     PaymentReminder, PaymentLink, Collection, PaymentTask)
 
-@admin.register(Workspace)
-class WorkspaceAdmin(admin.ModelAdmin):
-    list_display = ['name', 'type', 'phone', 'plan', 'monthly_amount', 'member_count', 'is_active']
-    list_filter = ['type', 'plan', 'is_active']
-    search_fields = ['name', 'phone']
+from .models import Collection, LoginOTP, Member, Payment, Secretary
 
-    def member_count(self, obj):
-        return obj.members.filter(is_active=True).count()
-    member_count.short_description = 'Members'
 
-@admin.register(Staff)
-class StaffAdmin(admin.ModelAdmin):
-    list_display = ['name', 'phone', 'role', 'workspace', 'is_active']
-    list_filter = ['role', 'is_active']
-    search_fields = ['name', 'phone']
+class MemberInline(admin.TabularInline):
+    model = Member
+    extra = 0
 
-@admin.register(Member)
-class MemberAdmin(admin.ModelAdmin):
-    list_display = ['name', 'phone', 'member_code', 'workspace', 'balance_due', 'last_paid_at', 'is_active']
-    list_filter = ['is_active', 'workspace']
-    search_fields = ['name', 'phone', 'member_code']
-    list_editable = ['balance_due']
 
-@admin.register(VerificationEvent)
-class VerificationEventAdmin(admin.ModelAdmin):
-    list_display = ['member', 'amount', 'event_type', 'verification_method', 'status', 'verifier', 'created_at']
-    list_filter = ['event_type', 'verification_method', 'status', 'workspace']
-    search_fields = ['member__name', 'receipt_token', 'member__phone']
-    date_hierarchy = 'created_at'
-    readonly_fields = ['receipt_token', 'receipt_pin', 'created_at']
+@admin.register(Secretary)
+class SecretaryAdmin(admin.ModelAdmin):
+    list_display = ('phone', 'created_at')
+    search_fields = ('phone',)
 
-@admin.register(MpesaTransaction)
-class MpesaTransactionAdmin(admin.ModelAdmin):
-    list_display = ['mpesa_receipt_number', 'phone_number', 'amount', 'is_matched', 'created_at']
-    list_filter = ['is_matched', 'transaction_type']
-    search_fields = ['mpesa_receipt_number', 'phone_number']
-
-@admin.register(PaymentReminder)
-class PaymentReminderAdmin(admin.ModelAdmin):
-    list_display = ['member', 'reminder_type', 'amount_due', 'sms_sent', 'created_at']
-    list_filter = ['reminder_type', 'sms_sent']
-
-@admin.register(PaymentLink)
-class PaymentLinkAdmin(admin.ModelAdmin):
-    list_display = ['member', 'workspace', 'amount', 'status', 'rail_used', 'paid_at', 'created_at']
-    list_filter = ['status', 'rail_used']
-    search_fields = ['member__name', 'token']
-    readonly_fields = ['token', 'created_at']
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'workspace', 'type', 'amount', 'due', 'rail', 'paid_count', 'closed', 'created_at']
-    list_filter = ['type', 'rail', 'closed', 'workspace']
-    search_fields = ['title', 'workspace__name']
+    list_display = ('title', 'secretary', 'amount', 'payout_method', 'created_at')
+    list_filter = ('payout_method',)
+    search_fields = ('title', 'secretary__phone')
+    inlines = [MemberInline]
 
-@admin.register(PaymentTask)
-class PaymentTaskAdmin(admin.ModelAdmin):
-    list_display = ['member', 'collection', 'state', 'amount', 'rail', 'txn_ref', 'paid_at']
-    list_filter = ['state', 'rail', 'collection__workspace']
-    search_fields = ['member__name', 'txn_ref']
+
+@admin.register(Member)
+class MemberAdmin(admin.ModelAdmin):
+    list_display = ('name', 'phone', 'collection', 'status', 'paid_amount',
+                    'paid_method', 'paid_at')
+    list_filter = ('status', 'paid_method')
+    search_fields = ('name', 'phone')
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('transaction_code', 'amount', 'phone', 'status',
+                    'member', 'created_at')
+    list_filter = ('status',)
+
+
+@admin.register(LoginOTP)
+class LoginOTPAdmin(admin.ModelAdmin):
+    list_display = ('phone', 'code', 'used', 'expires_at', 'created_at')

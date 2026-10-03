@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0D9488">
+<title>{% if not_found %}Not found{% else %}{{ title }} | TapVerify{% endif %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #0D9488;
+    --teal-dark: #0F766E;
+    --green: #16A34A;
+    --red: #DC2626;
+    --ink: #111827;
+    --grey: #6B7280;
+    --line: #E5E7EB;
+    --bg: #F0FDFA;
+    --radius: 20px;
+  }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, var(--bg) 0%, #F9FAFB 40%, #F9FAFB 100%);
+    color: var(--ink); min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 18px;
+  }
+  h1, h2, .amount, .brand { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color: #fff; font-weight: 800; font-size: 17px;
+    padding: 10px 18px; border-radius: 50px;
+    box-shadow: 0 8px 20px rgba(13, 148, 136, .3);
+    margin-bottom: 26px;
+    animation: dropIn .6s cubic-bezier(.21,1.02,.73,1) both;
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4ADE80; box-shadow: 0 0 0 0 rgba(74,222,128,.7);
+    animation: pulseDot 2s infinite;
+  }
+
+  .card {
+    background: #fff; border-radius: var(--radius); padding: 30px 24px;
+    width: 100%; max-width: 430px;
+    box-shadow: 0 10px 40px rgba(17, 24, 39, .08), 0 2px 8px rgba(17,24,39,.04);
+    border: 1px solid var(--line);
+    animation: riseIn .7s cubic-bezier(.21,1.02,.73,1) both .1s;
+  }
+  h1 { font-size: 23px; margin-bottom: 4px; letter-spacing: -0.5px; }
+  .subtitle { color: var(--grey); font-size: 14px; margin-bottom: 4px; }
+  .amount {
+    font-size: 40px; font-weight: 800; color: var(--teal);
+    margin: 14px 0 22px; letter-spacing: -1.5px;
+    animation: fadeUp .6s cubic-bezier(.21,1.02,.73,1) both .25s;
+  }
+  .instructions {
+    background: linear-gradient(135deg, #F0FDFA, #CCFBF1);
+    border: 1px solid #99F6E4; border-radius: 16px;
+    padding: 16px; font-size: 15px; line-height: 1.65; margin-bottom: 22px;
+    animation: fadeUp .6s cubic-bezier(.21,1.02,.73,1) both .35s;
+  }
+  .instructions b {
+    color: var(--teal-dark); background: #fff;
+    padding: 1px 7px; border-radius: 6px; font-size: 14px;
+    border: 1px solid #99F6E4; display: inline-block;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--grey); margin-bottom: 7px; }
+  .phone-wrap { position: relative; margin-bottom: 16px; }
+  .phone-wrap::before {
+    content: ""; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px; border-radius: 50%; background: var(--teal);
+    box-shadow: 0 0 0 3px rgba(13,148,136,.2); z-index: 1;
+  }
+  input {
+    width: 100%; padding: 16px 16px 16px 38px; font-size: 17px; font-weight: 500;
+    border: 1.5px solid var(--line); border-radius: 14px;
+    background: #F9FAFB; transition: border .2s, box-shadow .2s, background .2s;
+    font-family: inherit;
+  }
+  input:focus {
+    outline: none; border-color: var(--teal); background: #fff;
+    box-shadow: 0 0 0 4px rgba(13,148,136,.12);
+  }
+  button {
+    width: 100%; padding: 17px; font-size: 17px; font-weight: 700;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color: #fff; border: 0; border-radius: 14px;
+    cursor: pointer; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    box-shadow: 0 8px 20px rgba(13, 148, 136, .35);
+    transition: transform .15s cubic-bezier(.21,1.02,.73,1), box-shadow .2s, filter .2s;
+    animation: fadeUp .6s cubic-bezier(.21,1.02,.73,1) both .45s;
+  }
+  button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(13,148,136,.4); }
+  button:active:not(:disabled) { transform: translateY(0) scale(.99); }
+  button:disabled { filter: grayscale(.4); opacity: .7; cursor: not-allowed; box-shadow: none; }
+  .success { text-align: center; animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+  .tick {
+    width: 84px; height: 84px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), #15803D);
+    color: #fff; font-size: 44px; line-height: 84px; margin: 0 auto 18px;
+    box-shadow: 0 10px 26px rgba(22,163,74,.35);
+    animation: popIn .6s cubic-bezier(.34,1.56,.64,1) both .1s;
+  }
+  .note { color: var(--grey); font-size: 14px; margin-top: 14px; line-height: 1.6; }
+  .error {
+    color: var(--red); font-size: 14px; margin-top: 14px; text-align: center;
+    background: #FEF2F2; border: 1px solid rgba(220,38,38,.3);
+    border-radius: 12px; padding: 12px; display: none;
+  }
+  .error.show { display: block; animation: shake .4s ease both; }
+  .footer {
+    color: #9CA3AF; font-size: 13px; margin-top: 22px; text-align: center;
+    max-width: 430px; animation: fadeUp .6s cubic-bezier(.21,1.02,.73,1) both .55s;
+  }
+  .spinner {
+    width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,.4);
+    border-top-color: #fff; border-radius: 50%;
+    display: inline-block; vertical-align: middle; margin-right: 8px;
+    animation: spin .8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes dropIn { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes popIn { 0% { opacity: 0; transform: scale(.7); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  @keyframes pulseDot {
+    0% { box-shadow: 0 0 0 0 rgba(74,222,128,.6); }
+    70% { box-shadow: 0 0 0 7px rgba(74,222,128,0); }
+    100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="brand"><span class="dot"></span>TapVerify</div>
+
+{% if not_found %}
+<div class="card">
+  <h1>Link not found</h1>
+  <p class="note">This payment link is invalid or has expired. Please check the SMS you received.</p>
+</div>
+
+{% elif already_paid %}
+<div class="card success">
+  <div class="tick">&#10003;</div>
+  <h1>Payment Received</h1>
+  <div class="amount">KES {{ amount }}</div>
+  <p>You have paid KES {{ amount }} for<br><b>{{ title }}</b></p>
+  <p class="note">Thank you.<br>The secretary can now see that you have paid.</p>
+</div>
+
+{% else %}
+<div class="card">
+  <h1>{{ title }}</h1>
+  {% if member_name %}<p class="subtitle">for {{ member_name }}</p>{% endif %}
+  <div class="amount">KES {{ amount }}</div>
+
+  <div class="instructions">
+    {% if payout_method == 'till' %}
+      Pay to Till: <b>{{ payout_details.till_number }}</b><br>(Use your full name as reference)
+    {% elif payout_method == 'paybill' %}
+      Paybill: <b>{{ payout_details.paybill_number }}</b><br>
+      Account: <b>{{ payout_details.paybill_account }}</b>
+    {% elif payout_method == 'personal' %}
+      Send to: <b>{{ payout_details.personal_phone }}</b><br>(Use your name as reference)
+    {% else %}
+      Bank: <b>{{ payout_details.bank_details }}</b><br>(Use your name as reference)
+    {% endif %}
+  </div>
+
+  <form id="pay-form">
+    <label for="phone">Your M-Pesa phone number</label>
+    <div class="phone-wrap">
+      <input id="phone" name="phone" type="tel" value="{{ member_phone }}" required>
+    </div>
+    <button type="submit" id="pay-btn">Pay with M-Pesa</button>
+  </form>
+  <div class="error" id="error"></div>
+</div>
+<div class="footer">No account needed. After paying, the secretary sees it automatically.</div>
+
+<script>
+const form = document.getElementById('pay-form');
+const btn = document.getElementById('pay-btn');
+const err = document.getElementById('error');
+const PAY_URL = '{% url "pay-start" pay_code %}';
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Starting payment...';
+  err.classList.remove('show');
+  try {
+    const resp = await fetch(PAY_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({phone: document.getElementById('phone').value}),
+    });
+    const data = await resp.json();
+    if (data.paid) {
+      showSuccess();
+    } else if (data.checkout_url) {
+      btn.innerHTML = '<span class="spinner"></span>Complete payment...';
+      window.location.href = data.checkout_url;
+    } else {
+      throw new Error(data.error || 'Could not start payment. Try again.');
+    }
+  } catch (e2) {
+    err.textContent = e2.message;
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Pay with M-Pesa';
+  }
+});
+
+function showSuccess() {
+  document.querySelector('.card').innerHTML =
+    '<div class="success">' +
+    '<div class="tick">&#10003;</div>' +
+    '<h1>Payment Received</h1>' +
+    '<div class="amount">KES {{ amount }}</div>' +
+    '<p>You have paid KES {{ amount }} for<br><b>{{ title }}</b></p>' +
+    '<p class="note">Thank you.<br>The secretary can now see that you have paid.</p>' +
+    '</div>';
+}
+</script>
+{% endif %}
+</body>
+</html>

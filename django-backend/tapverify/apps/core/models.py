@@ -1,411 +1,165 @@
-"""TapVerify — data models. Revenue proof for manufacturing SMEs."""
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
-import uuid
+"""
+TapVerify V1 models.
+
+One user type: the Secretary (the person collecting money).
+A Collection has Members (people who should pay) and Payments
+(incoming money notifications, matched or unmatched).
+"""
 import secrets
 
+from django.db import models
+from django.utils import timezone
 
-def _gen_receipt_code():
-    return f"TV-{secrets.token_hex(4).upper()}"
 
-def _gen_receipt_token():
-    return secrets.token_urlsafe(16)
+def new_pay_code():
+    return secrets.token_urlsafe(6).replace('-', '').replace('_', '')[:8]
 
-def _gen_receipt_pin():
-    return f"{secrets.randbelow(10000):04d}"
 
-def _gen_payment_token():
-    return secrets.token_urlsafe(16)
+def new_token():
+    return secrets.token_hex(32)
 
-class Workspace(models.Model):
-    WORKSPACE_TYPES = [
-        ('chama', 'Chama / Revenue Group'),
-        ('church', 'Church / Religious'),
-        ('event', 'Event / Conference'),
-        ('delivery', 'Delivery / Logistics'),
-    ]
-    PLAN_TYPES = [
-        ('free', 'Free — 50 members'),
-        ('basic', 'Basic — Ksh 1,000/mo — 200 members'),
-        ('pro', 'Pro — Ksh 3,000/mo — unlimited'),
-    ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=200)
-    type = models.CharField(max_length=20, choices=WORKSPACE_TYPES, default='chama')
-    phone = models.CharField(max_length=15, help_text="Admin contact phone")
-    till_number = models.CharField(max_length=20, blank=True, null=True)
-    paybill_number = models.CharField(max_length=20, blank=True, null=True)
-    account_number = models.CharField(max_length=50, blank=True, null=True)
-    monthly_amount = models.DecimalField(max_digits=10, decimal_places=2, default=500)
-    meeting_location_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    meeting_location_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    meeting_radius_meters = models.IntegerField(default=500)
-    plan = models.CharField(max_length=20, choices=PLAN_TYPES, default='free')
-    is_active = models.BooleanField(default=True)
+class Secretary(models.Model):
+    """The person who collects money. Identified by phone number only."""
+
+    phone = models.CharField(max_length=20, unique=True)
+    auth_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        db_table = 'workspaces'
-
     def __str__(self):
-        return f"{self.name} ({self.type})"
+        return self.phone
 
 
-class Staff(models.Model):
-    ROLE_CHOICES = [
-        ('admin', 'Admin'),
-        ('treasurer', 'Treasurer'),
-        ('verifier', 'Verifier'),
-    ]
+class LoginOTP(models.Model):
+    """One-time login code sent by SMS. Valid for 10 minutes, single use."""
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='staff')
-    name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=15, unique=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='treasurer')
-    pin_code = models.CharField(max_length=6, default="0000", help_text="App login PIN")
-    is_active = models.BooleanField(default=True)
+    phone = models.CharField(max_length=20, db_index=True)
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'staff'
-
-    def __str__(self):
-        return f"{self.name} — {self.role} @ {self.workspace.name}"
-
-
-class Member(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='members')
-    name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=15, db_index=True)
-    member_code = models.CharField(max_length=20, unique=True, db_index=True,
-                                   default=_gen_receipt_code)
-    id_number = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
-    monthly_contribution = models.DecimalField(max_digits=10, decimal_places=2, default=500)
-    balance_due = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    last_paid_at = models.DateTimeField(null=True, blank=True)
-    has_qr_card = models.BooleanField(default=False)
-    has_nfc_sticker = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'members'
-        unique_together = ['workspace', 'phone']
-
-    def __str__(self):
-        return f"{self.name} ({self.member_code})"
-
-
-class VerificationEvent(models.Model):
-    EVENT_TYPES = [
-        ('payment_cash', 'Cash Payment Collected'),
-        ('payment_mpesa', 'M-Pesa Payment Verified'),
-        ('payment_till', 'Till Payment Matched'),
-        ('attendance_only', 'Attendance / No Payment'),
-        ('penalty', 'Late Payment / Penalty'),
-    ]
-    VERIFICATION_METHODS = [
-        ('manual', 'Manual Selection'),
-        ('qr_scan', 'QR Code Scan'),
-        ('nfc_tap', 'NFC Sticker Tap'),
-        ('mpesa_callback', 'M-Pesa Auto-Match'),
-        ('ussd', 'USSD Check-in'),
-    ]
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('disputed', 'Disputed'),
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='events')
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='events')
-    verifier = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, related_name='verifications')
-
-    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default='payment_cash')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
-    verification_method = models.CharField(max_length=20, choices=VERIFICATION_METHODS, default='manual')
-
-    gps_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    gps_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    gps_accuracy = models.FloatField(null=True, blank=True)
-
-    receipt_token = models.CharField(max_length=32, unique=True, db_index=True,
-                                     default=_gen_receipt_token)
-    receipt_pin = models.CharField(max_length=4, default=_gen_receipt_pin)
-    sms_status = models.CharField(max_length=20, default='pending')
-    sms_message_id = models.CharField(max_length=100, blank=True)
-
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    verified_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        db_table = 'verification_events'
-        indexes = [
-            models.Index(fields=['workspace', 'created_at']),
-            models.Index(fields=['member', 'created_at']),
-            models.Index(fields=['receipt_token']),
-            models.Index(fields=['status', 'created_at']),
-        ]
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.member.name} — {self.amount} — {self.created_at.strftime('%Y-%m-%d %H:%M')}"
-
-
-class MpesaTransaction(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='mpesa_transactions')
-    member = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True, blank=True, related_name='mpesa_payments')
-    event = models.OneToOneField(VerificationEvent, on_delete=models.SET_NULL, null=True, blank=True, related_name='mpesa_txn')
-
-    transaction_type = models.CharField(max_length=20, choices=[
-        ('stk_push', 'STK Push'),
-        ('till', 'Till Payment'),
-        ('paybill', 'Paybill Payment'),
-    ])
-    mpesa_receipt_number = models.CharField(max_length=50, unique=True, db_index=True)
-    phone_number = models.CharField(max_length=15)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    account_reference = models.CharField(max_length=50)
-    raw_callback = models.JSONField(default=dict)
-    is_matched = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'mpesa_transactions'
-
-    def __str__(self):
-        return f"{self.mpesa_receipt_number} — {self.amount}"
-
-
-class PaymentReminder(models.Model):
-    REMINDER_TYPES = [
-        ('due_soon', '3 Days Before Due'),
-        ('due_today', 'Due Today'),
-        ('overdue', 'Overdue'),
-        ('meeting_day', 'Meeting Day Reminder'),
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='reminders')
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='reminders')
-    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPES)
-    amount_due = models.DecimalField(max_digits=10, decimal_places=2)
-    message = models.TextField()
-    sms_sent = models.BooleanField(default=False)
-    sms_sent_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'payment_reminders'
-
-    def __str__(self):
-        return f"{self.member.name} — {self.reminder_type}"
-
-
-class PaymentLink(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending Payment'),
-        ('paid', 'Paid'),
-        ('expired', 'Expired'),
-        ('cancelled', 'Cancelled'),
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='payment_links')
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payment_links')
-    event = models.OneToOneField(VerificationEvent, on_delete=models.SET_NULL, null=True, blank=True, related_name='payment_link')
-
-    token = models.CharField(max_length=32, unique=True, db_index=True,
-                             default=_gen_payment_token)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.CharField(max_length=200, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    rail_used = models.CharField(max_length=20, default='sasapay')
-    transaction_ref = models.CharField(max_length=100, blank=True)
-
-    expires_at = models.DateTimeField(null=True, blank=True)
-    paid_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'payment_links'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"Link for {self.member.name} — Ksh {self.amount} ({self.status})"
 
     @property
-    def is_expired(self):
-        if self.expires_at:
-            return timezone.now() > self.expires_at
-        return False
+    def is_valid(self):
+        return not self.used and timezone.now() < self.expires_at
 
 
 class Collection(models.Model):
-    """An order raised by a manager against the whole workforce.
+    """A money collection, e.g. 'September Welfare - KES 500 per person'."""
 
-    Mirrors the mobile `WfCollection`: every customer gets a PaymentTask that
-    moves through the 9-state lifecycle below.
-    """
-
-    COLLECTION_TYPES = [
-        ('welfare', 'Welfare'),
-        ('medical', 'Medical'),
-        ('emergency', 'Emergency'),
-        ('trip', 'Trip'),
+    TILL = 'till'
+    PAYBILL = 'paybill'
+    PERSONAL = 'personal'
+    BANK = 'bank'
+    PAYOUT_METHODS = [
+        (TILL, 'Till Number'),
+        (PAYBILL, 'Paybill'),
+        (PERSONAL, 'Personal Number'),
+        (BANK, 'Bank Account'),
     ]
-    RAIL_CHOICES = [
-        ('sasapay', 'SasaPay Checkout link'),
-    ]
+    AUTO_DETECT_METHODS = (TILL, PAYBILL)
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='collections')
-    title = models.CharField(max_length=200)
-    type = models.CharField(max_length=20, choices=COLLECTION_TYPES, default='welfare')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    due = models.DateTimeField()
-    rail = models.CharField(max_length=20, choices=RAIL_CHOICES, default='sasapay')
-    message = models.TextField(blank=True)
-    sms_sent = models.BooleanField(default=False)
-    closed = models.BooleanField(default=False)
+    secretary = models.ForeignKey(
+        Secretary, on_delete=models.CASCADE, related_name='collections')
+    title = models.CharField(max_length=120)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    due_date = models.DateField(null=True, blank=True)
+    payout_method = models.CharField(max_length=10, choices=PAYOUT_METHODS)
+    till_number = models.CharField(max_length=20, blank=True)
+    paybill_number = models.CharField(max_length=20, blank=True)
+    paybill_account = models.CharField(max_length=60, blank=True)
+    personal_phone = models.CharField(max_length=20, blank=True)
+    bank_details = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'collections'
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.title} ({self.workspace.name})"
+        return f'{self.title} ({self.secretary.phone})'
 
     @property
-    def paid_count(self):
-        return self.tasks.filter(state__in=['completed', 'verified', 'streak', 'badge', 'reward']).count()
+    def auto_detect(self):
+        return self.payout_method in self.AUTO_DETECT_METHODS
+
+    def stats(self):
+        members = self.members.all()
+        paid = [m for m in members if m.status == Member.PAID]
+        collected = sum(m.paid_amount or 0 for m in paid)
+        expected = self.amount * len(members)
+        return {
+            'member_count': len(members),
+            'paid_count': len(paid),
+            'collected': collected,
+            'outstanding': expected - collected,
+        }
 
 
-class PaymentTask(models.Model):
-    """One customer's task inside a Collection — the 9-state lifecycle.
+class Member(models.Model):
+    """A person expected to pay into a Collection."""
 
-    CREATED → NOTIFIED → PENDING → COMPLETED → VERIFIED → STREAK → BADGE →
-    REWARD → ARCHIVED. `rail` + `txn_ref` are the evidence of how money moved.
-    """
+    UNPAID = 'unpaid'
+    PAID = 'paid'
+    STATUSES = [(UNPAID, 'Not paid'), (PAID, 'Paid')]
 
-    STATE_CHOICES = [
-        ('created', 'CREATED'),
-        ('notified', 'NOTIFIED'),
-        ('pending', 'PENDING'),
-        ('completed', 'COMPLETED'),
-        ('verified', 'VERIFIED'),
-        ('streak', 'STREAK'),
-        ('badge', 'BADGE'),
-        ('reward', 'REWARD'),
-        ('archived', 'ARCHIVED'),
-    ]
-    LIFECYCLE = ['created', 'notified', 'pending', 'completed',
-                 'verified', 'streak', 'badge', 'reward', 'archived']
+    collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name='members')
+    name = models.CharField(max_length=120, blank=True)
+    phone = models.CharField(max_length=20)
+    pay_code = models.CharField(max_length=12, unique=True, default=new_pay_code)
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='tasks')
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payment_tasks')
-    state = models.CharField(max_length=20, choices=STATE_CHOICES, default='created')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    rail = models.CharField(max_length=20, blank=True, default='')
-    txn_ref = models.CharField(max_length=100, blank=True, default='')
-
-    # SasaPay checkout fields
-    payment_token = models.CharField(max_length=16, unique=True, db_index=True,
-                                     blank=True, default='',
-                                     help_text='Unique reference per member for SasaPay checkout')
-    checkout_url = models.URLField(blank=True, default='',
-                                   help_text='SasaPay checkout URL to share via WhatsApp')
-    provider_checkout_id = models.CharField(max_length=100, blank=True, default='',
-                                            help_text='SasaPay CheckoutRequestID')
-    provider_tx_code = models.CharField(max_length=100, blank=True, default='',
-                                        help_text='SasaPay TransactionCode from webhook')
-
-    sms_status = models.CharField(max_length=20, default='pending')
-    sms_message_id = models.CharField(max_length=100, blank=True, default='')
-
+    status = models.CharField(max_length=10, choices=STATUSES, default=UNPAID)
     paid_at = models.DateTimeField(null=True, blank=True)
+    paid_method = models.CharField(max_length=10, blank=True)  # auto | cash | other
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    amount_mismatch = models.BooleanField(default=False)
+    transaction_ref = models.CharField(max_length=60, blank=True)
+    reminders_sent = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'payment_tasks'
-        unique_together = ['collection', 'member']
+        ordering = ['name', 'phone']
+        unique_together = [('collection', 'phone')]
 
     def __str__(self):
-        return f"{self.member.name} — {self.collection.title} ({self.state})"
+        return self.name or self.phone
 
-    def save(self, *args, **kwargs):
-        if not self.payment_token:
-            self.payment_token = secrets.token_urlsafe(8)[:12].upper()
-        super().save(*args, **kwargs)
-
-    def advance(self, to_state):
-        """Move the task through the lifecycle (validating order)."""
-        if to_state not in self.LIFECYCLE:
-            raise ValueError(f"Unknown state: {to_state}")
-        if self.state and self.LIFECYCLE.index(to_state) < self.LIFECYCLE.index(self.state):
-            raise ValueError(f"Cannot move back from {self.state} to {to_state}")
-        self.state = to_state
-        if to_state in ('completed', 'verified', 'streak', 'badge', 'reward') and not self.paid_at:
-            self.paid_at = timezone.now()
-        self.save(update_fields=['state', 'paid_at'])
-        return self
+    def mark_paid(self, method, amount, transaction_ref=''):
+        self.status = self.PAID
+        self.paid_at = timezone.now()
+        self.paid_method = method
+        self.paid_amount = amount
+        self.transaction_ref = transaction_ref
+        self.amount_mismatch = amount != self.collection.amount
+        self.save(update_fields=[
+            'status', 'paid_at', 'paid_method', 'paid_amount',
+            'transaction_ref', 'amount_mismatch',
+        ])
 
 
-class StreakRecord(models.Model):
-    """Gamification: consecutive on-time payments per member."""
+class Payment(models.Model):
+    """An incoming payment notification (webhook). Matched to a member when possible."""
 
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='streaks')
-    collection_type = models.CharField(max_length=50, default='welfare')
-    current_streak = models.IntegerField(default=0)
-    longest_streak = models.IntegerField(default=0)
-    total_paid = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    total_contributions = models.IntegerField(default=0)
-    last_paid_at = models.DateTimeField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    MATCHED = 'matched'
+    UNMATCHED = 'unmatched'
+    STATUSES = [(MATCHED, 'Matched'), (UNMATCHED, 'Unmatched')]
+
+    member = models.ForeignKey(
+        Member, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='payments')
+    collection = models.ForeignKey(
+        Collection, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='payments')
+    phone = models.CharField(max_length=20, blank=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    reference = models.CharField(max_length=60, blank=True, db_index=True)
+    transaction_code = models.CharField(max_length=60, blank=True)
+    status = models.CharField(max_length=10, choices=STATUSES, default=UNMATCHED)
+    raw = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'streak_records'
-        unique_together = ['member', 'collection_type']
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.member.name} — {self.current_streak} month streak"
-
-    def record_payment(self, amount, paid_at, due_date):
-        """Record a payment and update streak."""
-        self.total_paid += amount
-        self.total_contributions += 1
-        self.last_paid_at = paid_at
-
-        if paid_at.date() <= due_date:
-            self.current_streak += 1
-            if self.current_streak > self.longest_streak:
-                self.longest_streak = self.current_streak
-        else:
-            self.current_streak = 0
-
-        self.save()
-        return self
-
-    @property
-    def badge_level(self):
-        if self.current_streak >= 12:
-            return 'gold'
-        elif self.current_streak >= 6:
-            return 'silver'
-        elif self.current_streak >= 3:
-            return 'bronze'
-        return None
+        return f'{self.transaction_code or self.reference} - {self.amount}'

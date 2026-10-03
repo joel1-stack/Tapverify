@@ -1,14 +1,14 @@
 """
-TapVerify Django Settings
-Use .env for secrets in production.
+TapVerify V1 - Django settings.
+All secrets come from .env (see .env.example). Nothing sensitive is hardcoded here.
 """
-import os
 from pathlib import Path
+
 from decouple import config, Csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='dev-key-change-in-production')
+SECRET_KEY = config('SECRET_KEY', default='dev-only-insecure-key')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 
@@ -25,6 +25,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'tapverify.apps.core.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -38,11 +39,10 @@ ROOT_URLCONF = 'tapverify.config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -61,22 +61,16 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'tapverify.apps.core.authentication.SecretaryTokenAuthentication',
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'tapverify.apps.core.authentication.IsSecretary',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50,
 }
-
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Nairobi'
@@ -85,53 +79,33 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = '/login/'
-
-LOGIN_URL = '/login/'
-
-RECEIPT_BASE_URL = config('RECEIPT_BASE_URL', default='https://tverify.co.ke')
-
-AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='joelkaunda15')
-AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='atsk_23600759f9c7c4a65263251f8e7f68eb02069696cd76f93e220f0500b4c8dc0299365fc2')
+# --- Africa's Talking (SMS + OTP) ---
+AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='')
+AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='')
 AFRICASTALKING_SENDER_ID = config('AFRICASTALKING_SENDER_ID', default='TAPVERIFY')
-AFRICASTALKING_AIRTIME_PRODUCT_CODE = config('AFRICASTALKING_AIRTIME_PRODUCT_CODE', default='TAPVERIFY')
-AFRICASTALKING_USSD_SHORTCODE = config('AFRICASTALKING_USSD_SHORTCODE', default='14434')
-AFRICASTALKING_USSD_SERVICE_CODE = config('AFRICASTALKING_USSD_SERVICE_CODE', default='*384*123#')
 AFRICASTALKING_SANDBOX = config('AFRICASTALKING_SANDBOX', default=True, cast=bool)
 
-# Avalanche Fuji attestations
-AVALANCHE_RPC = config('AVALANCHE_RPC', default='https://api.avax-test.network/ext/bc/C/rpc')
-AVALANCHE_CHAIN_ID = config('AVALANCHE_CHAIN_ID', default=43113, cast=int)
-AVALANCHE_ATTESTATION_ADDRESS = config('AVALANCHE_ATTESTATION_ADDRESS', default='')
-AVALANCHE_PRIVATE_KEY = config('AVALANCHE_PRIVATE_KEY', default='')
-
-# SasaPay (sandbox keys for TapVerify — VIEWTECH LIMITED)
+# --- SasaPay (payment rail: checkout + webhooks) ---
 SASAPAY_BASE_URL = config('SASAPAY_BASE_URL', default='https://sandbox.sasapay.app')
-SASAPAY_CLIENT_ID = config('SASAPAY_CLIENT_ID', default='XNxeTbgFcKgRHYknbAmhKQApoHhl0P8jp9oGs5US')
-SASAPAY_CLIENT_SECRET = config('SASAPAY_CLIENT_SECRET', default='iCzqvZ93tFBDbdkubiAo1qSvswKuF0bV52yfeCaQ2JoBLdb8tL6QV12bq5qEacNzpOdgW74wtqsWTN05JzkdbpXSnqapC5AJ5m4jALTiUhWwORAC20JsVFcsRROrnmYF')
-SASAPAY_MERCHANT_CODE = config('SASAPAY_MERCHANT_CODE', default='600980')
-SASAPAY_ACCOUNT_NUMBER = config('SASAPAY_ACCOUNT_NUMBER', default='600980')
-SASAPAY_CALLBACK_URL = config('SASAPAY_CALLBACK_URL', default='https://api.tvrfy.co.ke/webhooks/sasapay/')
+SASAPAY_CLIENT_ID = config('SASAPAY_CLIENT_ID', default='')
+SASAPAY_CLIENT_SECRET = config('SASAPAY_CLIENT_SECRET', default='')
+SASAPAY_MERCHANT_CODE = config('SASAPAY_MERCHANT_CODE', default='')
+SASAPAY_ACCOUNT_NUMBER = config('SASAPAY_ACCOUNT_NUMBER', default='')
+SASAPAY_CALLBACK_URL = config('SASAPAY_CALLBACK_URL', default='')
 SASAPAY_MOCK_MODE = config('SASAPAY_MOCK_MODE', default=True, cast=bool)
 
-# Active payment rail: 'sasapay'
-ACTIVE_PAYMENT_RAIL = config('ACTIVE_PAYMENT_RAIL', default='sasapay')
+# Base URL used when building member payment links sent by SMS, e.g. https://tapverify.co
+PAYMENT_LINK_BASE = config(
+    'PAYMENT_LINK_BASE',
+    default=config('RECEIPT_BASE_URL', default='http://127.0.0.1:8000'),
+).rstrip('/')
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'root': {'handlers': ['console'], 'level': 'INFO'},
 }

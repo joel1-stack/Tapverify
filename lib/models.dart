@@ -59,7 +59,7 @@ class CollectionSummary {
         final paybill = payoutDetails['paybill_number'] ?? '';
         final account = payoutDetails['paybill_account'] ?? '';
         if (paybill.isEmpty) return 'Paybill';
-        return account.isEmpty ? 'Paybill $paybill' : 'Paybill $paybill · $account';
+        return account.isEmpty ? 'Paybill $paybill' : 'Paybill $paybill, $account';
       case 'personal':
         final phone = payoutDetails['personal_phone'] ?? '';
         return phone.isEmpty ? 'Personal number' : 'Personal ${phone}';

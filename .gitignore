@@ -42,7 +42,10 @@ app.*.map.json
 # Django Backend
 django-backend/venv/
 django-backend/.env
+# The database holds real phone numbers and live auth tokens, so it must never
+# be published. The path Django actually uses is inside the project package.
 django-backend/db.sqlite3
+django-backend/**/db.sqlite3
 django-backend/staticfiles/
 django-backend/media/
 django-backend/__pycache__/

@@ -113,6 +113,14 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+The dev database lives at `django-backend/tapverify/db.sqlite3` and is **not
+tracked by git**, because it holds real phone numbers and live login tokens. If
+one is ever exposed, rotate the tokens with:
+
+```bash
+python tools/rotate_dev_token.py
+```
+
 ### App
 
 ```bash

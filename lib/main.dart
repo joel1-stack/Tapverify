@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/login_screen.dart';
 
 /// Where the API lives.
 ///
@@ -64,7 +65,8 @@ class AuthState {
   }
 
   /// Called by [Api] when the server rejects the stored token. Clears the dead
-  /// token and unwinds to the root, which now shows the landing page.
+  /// token and unwinds to the root, which reappears as Login on mobile and the
+  /// landing page on web.
   static void expire() {
     Api.clearToken();
     signedIn.value = false;
@@ -176,7 +178,9 @@ class _TapVerifyAppState extends State<TapVerifyApp> {
   }
 }
 
-/// Shows Home when a login token exists, otherwise the public landing page.
+/// Shows Home when a login token exists.
+///
+/// Signed out: the landing/demo page on web, the login screen on mobile.
 class _Gate extends StatelessWidget {
   const _Gate();
 
@@ -185,7 +189,13 @@ class _Gate extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: AuthState.signedIn,
       builder: (context, signedIn, _) {
-        final child = signedIn ? const HomeScreen() : const LandingScreen();
+        // Mobile is the product: straight to login, no marketing demo.
+        // Web is the demo: landing page first, login pushed from it.
+        final child = signedIn
+            ? const HomeScreen()
+            : kIsWeb
+                ? const LandingScreen()
+                : const LoginScreen();
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 320),
           switchInCurve: Curves.easeOutCubic,

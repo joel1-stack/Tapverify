@@ -6,11 +6,18 @@ import '../models.dart';
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
 
-/// Small bottom sheet shown when the secretary taps a name.
+/// Member detail: a bottom sheet on phones, a centred dialog on desktop web.
 class MemberDetailSheet extends StatefulWidget {
-  const MemberDetailSheet({super.key, required this.member});
+  const MemberDetailSheet({
+    super.key,
+    required this.member,
+    this.asDialog = false,
+  });
 
   final Member member;
+
+  /// True when shown inside a [Dialog] on wide displays.
+  final bool asDialog;
 
   @override
   State<MemberDetailSheet> createState() => _MemberDetailSheetState();
@@ -57,9 +64,20 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
     final m = widget.member;
     final paid = m.isPaid;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: widget.asDialog
+            ? BorderRadius.circular(28)
+            : const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: widget.asDialog
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                ),
+              ]
+            : null,
       ),
       child: SafeArea(
         top: false,

@@ -7,6 +7,7 @@ import '../main.dart';
 import '../models.dart';
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/responsive.dart';
 import 'live_list_screen.dart';
 
 /// One pasted line, as far as the client can tell.
@@ -270,9 +271,11 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
       ),
       body: FadeTransition(
         opacity: _fadeIn,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-          child: Column(
+        child: AppConstrained(
+          wide: 680,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SectionCard(
@@ -432,6 +435,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
               ),
             ],
           ),
+        ),
         ),
       ),
     );

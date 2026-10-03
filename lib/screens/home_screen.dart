@@ -5,6 +5,7 @@ import '../main.dart';
 import '../models.dart' show CollectionSummary;
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/responsive.dart';
 import 'create_collection_screen.dart';
 import 'live_list_screen.dart';
 
@@ -111,7 +112,8 @@ class _HomeScreenState extends State<HomeScreen>
       body: RefreshIndicator(
         onRefresh: _refresh,
         color: kPrimary,
-        child: FutureBuilder<List<CollectionSummary>>(
+        child: AppConstrained(
+          child: FutureBuilder<List<CollectionSummary>>(
           future: _future,
           builder: (context, snap) {
             // Keep showing the collections we already have while a refresh is
@@ -141,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             );
           },
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

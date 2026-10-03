@@ -7,6 +7,7 @@ import '../models.dart';
 import '../services/csv_download.dart';
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/responsive.dart';
 import 'member_detail_sheet.dart';
 
 /// `2026-10-31` reads as `31 Oct 2026`; unparseable values fall back to raw.
@@ -174,12 +175,25 @@ class _LiveListScreenState extends State<LiveListScreen>
   }
 
   Future<void> _openMember(Member member) async {
-    final changed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => MemberDetailSheet(member: member),
-    );
+    final wide = isWideDisplay(context);
+    final changed = wide
+        ? await showDialog<bool>(
+            context: context,
+            builder: (_) => Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: MemberDetailSheet(member: member, asDialog: true),
+              ),
+            ),
+          )
+        : await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => MemberDetailSheet(member: member),
+          );
     if (changed == true && mounted) await _refresh();
   }
 
@@ -261,22 +275,24 @@ class _LiveListScreenState extends State<LiveListScreen>
                     ],
                   ),
                   child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                      child: FilledButton.icon(
-                        icon: const Icon(Icons.notifications_active_outlined, size: 20),
-                        label: const Text('Send Reminder to Unpaid',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: kPrimary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: kPrimary.withValues(alpha: 0.6),
-                          padding: const EdgeInsets.symmetric(vertical: 17),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
-                          shadowColor: kPrimary.withValues(alpha: 0.4),
+                    child: AppConstrained(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.notifications_active_outlined, size: 20),
+                          label: const Text('Send Reminder to Unpaid',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: kPrimary.withValues(alpha: 0.6),
+                            padding: const EdgeInsets.symmetric(vertical: 17),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 0,
+                            shadowColor: kPrimary.withValues(alpha: 0.4),
+                          ),
+                          onPressed: _actionBusy ? null : _remindUnpaid,
                         ),
-                        onPressed: _actionBusy ? null : _remindUnpaid,
                       ),
                     ),
                   ),
@@ -304,7 +320,9 @@ class _LiveListScreenState extends State<LiveListScreen>
     return RefreshIndicator(
       onRefresh: _refresh,
       color: kPrimary,
-      child: ListView(
+      child: AppConstrained(
+        wide: 760,
+        child: ListView(
         // Keeps the scroll position when the list is replaced after an update.
         key: PageStorageKey<String>('live-list-${widget.collectionId}'),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -461,6 +479,7 @@ class _LiveListScreenState extends State<LiveListScreen>
             );
           }),
         ],
+        ),
       ),
     );
   }

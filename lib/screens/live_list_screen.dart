@@ -94,7 +94,7 @@ class _LiveListScreenState extends State<LiveListScreen>
                   height: 72,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                      colors: [Color(0xFF00A86B), Color(0xFF007A4D)],
                     ),
                     borderRadius: BorderRadius.circular(36),
                   ),
@@ -104,7 +104,7 @@ class _LiveListScreenState extends State<LiveListScreen>
                 const SizedBox(height: 20),
                 const Text(
                   'Reminders sent',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -283,13 +283,13 @@ class _LiveListScreenState extends State<LiveListScreen>
                           label: const Text('Send Reminder to Unpaid',
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                           style: FilledButton.styleFrom(
-                            backgroundColor: kPrimary,
+                            backgroundColor: kAccent,
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: kPrimary.withValues(alpha: 0.6),
+                            disabledBackgroundColor: kAccent.withValues(alpha: 0.6),
                             padding: const EdgeInsets.symmetric(vertical: 17),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             elevation: 0,
-                            shadowColor: kPrimary.withValues(alpha: 0.4),
+                            shadowColor: kAccent.withValues(alpha: 0.4),
                           ),
                           onPressed: _actionBusy ? null : _remindUnpaid,
                         ),
@@ -348,7 +348,7 @@ class _LiveListScreenState extends State<LiveListScreen>
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                  colors: [Color(0xFF00A86B), Color(0xFF007A4D)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -722,18 +722,18 @@ class _RefreshWarning extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+        color: const Color(0xFFFFF7E8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFF5A623)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_rounded, size: 18, color: Color(0xFFB45309)),
+          const Icon(Icons.cloud_off_rounded, size: 18, color: Color(0xFFE08E0B)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               '$message Showing the last known list.',
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF92400E)),
+              style: const TextStyle(fontSize: 12.5, color: Color(0xFF333333)),
             ),
           ),
           TextButton(

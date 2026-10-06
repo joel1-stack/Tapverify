@@ -267,7 +267,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: const Text('New Collection',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: Color(0xFF111827))),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: Color(0xFF1A1A1A))),
       ),
       body: FadeTransition(
         opacity: _fadeIn,
@@ -536,7 +536,7 @@ class _SectionCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF111827),
+                  color: Color(0xFF1A1A1A),
                 ),
               ),
             ],
@@ -581,7 +581,7 @@ class _StyledField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF374151)),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF333333)),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -596,7 +596,7 @@ class _StyledField extends StatelessWidget {
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15, height: 1.5),
             prefixText: prefix,
-            prefixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF0D9488)),
+            prefixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF00A86B)),
             prefixIcon: Icon(icon, color: kPrimary, size: 20),
             filled: true,
             fillColor: const Color(0xFFF9FAFB),
@@ -659,7 +659,7 @@ class _MemberPreview extends StatelessWidget {
 
     final names = members.where((m) => m.name.isNotEmpty).length;
     return _PreviewBox(
-      color: unreadable > 0 ? const Color(0xFFB45309) : kSuccess,
+      color: unreadable > 0 ? const Color(0xFFE08E0B) : kSuccess,
       icon: unreadable > 0 ? Icons.warning_amber_rounded : Icons.check_circle_outline,
       text: [
         '${members.length} ${members.length == 1 ? "person" : "people"} ready'
@@ -719,7 +719,7 @@ class _DateField extends StatelessWidget {
       children: [
         const Text(
           'Due date (optional)',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF374151)),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF333333)),
         ),
         const SizedBox(height: 8),
         InkWell(
@@ -750,7 +750,7 @@ class _DateField extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: dueDate == null ? Colors.grey[500] : const Color(0xFF111827),
+                      color: dueDate == null ? Colors.grey[500] : const Color(0xFF1A1A1A),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -836,7 +836,7 @@ class _PayoutOption extends StatelessWidget {
                     children: [
                       Text(title,
                           style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF111827))),
+                              fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF1A1A1A))),
                       const SizedBox(height: 2),
                       Text(subtitle,
                           style: TextStyle(fontSize: 12, color: Colors.grey[600])),
@@ -848,7 +848,7 @@ class _PayoutOption extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                        colors: [Color(0xFF00A86B), Color(0xFF007A4D)],
                       ),
                       borderRadius: BorderRadius.circular(20),
                     ),

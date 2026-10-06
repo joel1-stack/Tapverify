@@ -67,17 +67,17 @@ class BackendWarningBanner extends StatelessWidget {
     if (!kBackendMisconfigured) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
-      color: const Color(0xFFFFFBEB),
+      color: const Color(0xFFFFF7E8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFB45309)),
+          const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFE08E0B)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'This build is pointed at $kApiBaseUrl. Rebuild with '
               '--dart-define=API_BASE_URL=https://your-api-host',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
             ),
           ),
         ],

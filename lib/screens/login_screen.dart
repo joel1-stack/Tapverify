@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFF0FDFA),
+              Color(0xFFE6F7F0),
               Colors.white,
             ],
             stops: [0.0, 0.4],
@@ -176,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen>
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFF111827),
+                                color: const Color(0xFF1A1A1A),
                                 height: 1.2,
                               ),
                             ),
@@ -265,7 +265,7 @@ class _LoginForm extends StatelessWidget {
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: const Color(0xFF0D9488).withValues(alpha: 0.05),
+            color: const Color(0xFF00A86B).withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -309,20 +309,20 @@ class _LoginForm extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D9488).withValues(alpha: 0.08),
+                  color: const Color(0xFF00A86B).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF99F6E4)),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.science_outlined, size: 16, color: Color(0xFF0D9488)),
+                    const Icon(Icons.science_outlined, size: 16, color: Color(0xFF00A86B)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Semantics(
                         liveRegion: true,
                         child: Text(
                           'Sandbox mode: your code is $devCode',
-                          style: const TextStyle(color: Color(0xFF0D9488), fontSize: 13, fontWeight: FontWeight.w600),
+                          style: const TextStyle(color: Color(0xFF00A86B), fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -338,18 +338,18 @@ class _LoginForm extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.3)),
+                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, size: 18, color: Color(0xFFDC2626)),
+                    const Icon(Icons.error_outline, size: 18, color: Color(0xFFEF4444)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Semantics(
                         liveRegion: true,
                         child: Text(
                           error!,
-                          style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13, fontWeight: FontWeight.w500),
+                          style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
@@ -362,7 +362,7 @@ class _LoginForm extends StatelessWidget {
             onPressed: busy ? null : (codeSent ? onContinue : onSendCode),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 18),
-              backgroundColor: const Color(0xFF0D9488),
+              backgroundColor: const Color(0xFF00A86B),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -422,7 +422,7 @@ class _PhoneField extends StatelessWidget {
       children: [
         const Text(
           'Phone Number',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -443,10 +443,10 @@ class _PhoneField extends StatelessWidget {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D9488).withValues(alpha: 0.12),
+                color: const Color(0xFF00A86B).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.phone_outlined, color: Color(0xFF0D9488), size: 20),
+              child: const Icon(Icons.phone_outlined, color: Color(0xFF00A86B), size: 20),
             ),
             filled: true,
             fillColor: const Color(0xFFF9FAFB),
@@ -460,7 +460,7 @@ class _PhoneField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF0D9488), width: 2),
+              borderSide: const BorderSide(color: Color(0xFF00A86B), width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           ),
@@ -487,7 +487,7 @@ class _CodeField extends StatelessWidget {
       children: [
         const Text(
           'Code from SMS',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -514,7 +514,7 @@ class _CodeField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF0D9488), width: 2),
+              borderSide: const BorderSide(color: Color(0xFF00A86B), width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           ),

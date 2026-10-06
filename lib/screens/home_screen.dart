@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen>
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: const Text('My Collections',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: Color(0xFF111827))),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: Color(0xFF1A1A1A))),
         centerTitle: false,
         actions: [
           Container(
@@ -333,12 +333,12 @@ class _CollectionCardState extends State<_CollectionCard>
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: _hovered ? const Color(0xFF0D9488) : const Color(0xFFE5E7EB),
+                color: _hovered ? const Color(0xFF00A86B) : const Color(0xFFE5E7EB),
                 width: _hovered ? 2 : 1,
               ),
               boxShadow: _hovered ? [
                 BoxShadow(
-                  color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+                  color: const Color(0xFF00A86B).withValues(alpha: 0.15),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -407,7 +407,7 @@ class _CollectionCardState extends State<_CollectionCard>
                                 style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF111827),
+                                  color: Color(0xFF1A1A1A),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -540,7 +540,7 @@ class _EmptyState extends StatelessWidget {
             const Text(
               'No collections yet',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
             ),
             const SizedBox(height: 10),
             Text(
@@ -594,7 +594,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 20),
             const Text(
               'Something went wrong',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
             ),
             const SizedBox(height: 8),
             Text(

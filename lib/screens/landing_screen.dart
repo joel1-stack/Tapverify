@@ -18,7 +18,7 @@ class LandingScreen extends StatefulWidget {
 
 class _LandingScreenState extends State<LandingScreen>
     with SingleTickerProviderStateMixin {
-  static const int _sectionCount = 8;
+  static const int _sectionCount = 9;
 
   late final AnimationController _controller;
   late final List<Animation<double>> _fadeAnimations;
@@ -140,9 +140,10 @@ class _LandingScreenState extends State<LandingScreen>
                 4,
                 _HowItWorks(key: _howItWorksKey),
               ),
-              _buildAnimatedSection(5, const _DetectionTable()),
-              _buildAnimatedSection(6, const _MemberExperience()),
-              _buildAnimatedSection(7, const _Footer()),
+              _buildAnimatedSection(5, const _LiveDemo()),
+              _buildAnimatedSection(6, const _DetectionTable()),
+              _buildAnimatedSection(7, const _MemberExperience()),
+              _buildAnimatedSection(8, const _Footer()),
             ],
           ),
         ),
@@ -281,6 +282,15 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
     final wide = MediaQuery.of(context).size.width > 860;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: wide ? 80 : 48),
+      // Very light green wash from the left, fading into clean white.
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [kPrimaryLight, Colors.white, Colors.white],
+          stops: [0.0, 0.55, 1.0],
+        ),
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -310,173 +320,168 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
                   ),
                 ),
               ),
+              // Soft light green curve at the bottom left of the hero.
               Positioned(
-                bottom: -80,
-                left: -80,
+                bottom: -110,
+                left: -110,
                 child: Container(
-                  width: 250,
-                  height: 250,
-                  decoration: BoxDecoration(
+                  width: 320,
+                  height: 320,
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFF0F766E).withValues(alpha: 0.1),
-                        Colors.transparent,
-                      ],
-                    ),
+                    color: kPrimaryLight,
                   ),
                 ),
               ),
-              Flex(
-                direction: wide ? Axis.horizontal : Axis.vertical,
-                crossAxisAlignment: wide
-                    ? CrossAxisAlignment.center
-                    : CrossAxisAlignment.stretch,
+              Column(
                 children: [
-                  Expanded(
-                    flex: wide ? 6 : 0,
-                    child: Column(
-                      crossAxisAlignment: wide
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(50),
-                            border: Border.all(color: const Color(0xFF99F6E4), width: 1.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0D9488).withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF16A34A),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Built for Kenyan chamas, welfare & school groups',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Stop asking people\nif they have paid.',
-                          textAlign: wide ? TextAlign.left : TextAlign.center,
-                          style: TextStyle(
-                            fontSize: wide ? 52 : 42,
-                            fontWeight: FontWeight.w900,
-                            height: 1.1,
-                            color: const Color(0xFF111827),
-                            letterSpacing: -1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
-                          ).createShader(bounds),
-                          child: Text(
-                            'Open this and see.',
-                            textAlign: wide ? TextAlign.left : TextAlign.center,
-                            style: TextStyle(
-                              fontSize: wide ? 52 : 42,
-                              fontWeight: FontWeight.w900,
-                              height: 1.1,
-                              color: Colors.white,
-                              letterSpacing: -1.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'One live list for your chama, welfare group or school '
-                          'collection: who has paid, who has not, and how much is '
-                          'still out. Digital payments appear automatically.',
-                          textAlign: wide ? TextAlign.left : TextAlign.center,
-                          style: TextStyle(fontSize: 18, color: Colors.grey[700],
-                              height: 1.6, fontWeight: FontWeight.w400),
-                        ),
-                        const SizedBox(height: 32),
-                        // Wrap, not Row: two full-width labels cannot fit side
-                        // by side on a 360dp phone, which overflowed.
-                        Wrap(
-                          alignment: wide ? WrapAlignment.start : WrapAlignment.center,
-                          spacing: 14,
-                          runSpacing: 12,
+                  Flex(
+                    direction: wide ? Axis.horizontal : Axis.vertical,
+                    crossAxisAlignment: wide
+                        ? CrossAxisAlignment.center
+                        : CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: wide ? 6 : 0,
+                        child: Column(
+                          crossAxisAlignment: wide
+                              ? CrossAxisAlignment.start
+                              : CrossAxisAlignment.center,
                           children: [
-                            FilledButton(
-                              onPressed: widget.onLogin,
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-                                backgroundColor: kPrimary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 0,
-                                shadowColor: kPrimary.withValues(alpha: 0.4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(color: kPrimaryBorder, width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: kPrimary.withValues(alpha: 0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('Start Collecting for Free', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward, size: 20),
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: kPrimary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Built for Kenyan chamas, welfare & school groups',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                            OutlinedButton(
-                              onPressed: widget.onSeeHowItWorks,
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-                                side: const BorderSide(color: Color(0xFFD1D5DB), width: 1.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Stop asking people\nif they have paid.',
+                              textAlign: wide ? TextAlign.left : TextAlign.center,
+                              style: TextStyle(
+                                fontSize: wide ? 52 : 42,
+                                fontWeight: FontWeight.w900,
+                                height: 1.1,
+                                color: kBrandInk,
+                                letterSpacing: -1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [kPrimary, kPrimaryDark],
+                              ).createShader(bounds),
+                              child: Text(
+                                'Open this and see.',
+                                textAlign: wide ? TextAlign.left : TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: wide ? 52 : 42,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.1,
+                                  color: Colors.white,
+                                  letterSpacing: -1.5,
                                 ),
                               ),
-                              child: const Text('See How It Works', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'One live list for your chama, welfare group or school '
+                              'collection: who has paid, who has not, and how much is '
+                              'still out. Digital payments appear automatically.',
+                              textAlign: wide ? TextAlign.left : TextAlign.center,
+                              style: TextStyle(fontSize: 18, color: Colors.grey[700],
+                                  height: 1.6, fontWeight: FontWeight.w400),
+                            ),
+                            const SizedBox(height: 32),
+                            // Wrap, not Row: two full-width labels cannot fit
+                            // side by side on a 360dp phone.
+                            Wrap(
+                              alignment: wide ? WrapAlignment.start : WrapAlignment.center,
+                              spacing: 14,
+                              runSpacing: 12,
+                              children: [
+                                FilledButton(
+                                  onPressed: widget.onLogin,
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+                                    backgroundColor: kPrimary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                    shadowColor: kPrimary.withValues(alpha: 0.4),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('Start Collecting for Free', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                      SizedBox(width: 8),
+                                      Icon(Icons.arrow_forward, size: 20),
+                                    ],
+                                  ),
+                                ),
+                                // Secondary: white with a green border, green
+                                // label and a play icon.
+                                OutlinedButton.icon(
+                                  onPressed: widget.onSeeHowItWorks,
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+                                    side: const BorderSide(color: kPrimary, width: 1.6),
+                                    foregroundColor: kPrimary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                                  label: const Text('See How It Works',
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        Wrap(
-                          alignment: wide ? WrapAlignment.start : WrapAlignment.center,
-                          spacing: 16,
-                          runSpacing: 8,
-                          children: [
-                            _TrustBadge(icon: Icons.people_outline, text: 'No app for members'),
-                            _TrustBadge(icon: Icons.sms_outlined, text: 'SMS notifications'),
-                            _TrustBadge(icon: Icons.auto_awesome_outlined, text: 'Auto-detect Till/Paybill'),
-                            _TrustBadge(icon: Icons.download_outlined, text: 'Export CSV / Print'),
-                          ],
-                        ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(width: wide ? 48 : 0, height: wide ? 0 : 40),
+                      Expanded(
+                        flex: wide ? 5 : 0,
+                        child: const Center(child: _HeroArt()),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: wide ? 48 : 0, height: wide ? 0 : 40),
-                  Expanded(
-                    flex: wide ? 5 : 0,
-                    child: const Center(child: PhoneDemo()),
-                  ),
+                  const SizedBox(height: 48),
+                  const _FeatureBar(),
                 ],
               ),
             ],
@@ -487,28 +492,216 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
   }
 }
 
-class _TrustBadge extends StatelessWidget {
-  const _TrustBadge({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
+/// Hero artwork: the brand phone mockup with the torn-paper portrait of a
+/// member overlapping it in front, plus a small payment-detected chip, laid
+/// out exactly like the brand artwork.
+class _HeroArt extends StatelessWidget {
+  const _HeroArt();
+
+  @override
+  Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: SizedBox(
+        width: 470,
+        height: 600,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Light green shape giving the composition a soft base.
+            Positioned(
+              left: 0,
+              bottom: 24,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kPrimaryLight,
+                ),
+              ),
+            ),
+            // Phone mockup photo, lightly rounded with a deep soft shadow.
+            Positioned(
+              right: 8,
+              top: 24,
+              child: Container(
+                width: 300,
+                height: 540,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(36),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.16),
+                      blurRadius: 44,
+                      offset: const Offset(0, 22),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(36),
+                  child: Image.asset(
+                    'assets/images/phone_mockup.png',
+                    fit: BoxFit.cover,
+                    semanticLabel: 'The TapVerify app open on a phone',
+                  ),
+                ),
+              ),
+            ),
+            // Member portrait with the torn-paper edge, in front of the phone.
+            Positioned(
+              left: 0,
+              bottom: 34,
+              width: 372,
+              child: Image.asset(
+                'assets/images/hero_woman.png',
+                fit: BoxFit.contain,
+                cacheWidth: (372 * dpr).round(),
+                semanticLabel: 'A member smiling at her phone',
+              ),
+            ),
+            // Small proof chip floating over the phone.
+            Positioned(
+              left: 0,
+              top: 76,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: kPrimaryBorder, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, size: 18, color: kSuccess),
+                    SizedBox(width: 8),
+                    Text(
+                      'Payment detected - KES 500',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: kBrandInk,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Four quick trust signals in one clean white bar under the hero.
+class _FeatureBar extends StatelessWidget {
+  const _FeatureBar();
+
+  static const _items = [
+    (Icons.shield_outlined, 'Protected', 'Your collection data stays private.'),
+    (Icons.bolt_outlined, 'Auto-detected', 'Till and Paybill payments mark themselves.'),
+    (Icons.people_outline, 'No app needed', 'Members pay from one SMS link.'),
+    (Icons.sms_outlined, 'Always in the loop', 'Reminders and receipts by SMS.'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF0D9488)),
-          const SizedBox(width: 6),
-          Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: kHairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final cols = c.maxWidth > 820 ? 4 : (c.maxWidth > 480 ? 2 : 1);
+          final width = (c.maxWidth - (cols - 1) * 12) / cols;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 20,
+            children: [
+              for (final (icon, title, subtitle) in _items)
+                SizedBox(
+                  width: width,
+                  child: _FeatureItem(
+                    icon: icon,
+                    title: title,
+                    subtitle: subtitle,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FeatureItem extends StatelessWidget {
+  const _FeatureItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: kPrimaryLight,
+          ),
+          child: Icon(icon, size: 26, color: kPrimary),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
+            color: kBrandInk,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12.5,
+            color: Colors.grey[600],
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -582,10 +775,10 @@ class _PainCardState extends State<_PainCard> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _hovered ? const Color(0xFF0D9488) : const Color(0xFFE5E7EB), width: _hovered ? 2 : 1),
+          border: Border.all(color: _hovered ? const Color(0xFF00A86B) : const Color(0xFFE5E7EB), width: _hovered ? 2 : 1),
           boxShadow: _hovered ? [
             BoxShadow(
-              color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+              color: const Color(0xFF00A86B).withValues(alpha: 0.15),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -605,7 +798,7 @@ class _PainCardState extends State<_PainCard> {
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
-                  color: Color(0xFFDC2626),
+                  color: Color(0xFFEF4444),
                 ),
               ),
             ),
@@ -861,7 +1054,7 @@ class _PhotoCardState extends State<_PhotoCard> {
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF111827),
+                      color: Color(0xFF1A1A1A),
                       height: 1.3,
                     ),
                   ),
@@ -956,10 +1149,10 @@ class _StepCardState extends State<_StepCard> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _hovered ? const Color(0xFF0D9488) : const Color(0xFFE5E7EB), width: _hovered ? 2 : 1),
+          border: Border.all(color: _hovered ? const Color(0xFF00A86B) : const Color(0xFFE5E7EB), width: _hovered ? 2 : 1),
           boxShadow: _hovered ? [
             BoxShadow(
-              color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+              color: const Color(0xFF00A86B).withValues(alpha: 0.15),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -977,21 +1170,21 @@ class _StepCardState extends State<_StepCard> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: _hovered
-                          ? [const Color(0xFF0D9488), const Color(0xFF0F766E)]
-                          : [const Color(0xFF0D9488).withValues(alpha: 0.12), const Color(0xFF0F766E).withValues(alpha: 0.08)],
+                          ? [const Color(0xFF00A86B), const Color(0xFF007A4D)]
+                          : [const Color(0xFF00A86B).withValues(alpha: 0.12), const Color(0xFF007A4D).withValues(alpha: 0.08)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: _hovered ? [
                       BoxShadow(
-                        color: const Color(0xFF0D9488).withValues(alpha: 0.3),
+                        color: const Color(0xFF00A86B).withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ] : null,
                   ),
-                  child: Icon(icon, color: _hovered ? Colors.white : const Color(0xFF0D9488), size: 24),
+                  child: Icon(icon, color: _hovered ? Colors.white : const Color(0xFF00A86B), size: 24),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1003,7 +1196,7 @@ class _StepCardState extends State<_StepCard> {
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 16,
-                          color: Color(0xFF111827),
+                          color: Color(0xFF1A1A1A),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1023,6 +1216,23 @@ class _StepCardState extends State<_StepCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The interactive product demo, kept as its own section so the hero can use
+/// the brand artwork instead.
+class _LiveDemo extends StatelessWidget {
+  const _LiveDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _Section(
+      background: kPrimaryLight,
+      title: 'See the live list in action',
+      subtitle: 'This is the real screen a secretary uses. Tap around: mark '
+          'someone as paid, send a reminder, watch the totals move.',
+      child: Center(child: PhoneDemo()),
     );
   }
 }
@@ -1120,7 +1330,7 @@ class _DetectionRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: recommended ? const Color(0xFF0D9488).withValues(alpha: 0.04) : Colors.white,
+        color: recommended ? const Color(0xFF00A86B).withValues(alpha: 0.04) : Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(isFirst ? 20 : 0),
           topRight: Radius.circular(isFirst ? 20 : 0),
@@ -1128,7 +1338,7 @@ class _DetectionRow extends StatelessWidget {
           bottomRight: Radius.circular(isLast ? 20 : 0),
         ),
         border: Border.all(
-          color: recommended ? const Color(0xFF99F6E4) : const Color(0xFFE5E7EB),
+          color: recommended ? const Color(0xFFA7F3D0) : const Color(0xFFE5E7EB),
           width: recommended ? 1.5 : 1,
         ),
       ),
@@ -1139,13 +1349,13 @@ class _DetectionRow extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: recommended
-                  ? const Color(0xFF0D9488).withValues(alpha: 0.12)
+                  ? const Color(0xFF00A86B).withValues(alpha: 0.12)
                   : Colors.grey.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
-              color: recommended ? const Color(0xFF0D9488) : Colors.grey[500],
+              color: recommended ? const Color(0xFF00A86B) : Colors.grey[500],
               size: 20,
             ),
           ),
@@ -1166,7 +1376,7 @@ class _DetectionRow extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
-                        color: Color(0xFF111827),
+                        color: Color(0xFF1A1A1A),
                       ),
                     ),
                     if (recommended)
@@ -1195,7 +1405,7 @@ class _DetectionRow extends StatelessWidget {
                   detection,
                   style: TextStyle(
                     fontSize: 13,
-                    color: recommended ? const Color(0xFF0F766E) : Colors.grey[600],
+                    color: recommended ? const Color(0xFF007A4D) : Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1206,7 +1416,7 @@ class _DetectionRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
               color: recommended
-                  ? const Color(0xFF16A34A).withValues(alpha: 0.12)
+                  ? const Color(0xFF00A86B).withValues(alpha: 0.12)
                   : Colors.grey.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
@@ -1215,14 +1425,14 @@ class _DetectionRow extends StatelessWidget {
               children: [
                 Icon(
                   recommended ? Icons.check_circle : Icons.edit_outlined,
-                  color: recommended ? const Color(0xFF16A34A) : Colors.grey[500],
+                  color: recommended ? const Color(0xFF00A86B) : Colors.grey[500],
                   size: 14,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   recommended ? 'Automatic' : 'Manual',
                   style: TextStyle(
-                    color: recommended ? const Color(0xFF16A34A) : Colors.grey[600],
+                    color: recommended ? const Color(0xFF00A86B) : Colors.grey[600],
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
@@ -1269,7 +1479,7 @@ class _MemberExperienceState extends State<_MemberExperience> with SingleTickerP
   @override
   Widget build(BuildContext context) {
     return _Section(
-      background: const Color(0xFFF0FDFA),
+      background: const Color(0xFFE6F7F0),
       title: 'Members do nothing new',
       subtitle: 'No app to download. No account to create. They receive one '
           'SMS, pay the way they already know, and get a confirmation.',
@@ -1283,10 +1493,10 @@ class _MemberExperienceState extends State<_MemberExperience> with SingleTickerP
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF99F6E4), width: 1.5),
+                border: Border.all(color: const Color(0xFFA7F3D0), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0D9488).withValues(alpha: 0.08),
+                    color: const Color(0xFF00A86B).withValues(alpha: 0.08),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -1300,15 +1510,15 @@ class _MemberExperienceState extends State<_MemberExperience> with SingleTickerP
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D9488).withValues(alpha: 0.12),
+                          color: const Color(0xFF00A86B).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.sms_outlined, color: Color(0xFF0D9488), size: 20),
+                        child: const Icon(Icons.sms_outlined, color: Color(0xFF00A86B), size: 20),
                       ),
                       const SizedBox(width: 12),
                       const Text(
                         'Example SMS Member Receives',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF111827)),
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF1A1A1A)),
                       ),
                     ],
                   ),
@@ -1328,7 +1538,7 @@ class _MemberExperienceState extends State<_MemberExperience> with SingleTickerP
                       '(Use your full name as reference)\n\n'
                       'Or pay here: https://tapverify.co/p/abc123',
                       style: TextStyle(
-                          fontFamily: 'monospace', fontSize: 13, height: 1.6, color: Color(0xFF374151)),
+                          fontFamily: 'monospace', fontSize: 13, height: 1.6, color: Color(0xFF333333)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -1364,7 +1574,7 @@ class _MemberStep extends StatelessWidget {
           height: 32,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+              colors: [Color(0xFF00A86B), Color(0xFF007A4D)],
             ),
             borderRadius: BorderRadius.circular(16),
           ),
@@ -1386,70 +1596,127 @@ class _MemberStep extends StatelessWidget {
   }
 }
 
+/// Footer: a soft green wave flowing out of the light section above, into a
+/// deep green body with the tagline and contact details centred.
 class _Footer extends StatelessWidget {
   const _Footer();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF0F172A),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 56),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              // onDark renders the mark white on a light chip: the old version
-              // hardcoded a near black wordmark on this dark background, which
-              // was effectively invisible.
-              const _LogoChip(onDark: true),
-              const SizedBox(height: 20),
-              Text(
-                'Stop asking people if they have paid. Open this and see.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[300], fontSize: 15, height: 1.5),
-              ),
-              const SizedBox(height: 24),
-              // Real links: these used to be plain rows, so nothing happened.
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 28,
-                runSpacing: 12,
-                children: const [
-                  _FooterLink(
-                    icon: Icons.chat_bubble_outline,
-                    text: 'WhatsApp +254 715 641 339',
-                    url: 'https://wa.me/254715641339',
+    return Column(
+      children: [
+        // Wave transition. Its background continues the light green section
+        // above, so the curve reads as the page flowing into the footer.
+        Container(
+          color: kPrimaryLight,
+          height: 110,
+          child: const CustomPaint(
+            size: Size(double.infinity, 110),
+            painter: _FooterWavePainter(),
+          ),
+        ),
+        // Deep green body.
+        Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [kPrimaryDark, Color(0xFF005E3E)],
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Column(
+                children: [
+                  const _LogoChip(onDark: true),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Stop asking people if they have paid. Open this and see.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                    ),
                   ),
-                  _FooterLink(
-                    icon: Icons.email_outlined,
-                    text: 'hello@tapverify.co',
-                    url: 'mailto:hello@tapverify.co',
+                  const SizedBox(height: 28),
+                  // Real links: these used to be plain rows, so nothing
+                  // happened. Icons sit in small rounded chips.
+                  const Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 28,
+                    runSpacing: 12,
+                    children: [
+                      _FooterLink(
+                        icon: Icons.chat_bubble_outline,
+                        text: 'WhatsApp +254 715 641 339',
+                        url: 'https://wa.me/254715641339',
+                      ),
+                      _FooterLink(
+                        icon: Icons.email_outlined,
+                        text: 'hello@tapverify.co',
+                        url: 'mailto:hello@tapverify.co',
+                      ),
+                      _FooterLink(
+                        icon: Icons.public,
+                        text: 'tapverify.vercel.app',
+                        url: 'https://tapverify.vercel.app',
+                      ),
+                    ],
                   ),
-                  _FooterLink(
-                    icon: Icons.public,
-                    text: 'tapverify.vercel.app',
-                    url: 'https://tapverify.vercel.app',
+                  const SizedBox(height: 32),
+                  Container(
+                    height: 1,
+                    color: Colors.white24,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '© ${DateTime.now().year} TapVerify. Built for Kenya.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-              Container(
-                height: 1,
-                color: Colors.white24,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '© ${DateTime.now().year} TapVerify. Built for Kenya.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[400], fontSize: 13),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
+}
+
+/// A wide, gentle wave; light green at the crest, fading into the deep green
+/// of the footer body so there is no seam between them.
+class _FooterWavePainter extends CustomPainter {
+  const _FooterWavePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final path = Path()
+      ..moveTo(0, h)
+      ..lineTo(0, h * 0.55)
+      ..quadraticBezierTo(w * 0.28, 0, w * 0.55, h * 0.38)
+      ..quadraticBezierTo(w * 0.78, h * 0.74, w, h * 0.42)
+      ..lineTo(w, h)
+      ..close();
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [kPrimaryLight, kPrimary, kPrimaryDark],
+        stops: [0.0, 0.5, 1.0],
+      ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _FooterWavePainter oldDelegate) => false;
 }
 
 class _FooterLink extends StatelessWidget {
@@ -1472,18 +1739,25 @@ class _FooterLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: _open,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: Colors.grey[300]),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 16, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
             Text(text,
-                style: TextStyle(
-                    color: Colors.grey[300],
-                    fontSize: 13,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w500)),
           ],
         ),
@@ -1518,7 +1792,7 @@ class _Section extends StatelessWidget {
               Text(title,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                      fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF111827), height: 1.2)),
+                      fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A), height: 1.2)),
               const SizedBox(height: 16),
               Text(subtitle,
                   textAlign: TextAlign.center,

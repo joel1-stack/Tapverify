@@ -22,14 +22,24 @@ const kApiBaseUrl = String.fromEnvironment(
   defaultValue: 'http://127.0.0.1:8000',
 );
 
-const kPrimary = Color(0xFF0D9488);
-const kPrimaryDark = Color(0xFF0F766E);
-const kSuccess = Color(0xFF16A34A);
-const kDanger = Color(0xFFDC2626);
-const kBrandInk = Color(0xFF111827);
-const kSurface = Color(0xFFF9FAFB);
-const kHairline = Color(0xFFE5E7EB);
-const kMuted = Color(0xFF6B7280);
+/// TapVerify color system, derived from the brand logo (green shield +
+/// checkmark with an orange accent). Every screen reads from these constants,
+/// so a palette change is one edit here.
+const kPrimary = Color(0xFF00A86B); // TapVerify Green: brand, buttons, paid
+const kPrimaryDark = Color(0xFF007A4D); // Deep Green: pressed, headers, footer
+const kPrimaryLight = Color(0xFFE6F7F0); // Light Green: soft highlights, bg
+const kAccent = Color(0xFFF5A623); // Orange: reminders, outstanding, badges
+const kAccentDark = Color(0xFFE08E0B); // Orange: hover / pressed / link text
+const kSuccess = Color(0xFF00A86B); // Paid, verified, completed
+const kWarning = Color(0xFFF5A623); // Pending, needs attention
+const kDanger = Color(0xFFEF4444); // Failed, overdue, delete
+const kInfo = Color(0xFF3B82F6); // Neutral information
+const kBrandInk = Color(0xFF1A1A1A); // Near Black: main text
+const kTextDark = Color(0xFF333333); // Dark Gray: secondary text
+const kSurface = Color(0xFFF9FAFB); // Off White: app background
+const kHairline = Color(0xFFE5E7EB); // Borders, dividers
+const kMuted = Color(0xFF6B7280); // Placeholders, icons
+const kPrimaryBorder = Color(0xFFA7F3D0); // Soft green outline on white
 
 /// True while the app is pointed at a local development backend. The web build
 /// then shows a small strip so nobody mistakes a dev build for production.

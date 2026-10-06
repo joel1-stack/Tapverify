@@ -218,7 +218,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                     label: const Text('Send reminder to this person only',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
+                      foregroundColor: kAccentDark,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),

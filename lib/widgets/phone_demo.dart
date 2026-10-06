@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../main.dart' show kPrimary, kSuccess;
+import '../main.dart' show kAccent, kAccentDark, kPrimary, kSuccess;
 import '../utils/format.dart';
 
 /// An interactive, offline demo of the TapVerify app, framed like a phone.
@@ -146,7 +146,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                 ),
                 child: const Text(
                   'Reset',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF333333)),
                 ),
               ),
             ),
@@ -162,7 +162,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
       height: widget.height + 16,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF111827),
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(48),
         boxShadow: [
           BoxShadow(
@@ -234,7 +234,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
         children: [
           const Text(
             '9:41',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
           ),
           const Spacer(),
           Icon(Icons.signal_cellular_alt, size: 13, color: Colors.grey[700]),
@@ -261,7 +261,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
               const Expanded(
                 child: Text(
                   'My Collections',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
                 ),
               ),
               _roundIcon(Icons.logout, tooltip: 'Logout (demo)', onTap: () => _showToast('This is a demo - stay as long as you like', success: false)),
@@ -361,7 +361,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                   const Expanded(
                     child: Text(
                       _title,
-                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
                     ),
                   ),
                   Icon(Icons.chevron_right, color: Colors.grey[400]),
@@ -374,7 +374,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                   const SizedBox(width: 10),
                   _miniStat('Collected', Format.kes(_collected), kSuccess),
                   const SizedBox(width: 10),
-                  _miniStat('Outstanding', Format.kes(_outstanding), const Color(0xFFDC2626)),
+                  _miniStat('Outstanding', Format.kes(_outstanding), kAccent),
                 ],
               ),
               const SizedBox(height: 12),
@@ -437,7 +437,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                   _title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                  style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
                 ),
               ),
               _roundIcon(Icons.share_outlined, tooltip: 'Share', onTap: () => _showToast('Share link copied (demo)')),
@@ -455,7 +455,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                   const Expanded(
                     child: Text(
                       'Members',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
                     ),
                   ),
                   Text(
@@ -504,7 +504,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [kPrimary, Color(0xFF0F766E)],
+          colors: [kPrimary, Color(0xFF007A4D)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -585,7 +585,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
   }
 
   Widget _memberTile(int index, _DemoMember m) {
-    final color = m.paid ? kSuccess : const Color(0xFF0D9488);
+    final color = m.paid ? kSuccess : const Color(0xFF00A86B);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
@@ -619,7 +619,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                         m.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
                       ),
                       Text(
                         Format.phone(m.phone),
@@ -631,7 +631,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (m.paid ? kSuccess : const Color(0xFFDC2626)).withValues(alpha: 0.1),
+                    color: (m.paid ? kSuccess : const Color(0xFFEF4444)).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -639,7 +639,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
-                      color: m.paid ? kSuccess : const Color(0xFFDC2626),
+                      color: m.paid ? kSuccess : const Color(0xFFEF4444),
                     ),
                   ),
                 ),
@@ -730,7 +730,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                           Text(
                             m.name,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A)),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -743,7 +743,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
-                                color: (m.paid ? kSuccess : const Color(0xFFDC2626)).withValues(alpha: 0.1),
+                                color: (m.paid ? kSuccess : const Color(0xFFEF4444)).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
@@ -752,7 +752,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                                   Icon(
                                     m.paid ? Icons.check_circle : Icons.schedule,
                                     size: 14,
-                                    color: m.paid ? kSuccess : const Color(0xFFDC2626),
+                                    color: m.paid ? kSuccess : const Color(0xFFEF4444),
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
@@ -760,7 +760,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,
-                                      color: m.paid ? kSuccess : const Color(0xFFDC2626),
+                                      color: m.paid ? kSuccess : const Color(0xFFEF4444),
                                     ),
                                   ),
                                 ],
@@ -772,12 +772,12 @@ class _PhoneDemoState extends State<PhoneDemo> {
                             FilledButton.icon(
                               icon: const Icon(Icons.payments_outlined, size: 16),
                               label: const Text('Mark as Paid (Cash)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: kSuccess,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 13),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                              ),
+            style: FilledButton.styleFrom(
+              backgroundColor: kAccent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
                               onPressed: () => _markPaid(index),
                             ),
                             const SizedBox(height: 8),
@@ -785,8 +785,8 @@ class _PhoneDemoState extends State<PhoneDemo> {
                               icon: const Icon(Icons.sms_outlined, size: 16),
                               label: const Text('Send reminder SMS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: kPrimary,
-                                side: BorderSide(color: kPrimary.withValues(alpha: 0.6), width: 1.4),
+                                foregroundColor: kAccentDark,
+                                side: BorderSide(color: kAccent.withValues(alpha: 0.7), width: 1.4),
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
                               ),
@@ -802,7 +802,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
                               ),
                               child: const Text(
                                 'Received. The live list updates the moment a payment lands.',
-                                style: TextStyle(fontSize: 12, color: Color(0xFF374151), height: 1.4),
+                                style: TextStyle(fontSize: 12, color: Color(0xFF333333), height: 1.4),
                               ),
                             ),
                         ],
@@ -821,7 +821,7 @@ class _PhoneDemoState extends State<PhoneDemo> {
   // --------------------------------------------------------------- toast ---
 
   Widget _toastBanner(String message) {
-    final color = _toastIsSuccess ? kSuccess : const Color(0xFF0D9488);
+    final color = _toastIsSuccess ? kSuccess : const Color(0xFF00A86B);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 300),

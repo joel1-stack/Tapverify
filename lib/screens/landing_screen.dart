@@ -1,10 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import '../widgets/app_feedback.dart';
-import '../widgets/phone_demo.dart';
 import 'login_screen.dart';
 
 /// Public marketing page: what a visitor sees before logging in.
@@ -1220,21 +1221,226 @@ class _StepCardState extends State<_StepCard> {
   }
 }
 
-/// The interactive product demo, kept as its own section so the hero can use
-/// the brand artwork instead.
-class _LiveDemo extends StatelessWidget {
+/// "See the live list in action": the 3D dashboard mockup floating gently
+/// above a soft shadow, over layered waves drifting through the section in
+/// the brand greens.
+class _LiveDemo extends StatefulWidget {
   const _LiveDemo();
 
   @override
+  State<_LiveDemo> createState() => _LiveDemoState();
+}
+
+class _LiveDemoState extends State<_LiveDemo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _waveController;
+  late final AnimationController _floatController;
+  late final Animation<double> _lift;
+
+  @override
+  void initState() {
+    super.initState();
+    // The wave phase runs 0..1, and the painter draws whole sine cycles, so
+    // the loop repeats with no visible jump.
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 9000),
+    )..repeat();
+    // The phone breathes up and down with settled easing, no bounce.
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat(reverse: true);
+    _lift = CurvedAnimation(parent: _floatController, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const _Section(
-      background: kPrimaryLight,
-      title: 'See the live list in action',
-      subtitle: 'This is the real screen a secretary uses. Tap around: mark '
-          'someone as paid, send a reminder, watch the totals move.',
-      child: Center(child: PhoneDemo()),
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return Container(
+      color: kPrimaryLight,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Stack(
+            children: [
+              // Flowing, layered waves behind everything in this section.
+              Positioned.fill(
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _waveController,
+                    builder: (context, _) => CustomPaint(
+                      size: Size.infinite,
+                      painter: _DemoWavesPainter(_waveController.value),
+                    ),
+                  ),
+                ),
+              ),
+              Column(
+                children: [
+                  const Text(
+                    'See the live list in action',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: kBrandInk,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Collections, progress and totals on one screen: who has '
+                    'paid, how much is in, and what is still out.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      color: Colors.grey[600],
+                      height: 1.6,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 44),
+                  // The floating 3D phone with its grounding shadow.
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 380),
+                      child: AnimatedBuilder(
+                        animation: _lift,
+                        builder: (context, child) {
+                          final lift = _lift.value;
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Transform.translate(
+                                offset: Offset(0, -14 * lift),
+                                child: child,
+                              ),
+                              // Soft shadow: as the phone rises it lifts away
+                              // from the ground, so the shadow shrinks and
+                              // fades with it.
+                              Transform.translate(
+                                offset: const Offset(0, -10),
+                                child: FractionallySizedBox(
+                                  widthFactor: 0.62 * (1 - 0.12 * lift),
+                                  child: Container(
+                                    height: 18,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                              alpha:
+                                                  0.26 * (1 - 0.45 * lift)),
+                                          blurRadius: 26,
+                                          spreadRadius: -2,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                        child: Image.asset(
+                          'assets/images/dashboard_3d.png',
+                          width: double.infinity,
+                          cacheWidth: (380 * dpr).round(),
+                          semanticLabel: 'The TapVerify dashboard on a phone',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
+}
+
+/// Three layered sine bands in the brand greens, each phase-shifted so the
+/// surface keeps drifting. The lightest sits highest; each band fills down to
+/// the section floor, so depth builds towards the bottom.
+class _DemoWavesPainter extends CustomPainter {
+  const _DemoWavesPainter(this.t);
+
+  /// Phase driver, 0..1, one full sine cycle per sweep.
+  final double t;
+
+  static void _band(
+    Canvas canvas,
+    Size size, {
+    required double baseY,
+    required double amp,
+    required double cycles,
+    required double phase,
+    required Color color,
+  }) {
+    const steps = 56;
+    final path = Path();
+    path.moveTo(0, baseY + amp * math.sin(phase));
+    for (var i = 1; i <= steps; i++) {
+      final x = size.width * i / steps;
+      path.lineTo(
+        x,
+        baseY + amp * math.sin(phase + cycles * 2 * math.pi * i / steps),
+      );
+    }
+    path
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final phase = t * 2 * math.pi;
+    _band(
+      canvas,
+      size,
+      baseY: size.height * 0.40,
+      amp: size.height * 0.035,
+      cycles: 1.4,
+      phase: phase,
+      color: kPrimary.withValues(alpha: 0.10),
+    );
+    _band(
+      canvas,
+      size,
+      baseY: size.height * 0.58,
+      amp: size.height * 0.04,
+      cycles: 1.0,
+      phase: phase + 2.3,
+      color: kPrimaryDark.withValues(alpha: 0.10),
+    );
+    _band(
+      canvas,
+      size,
+      baseY: size.height * 0.76,
+      amp: size.height * 0.03,
+      cycles: 1.7,
+      phase: phase + 4.4,
+      color: kPrimary.withValues(alpha: 0.15),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _DemoWavesPainter oldDelegate) =>
+      oldDelegate.t != t;
 }
 
 class _DetectionTable extends StatefulWidget {

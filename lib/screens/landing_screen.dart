@@ -1221,9 +1221,9 @@ class _StepCardState extends State<_StepCard> {
   }
 }
 
-/// "See the live list in action": the 3D dashboard mockup floating gently
-/// above a soft shadow, over layered waves drifting through the section in
-/// the brand greens.
+/// "See the live list in action": the five product screens riding a rotating
+/// 3D turntable (splash, login, code, create account, home) over layered
+/// waves drifting through the section in the brand greens.
 class _LiveDemo extends StatefulWidget {
   const _LiveDemo();
 
@@ -1252,12 +1252,12 @@ class _LiveDemoState extends State<_LiveDemo>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     )..repeat(reverse: true);
-    // The coin toss: one continuous east-west turn plus a nod per 3.6s loop.
-    // The controller is linear and every angle comes from a whole sine cycle,
-    // so the motion never jumps at the seam.
+    // The turntable: one full revolution every 10s, so each of the five
+    // screens faces the viewer for about two seconds. Linear with whole
+    // sine cycles, so the loop never jumps at the seam.
     _spinController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3600),
+      duration: const Duration(milliseconds: 10000),
     )..repeat();
     _lift = CurvedAnimation(parent: _floatController, curve: Curves.easeInOut);
   }
@@ -1307,8 +1307,8 @@ class _LiveDemoState extends State<_LiveDemo>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Collections, progress and totals on one screen: who has '
-                    'paid, how much is in, and what is still out.',
+                    'From sign-in to the live list: every screen your group '
+                    'runs on, in motion.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 17,
@@ -1318,74 +1318,37 @@ class _LiveDemoState extends State<_LiveDemo>
                     ),
                   ),
                   const SizedBox(height: 44),
-                  // The floating 3D phone with its grounding shadow.
+                  // Five product screens on a rotating 3D turntable.
                   Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 380),
-                      child: AnimatedBuilder(
-                        animation: Listenable.merge(
-                            [_spinController, _floatController]),
-                        builder: (context, child) {
-                          final lift = _lift.value;
-                          // East-west sweep with a coin-flip nod and a hint of
-                          // roll: a slow corkscrew that reads as circular
-                          // motion but never turns edge-on, so the screen
-                          // stays readable the whole way around.
-                          final theta =
-                              _spinController.value * 2 * math.pi;
-                          final turn = math.sin(theta).abs();
-                          final pose = Matrix4.identity()
-                            ..setEntry(3, 2, 0.0012)
-                            ..rotateY(math.sin(theta) * 0.55)
-                            ..rotateX(math.cos(theta) * 0.14)
-                            ..rotateZ(math.sin(theta) * 0.07);
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Transform.translate(
-                                offset: Offset(0, -14 * lift),
-                                child: Transform(
-                                  transform: pose,
-                                  alignment: Alignment.center,
-                                  child: child,
-                                ),
+                      constraints: const BoxConstraints(maxWidth: 860),
+                      child: SizedBox(
+                        height: 540,
+                        child: AnimatedBuilder(
+                          animation: Listenable.merge(
+                              [_spinController, _floatController]),
+                          builder: (context, _) {
+                            final lift = _lift.value;
+                            final base =
+                                _spinController.value * 2 * math.pi;
+                            // Paint back-to-front so the front screen lands
+                            // on top of its neighbours.
+                            final order = List<int>.generate(
+                                _demoScreens.length, (i) => i)
+                              ..sort((a, b) => _cos(base, a)
+                                  .compareTo(_cos(base, b)));
+                            return Transform.translate(
+                              offset: Offset(0, -12 * lift),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
+                                children: [
+                                  for (final i in order)
+                                    _turntableItem(base, i, dpr),
+                                ],
                               ),
-                              // Soft shadow: it narrows and lightens as the
-                              // phone turns (smaller footprint) and as it
-                              // rises away from the ground.
-                              Transform.translate(
-                                offset: const Offset(0, -10),
-                                child: FractionallySizedBox(
-                                  widthFactor: 0.62 *
-                                      (1 - 0.12 * lift) *
-                                      (1 - 0.18 * turn),
-                                  child: Container(
-                                    height: 18,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(50),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                              alpha: 0.26 *
-                                                  (1 - 0.45 * lift) *
-                                                  (1 - 0.25 * turn)),
-                                          blurRadius: 26,
-                                          spreadRadius: -2,
-                                          offset: const Offset(0, 8),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                        child: Image.asset(
-                          'assets/images/dashboard_3d.png',
-                          width: double.infinity,
-                          cacheWidth: (380 * dpr).round(),
-                          semanticLabel: 'The TapVerify dashboard on a phone',
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -1393,6 +1356,77 @@ class _LiveDemoState extends State<_LiveDemo>
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The five phone mockups, in tour order around the turntable.
+  static const _demoScreens = [
+    ('assets/mobile screens/splash scree.jpeg', 'TapVerify splash screen'),
+    ('assets/mobile screens/get started same login screen.jpeg', 'Login screen'),
+    ('assets/mobile screens/code verify screen.jpeg', 'Code verification screen'),
+    ('assets/mobile screens/create account.jpeg', 'Create account screen'),
+    ('assets/mobile screens/home screen.jpeg', 'My Collections home screen'),
+  ];
+
+  /// Where screen [i] sits on the circle right now, wrapped to (-pi, pi] so
+  /// the front of the turntable is always at angle 0.
+  double _angle(double base, int i) {
+    var a = base + i * 2 * math.pi / _demoScreens.length;
+    while (a > math.pi) {
+      a -= 2 * math.pi;
+    }
+    while (a <= -math.pi) {
+      a += 2 * math.pi;
+    }
+    return a;
+  }
+
+  double _cos(double base, int i) => math.cos(_angle(base, i));
+
+  /// One screen: swung around the vertical axis by its angle, pushed out on
+  /// x, shrunk and faded as it travels to the back of the turntable.
+  Widget _turntableItem(double base, int i, double dpr) {
+    final a = _angle(base, i);
+    final depth = (math.cos(a) + 1) / 2; // 1 at the front, 0 at the back
+    final (asset, label) = _demoScreens[i];
+    return Opacity(
+      opacity: 0.2 + 0.8 * depth,
+      child: Transform.translate(
+        offset: Offset(math.sin(a) * 250, 0),
+        child: Transform.scale(
+          scale: 0.62 + 0.38 * depth,
+          child: Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0016)
+              ..rotateY(a),
+            alignment: Alignment.center,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        kDarkGreen.withValues(alpha: 0.16 + 0.10 * depth),
+                    blurRadius: 34,
+                    offset: Offset(0, 14 + 8 * depth),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(26),
+                child: Image.asset(
+                  asset,
+                  width: 240,
+                  height: 480,
+                  fit: BoxFit.cover,
+                  cacheWidth: (240 * dpr * 2).round(),
+                  semanticLabel: label,
+                ),
+              ),
+            ),
           ),
         ),
       ),

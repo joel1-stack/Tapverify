@@ -1235,6 +1235,7 @@ class _LiveDemoState extends State<_LiveDemo>
     with SingleTickerProviderStateMixin {
   late final AnimationController _waveController;
   late final AnimationController _floatController;
+  late final AnimationController _spinController;
   late final Animation<double> _lift;
 
   @override
@@ -1244,13 +1245,20 @@ class _LiveDemoState extends State<_LiveDemo>
     // the loop repeats with no visible jump.
     _waveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 9000),
+      duration: const Duration(milliseconds: 5000),
     )..repeat();
     // The phone breathes up and down with settled easing, no bounce.
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2600),
+      duration: const Duration(milliseconds: 1600),
     )..repeat(reverse: true);
+    // The coin toss: one continuous east-west turn plus a nod per 3.6s loop.
+    // The controller is linear and every angle comes from a whole sine cycle,
+    // so the motion never jumps at the seam.
+    _spinController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3600),
+    )..repeat();
     _lift = CurvedAnimation(parent: _floatController, curve: Curves.easeInOut);
   }
 
@@ -1258,6 +1266,7 @@ class _LiveDemoState extends State<_LiveDemo>
   void dispose() {
     _waveController.dispose();
     _floatController.dispose();
+    _spinController.dispose();
     super.dispose();
   }
 
@@ -1314,23 +1323,42 @@ class _LiveDemoState extends State<_LiveDemo>
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 380),
                       child: AnimatedBuilder(
-                        animation: _lift,
+                        animation: Listenable.merge(
+                            [_spinController, _floatController]),
                         builder: (context, child) {
                           final lift = _lift.value;
+                          // East-west sweep with a coin-flip nod and a hint of
+                          // roll: a slow corkscrew that reads as circular
+                          // motion but never turns edge-on, so the screen
+                          // stays readable the whole way around.
+                          final theta =
+                              _spinController.value * 2 * math.pi;
+                          final turn = math.sin(theta).abs();
+                          final pose = Matrix4.identity()
+                            ..setEntry(3, 2, 0.0012)
+                            ..rotateY(math.sin(theta) * 0.55)
+                            ..rotateX(math.cos(theta) * 0.14)
+                            ..rotateZ(math.sin(theta) * 0.07);
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Transform.translate(
                                 offset: Offset(0, -14 * lift),
-                                child: child,
+                                child: Transform(
+                                  transform: pose,
+                                  alignment: Alignment.center,
+                                  child: child,
+                                ),
                               ),
-                              // Soft shadow: as the phone rises it lifts away
-                              // from the ground, so the shadow shrinks and
-                              // fades with it.
+                              // Soft shadow: it narrows and lightens as the
+                              // phone turns (smaller footprint) and as it
+                              // rises away from the ground.
                               Transform.translate(
                                 offset: const Offset(0, -10),
                                 child: FractionallySizedBox(
-                                  widthFactor: 0.62 * (1 - 0.12 * lift),
+                                  widthFactor: 0.62 *
+                                      (1 - 0.12 * lift) *
+                                      (1 - 0.18 * turn),
                                   child: Container(
                                     height: 18,
                                     decoration: BoxDecoration(
@@ -1338,8 +1366,9 @@ class _LiveDemoState extends State<_LiveDemo>
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withValues(
-                                              alpha:
-                                                  0.26 * (1 - 0.45 * lift)),
+                                              alpha: 0.26 *
+                                                  (1 - 0.45 * lift) *
+                                                  (1 - 0.25 * turn)),
                                           blurRadius: 26,
                                           spreadRadius: -2,
                                           offset: const Offset(0, 8),

@@ -1222,8 +1222,10 @@ class _StepCardState extends State<_StepCard> {
 }
 
 /// "See the live list in action": the five product screens riding a rotating
-/// 3D turntable (splash, login, code, create account, home) over layered
-/// waves drifting through the section in the brand greens.
+/// 3D turntable (splash, login, code, create account, home) inside a premium
+/// natural scene: blurred green bokeh photo, soft light-green wash, subtle
+/// vignette, and white fades top and bottom so the section blends into the
+/// page around it.
 class _LiveDemo extends StatefulWidget {
   const _LiveDemo();
 
@@ -1233,7 +1235,6 @@ class _LiveDemo extends StatefulWidget {
 
 class _LiveDemoState extends State<_LiveDemo>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _waveController;
   late final AnimationController _floatController;
   late final AnimationController _spinController;
   late final Animation<double> _lift;
@@ -1241,12 +1242,6 @@ class _LiveDemoState extends State<_LiveDemo>
   @override
   void initState() {
     super.initState();
-    // The wave phase runs 0..1, and the painter draws whole sine cycles, so
-    // the loop repeats with no visible jump.
-    _waveController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 5000),
-    )..repeat();
     // The phone breathes up and down with settled easing, no bounce.
     _floatController = AnimationController(
       vsync: this,
@@ -1264,7 +1259,6 @@ class _LiveDemoState extends State<_LiveDemo>
 
   @override
   void dispose() {
-    _waveController.dispose();
     _floatController.dispose();
     _spinController.dispose();
     super.dispose();
@@ -1281,14 +1275,55 @@ class _LiveDemoState extends State<_LiveDemo>
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Stack(
             children: [
-              // Flowing, layered waves behind everything in this section.
+              // 1. The bokeh photo covers the entire section: stretch to fill,
+              // no empty edges or solid gaps behind the phones.
               Positioned.fill(
-                child: RepaintBoundary(
-                  child: AnimatedBuilder(
-                    animation: _waveController,
-                    builder: (context, _) => CustomPaint(
-                      size: Size.infinite,
-                      painter: _DemoWavesPainter(_waveController.value),
+                child: Image.asset(
+                  'assets/images/Dreamy Sunlit Greenery Bokeh.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) =>
+                      const ColoredBox(color: kPrimaryLight),
+                ),
+              ),
+              // 2. Soft light green wash (#E6F7F0, 65%) so the dark screens
+              // and white interfaces stay crisp against the texture.
+              Positioned.fill(
+                child: ColoredBox(
+                  color: kPrimaryLight.withValues(alpha: 0.65),
+                ),
+              ),
+              // 3. Vignette: subtly darker around the edges so the centre
+              // reads like a spotlight and the middle phone pops.
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.85,
+                      stops: const [0.45, 1],
+                      colors: [
+                        Colors.transparent,
+                        const Color(0xFF003322).withValues(alpha: 0.16),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // 4. White gradient fades top and bottom: no harsh line, the
+              // section blends into the white page above and below it.
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.97),
+                        Colors.white.withValues(alpha: 0),
+                        Colors.white.withValues(alpha: 0),
+                        Colors.white.withValues(alpha: 0.97),
+                      ],
+                      stops: const [0, 0.14, 0.86, 1],
                     ),
                   ),
                 ),
@@ -1432,78 +1467,6 @@ class _LiveDemoState extends State<_LiveDemo>
       ),
     );
   }
-}
-
-/// Three layered sine bands in the brand greens, each phase-shifted so the
-/// surface keeps drifting. The lightest sits highest; each band fills down to
-/// the section floor, so depth builds towards the bottom.
-class _DemoWavesPainter extends CustomPainter {
-  const _DemoWavesPainter(this.t);
-
-  /// Phase driver, 0..1, one full sine cycle per sweep.
-  final double t;
-
-  static void _band(
-    Canvas canvas,
-    Size size, {
-    required double baseY,
-    required double amp,
-    required double cycles,
-    required double phase,
-    required Color color,
-  }) {
-    const steps = 56;
-    final path = Path();
-    path.moveTo(0, baseY + amp * math.sin(phase));
-    for (var i = 1; i <= steps; i++) {
-      final x = size.width * i / steps;
-      path.lineTo(
-        x,
-        baseY + amp * math.sin(phase + cycles * 2 * math.pi * i / steps),
-      );
-    }
-    path
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(path, Paint()..color = color);
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final phase = t * 2 * math.pi;
-    _band(
-      canvas,
-      size,
-      baseY: size.height * 0.40,
-      amp: size.height * 0.035,
-      cycles: 1.4,
-      phase: phase,
-      color: kPrimary.withValues(alpha: 0.10),
-    );
-    _band(
-      canvas,
-      size,
-      baseY: size.height * 0.58,
-      amp: size.height * 0.04,
-      cycles: 1.0,
-      phase: phase + 2.3,
-      color: kPrimaryDark.withValues(alpha: 0.10),
-    );
-    _band(
-      canvas,
-      size,
-      baseY: size.height * 0.76,
-      amp: size.height * 0.03,
-      cycles: 1.7,
-      phase: phase + 4.4,
-      color: kPrimary.withValues(alpha: 0.15),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _DemoWavesPainter oldDelegate) =>
-      oldDelegate.t != t;
 }
 
 class _DetectionTable extends StatefulWidget {
@@ -1872,85 +1835,171 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= 760;
     return Column(
       children: [
         // Wave transition. Its background continues the light green section
         // above, so the curve reads as the page flowing into the footer.
         Container(
           color: kPrimaryLight,
-          height: 110,
+          height: 130,
           child: const CustomPaint(
-            size: Size(double.infinity, 110),
+            size: Size(double.infinity, 130),
             painter: _FooterWavePainter(),
           ),
         ),
-        // Deep green body.
+        // Solid deep green body with faint leaf silhouettes for depth.
         Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [kPrimaryDark, Color(0xFF005E3E)],
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: Column(
-                children: [
-                  const _LogoChip(onDark: true),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Stop asking people if they have paid. Open this and see.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  // Real links: these used to be plain rows, so nothing
-                  // happened. Icons sit in small rounded chips.
-                  const Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 28,
-                    runSpacing: 12,
+          color: kPrimaryDark,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
+          child: Stack(
+            children: [
+              const Positioned.fill(
+                child: RepaintBoundary(
+                  child: CustomPaint(painter: _LeafSilhouettesPainter()),
+                ),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1100),
+                  child: Column(
                     children: [
-                      _FooterLink(
-                        icon: Icons.chat_bubble_outline,
-                        text: 'WhatsApp +254 715 641 339',
-                        url: 'https://wa.me/254715641339',
+                      // The mark, rendered directly: the old white chip put
+                      // a white logo on a white box, so nothing showed.
+                      const AppLogo(height: 40, onDark: true),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'Stop asking people if they have paid. Open this and see.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                        ),
                       ),
-                      _FooterLink(
-                        icon: Icons.email_outlined,
-                        text: 'hello@tapverify.co',
-                        url: 'mailto:hello@tapverify.co',
+                      const SizedBox(height: 40),
+                      // Contact: green icon boxes with labels, one row on
+                      // wide screens with thin dividers, wrapping on phones.
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 900),
+                        child: wide
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _ContactItem(
+                                    icon: Icons.chat_bubble_outline,
+                                    text: '+254 715 641 339',
+                                    url: 'https://wa.me/254715641339',
+                                  ),
+                                  _ContactDivider(),
+                                  _ContactItem(
+                                    icon: Icons.mail_outline,
+                                    text: 'hello@tapverify.co',
+                                    url: 'mailto:hello@tapverify.co',
+                                  ),
+                                  _ContactDivider(),
+                                  _ContactItem(
+                                    icon: Icons.public,
+                                    text: 'tapverify.vercel.app',
+                                    url: 'https://tapverify.vercel.app',
+                                  ),
+                                ],
+                              )
+                            : const Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 24,
+                                runSpacing: 16,
+                                children: [
+                                  _ContactItem(
+                                    icon: Icons.chat_bubble_outline,
+                                    text: '+254 715 641 339',
+                                    url: 'https://wa.me/254715641339',
+                                  ),
+                                  _ContactItem(
+                                    icon: Icons.mail_outline,
+                                    text: 'hello@tapverify.co',
+                                    url: 'mailto:hello@tapverify.co',
+                                  ),
+                                  _ContactItem(
+                                    icon: Icons.public,
+                                    text: 'tapverify.vercel.app',
+                                    url: 'https://tapverify.vercel.app',
+                                  ),
+                                ],
+                              ),
                       ),
-                      _FooterLink(
-                        icon: Icons.public,
-                        text: 'tapverify.vercel.app',
-                        url: 'https://tapverify.vercel.app',
+                      const SizedBox(height: 36),
+                      Container(height: 1, color: Colors.white24),
+                      const SizedBox(height: 18),
+                      Text(
+                        '© ${DateTime.now().year} TapVerify. Built for Kenya.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 48),
+                      // Trust strip: icon, bold title, short subtitle.
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 900),
+                        child: wide
+                            ? const Row(
+                                children: [
+                                  Expanded(
+                                    child: _TrustBadge(
+                                      icon: Icons.shield_outlined,
+                                      title: 'Secure & Encrypted',
+                                      subtitle: 'Your data stays safe',
+                                    ),
+                                  ),
+                                  _ContactDivider(),
+                                  Expanded(
+                                    child: _TrustBadge(
+                                      icon: Icons.bolt_outlined,
+                                      title: 'Fast & Easy',
+                                      subtitle: 'Get started in minutes',
+                                    ),
+                                  ),
+                                  _ContactDivider(),
+                                  Expanded(
+                                    child: _TrustBadge(
+                                      icon: Icons.favorite_outline,
+                                      title: 'Built for Kenya',
+                                      subtitle: 'Local needs, real impact',
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 28,
+                                runSpacing: 20,
+                                children: [
+                                  _TrustBadge(
+                                    icon: Icons.shield_outlined,
+                                    title: 'Secure & Encrypted',
+                                    subtitle: 'Your data stays safe',
+                                  ),
+                                  _TrustBadge(
+                                    icon: Icons.bolt_outlined,
+                                    title: 'Fast & Easy',
+                                    subtitle: 'Get started in minutes',
+                                  ),
+                                  _TrustBadge(
+                                    icon: Icons.favorite_outline,
+                                    title: 'Built for Kenya',
+                                    subtitle: 'Local needs, real impact',
+                                  ),
+                                ],
+                              ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  Container(
-                    height: 1,
-                    color: Colors.white24,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '© ${DateTime.now().year} TapVerify. Built for Kenya.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ],
@@ -1958,8 +2007,8 @@ class _Footer extends StatelessWidget {
   }
 }
 
-/// A wide, gentle wave; light green at the crest, fading into the deep green
-/// of the footer body so there is no seam between them.
+/// One wide, gentle sweep across the full width. The fill runs light green at
+/// the crest into the deep green of the body, so the two read as one surface.
 class _FooterWavePainter extends CustomPainter {
   const _FooterWavePainter();
 
@@ -1969,9 +2018,8 @@ class _FooterWavePainter extends CustomPainter {
     final h = size.height;
     final path = Path()
       ..moveTo(0, h)
-      ..lineTo(0, h * 0.55)
-      ..quadraticBezierTo(w * 0.28, 0, w * 0.55, h * 0.38)
-      ..quadraticBezierTo(w * 0.78, h * 0.74, w, h * 0.42)
+      ..lineTo(0, h * 0.62)
+      ..cubicTo(w * 0.25, h * 0.18, w * 0.62, h * 0.14, w, h * 0.5)
       ..lineTo(w, h)
       ..close();
     final paint = Paint()
@@ -1988,8 +2036,54 @@ class _FooterWavePainter extends CustomPainter {
   bool shouldRepaint(covariant _FooterWavePainter oldDelegate) => false;
 }
 
-class _FooterLink extends StatelessWidget {
-  const _FooterLink({required this.icon, required this.text, required this.url});
+/// Faint leaf silhouettes anchored in the bottom corners of the footer, so
+/// the dark green reads as depth rather than a flat block.
+class _LeafSilhouettesPainter extends CustomPainter {
+  const _LeafSilhouettesPainter();
+
+  static Path _leaf(Offset base, double length, double angle, double width) {
+    final tip = base +
+        Offset(math.cos(angle) * length, math.sin(angle) * length);
+    final mid = Offset((base.dx + tip.dx) / 2, (base.dy + tip.dy) / 2);
+    final nx = -math.sin(angle) * width;
+    final ny = math.cos(angle) * width;
+    return Path()
+      ..moveTo(base.dx, base.dy)
+      ..quadraticBezierTo(mid.dx + nx, mid.dy + ny, tip.dx, tip.dy)
+      ..quadraticBezierTo(mid.dx - nx, mid.dy - ny, base.dx, base.dy)
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 2) return;
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.05);
+    // Bottom left, leaves reaching up and to the right.
+    canvas.drawPath(
+        _leaf(Offset(0, size.height), 170, -math.pi * 0.24, 40), paint);
+    canvas.drawPath(
+        _leaf(Offset(0, size.height), 130, -math.pi * 0.42, 32), paint);
+    canvas.drawPath(
+        _leaf(Offset(20, size.height), 95, -math.pi * 0.6, 26), paint);
+    // Bottom right, mirrored.
+    canvas.drawPath(
+        _leaf(Offset(size.width, size.height), 170, math.pi + math.pi * 0.24, 40),
+        paint);
+    canvas.drawPath(
+        _leaf(Offset(size.width, size.height), 130, math.pi + math.pi * 0.42, 32),
+        paint);
+    canvas.drawPath(
+        _leaf(Offset(size.width - 20, size.height), 95, math.pi + math.pi * 0.6, 26),
+        paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LeafSilhouettesPainter oldDelegate) => false;
+}
+
+/// A tappable contact item: bright green rounded icon square plus its label.
+class _ContactItem extends StatelessWidget {
+  const _ContactItem({required this.icon, required this.text, required this.url});
   final IconData icon;
   final String text;
   final String url;
@@ -2008,29 +2102,95 @@ class _FooterLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: _open,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
+              width: 42,
+              height: 42,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
+                color: kPrimary,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 16, color: Colors.white),
+              child: Icon(icon, size: 20, color: Colors.white),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Text(text,
                 style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 13.5,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500)),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Thin vertical rule between contact items or trust badges.
+class _ContactDivider extends StatelessWidget {
+  const _ContactDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: 1,
+        height: 44,
+        color: Colors.white24,
+      ),
+    );
+  }
+}
+
+/// Icon, bold title, short subtitle in one vertically centred row.
+class _TrustBadge extends StatelessWidget {
+  const _TrustBadge(
+      {required this.icon, required this.title, required this.subtitle});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 22, color: kSoftGreen),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                  style: const TextStyle(
+                      color: Colors.white70, fontSize: 12.5)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

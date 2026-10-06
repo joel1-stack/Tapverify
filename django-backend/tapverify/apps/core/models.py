@@ -24,10 +24,12 @@ class Secretary(models.Model):
 
     phone = models.CharField(max_length=20, unique=True)
     auth_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    name = models.CharField(max_length=120, blank=True)
+    group_name = models.CharField(max_length=120, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.phone
+        return self.name or self.phone
 
 
 class LoginOTP(models.Model):

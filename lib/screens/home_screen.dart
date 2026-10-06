@@ -34,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen>
   late Future<List<CollectionSummary>> _future = _load();
   late final AnimationController _fabController;
   late final Animation<double> _fabScale;
+  String _name = '';
+  String _group = '';
 
   Future<List<CollectionSummary>> _load() => Api.listCollections();
 
@@ -48,6 +50,17 @@ class _HomeScreenState extends State<HomeScreen>
       CurvedAnimation(parent: _fabController, curve: Curves.easeOutBack),
     );
     _fabController.forward();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await Api.loadProfile();
+    if (mounted) {
+      setState(() {
+        _name = profile['name'] ?? '';
+        _group = profile['group'] ?? '';
+      });
+    }
   }
 
   @override
@@ -85,66 +98,50 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: const Text('My Collections',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: Color(0xFF1A1A1A))),
-        centerTitle: false,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.logout, color: Color(0xFF6B7280)),
-              onPressed: _logout,
-              tooltip: 'Logout',
+      backgroundColor: kSurface,
+      body: Column(
+        children: [
+          _HomeHeader(name: _name, group: _group, onLogout: _logout),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              color: kPrimary,
+              child: AppConstrained(
+                child: FutureBuilder<List<CollectionSummary>>(
+                future: _future,
+                builder: (context, snap) {
+                  // Keep showing the collections we already have while a refresh
+                  // is in flight; only a first load shows the skeleton.
+                  final collections = snap.data;
+                  if (collections == null) {
+                    if (snap.hasError) {
+                      return _ErrorState(
+                        message: friendlyError(snap.error!),
+                        onRetry: _refresh,
+                      );
+                    }
+                    return _buildLoadingState();
+                  }
+                  if (collections.isEmpty) {
+                    return _EmptyState(onCreate: _openCreate);
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                    itemCount: collections.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) => _CollectionCard(
+                      key: ValueKey<int>(collections[i].id),
+                      collection: collections[i],
+                      index: i,
+                      onChanged: _refresh,
+                    ),
+                  );
+                },
+                ),
+              ),
             ),
           ),
         ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        color: kPrimary,
-        child: AppConstrained(
-          child: FutureBuilder<List<CollectionSummary>>(
-          future: _future,
-          builder: (context, snap) {
-            // Keep showing the collections we already have while a refresh is
-            // in flight; only a first load shows the skeleton.
-            final collections = snap.data;
-            if (collections == null) {
-              if (snap.hasError) {
-                return _ErrorState(
-                  message: friendlyError(snap.error!),
-                  onRetry: _refresh,
-                );
-              }
-              return _buildLoadingState();
-            }
-            if (collections.isEmpty) {
-              return _EmptyState(onCreate: _openCreate);
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-              itemCount: collections.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) => _CollectionCard(
-                key: ValueKey<int>(collections[i].id),
-                collection: collections[i],
-                index: i,
-                onChanged: _refresh,
-              ),
-            );
-          },
-          ),
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: ScaleTransition(
@@ -173,6 +170,107 @@ class _HomeScreenState extends State<HomeScreen>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
       children: List.generate(3, (i) => _CollectionSkeleton(index: i)),
+    );
+  }
+}
+
+/// Deep green gradient header: white logo, "My Collections", the group name
+/// and the secretary's avatar, matching the home mockup.
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({
+    required this.name,
+    required this.group,
+    required this.onLogout,
+  });
+
+  final String name;
+  final String group;
+  final VoidCallback onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, top + 14, 16, 22),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kPrimaryDark, kPrimary],
+        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AppLogo(height: 30, onDark: true),
+              const Spacer(),
+              IconButton(
+                onPressed: onLogout,
+                tooltip: 'Logout',
+                icon: const Icon(Icons.logout, color: Colors.white, size: 21),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: name.isNotEmpty
+                    ? Text(
+                        Format.initial(name),
+                        style: const TextStyle(
+                          color: kPrimaryDark,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 17,
+                        ),
+                      )
+                    : const Icon(Icons.person, color: kPrimary, size: 22),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'My Collections',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              const Icon(Icons.groups_outlined, color: kSoftGreen, size: 16),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  group.isEmpty ? 'My Group' : group,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: kSoftGreen,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

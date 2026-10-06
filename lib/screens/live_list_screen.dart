@@ -176,6 +176,8 @@ class _LiveListScreenState extends State<LiveListScreen>
 
   Future<void> _openMember(Member member) async {
     final wide = isWideDisplay(context);
+    final title = _detail?.summary.title ?? 'Collection';
+    final amountLabel = Format.kes(_detail?.summary.amount ?? 0);
     final changed = wide
         ? await showDialog<bool>(
             context: context,
@@ -184,7 +186,12 @@ class _LiveListScreenState extends State<LiveListScreen>
               insetPadding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: MemberDetailSheet(member: member, asDialog: true),
+                child: MemberDetailSheet(
+                  member: member,
+                  asDialog: true,
+                  collectionTitle: title,
+                  amountLabel: amountLabel,
+                ),
               ),
             ),
           )
@@ -192,7 +199,11 @@ class _LiveListScreenState extends State<LiveListScreen>
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
-            builder: (_) => MemberDetailSheet(member: member),
+            builder: (_) => MemberDetailSheet(
+              member: member,
+              collectionTitle: title,
+              amountLabel: amountLabel,
+            ),
           );
     if (changed == true && mounted) await _refresh();
   }

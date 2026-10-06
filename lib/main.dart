@@ -7,6 +7,7 @@ import 'api.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 
 /// Where the API lives.
 ///
@@ -62,18 +63,31 @@ class AuthState {
 
   static final ValueNotifier<bool> signedIn = ValueNotifier<bool>(false);
 
+  /// True once the stored token has been read. The splash screen waits for
+  /// this before deciding where to go, so a valid session lands on Home
+  /// instead of flashing the login screen first.
+  static final ValueNotifier<bool> ready = ValueNotifier<bool>(false);
+
+  /// True once the splash screen has served its display time on a signed-out
+  /// device. Only then does the gate show Login.
+  static final ValueNotifier<bool> splashDone = ValueNotifier<bool>(false);
+
   /// Reads the stored token once at startup.
   static Future<void> restore() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     signedIn.value = token != null && token.isNotEmpty;
+    ready.value = true;
   }
 
   static void markSignedIn() => signedIn.value = true;
 
   static Future<void> signOut() async {
     await Api.clearToken();
+    await Api.clearProfile();
     signedIn.value = false;
+    // splashDone is left alone: the splash only plays once per launch, so a
+    // logout lands straight on Login.
   }
 
   /// Called by [Api] when the server rejects the stored token. Clears the dead
@@ -192,32 +206,60 @@ class _TapVerifyAppState extends State<TapVerifyApp> {
 
 /// Shows Home when a login token exists.
 ///
-/// Signed out: the landing/demo page on web, the login screen on mobile.
-class _Gate extends StatelessWidget {
+/// Signed out: on web the landing/demo page; on mobile the splash screen
+/// first (session check), then Login once the splash has had its moment.
+class _Gate extends StatefulWidget {
   const _Gate();
 
   @override
+  State<_Gate> createState() => _GateState();
+}
+
+class _GateState extends State<_Gate> {
+  @override
+  void initState() {
+    super.initState();
+    AuthState.signedIn.addListener(_changed);
+    AuthState.splashDone.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    AuthState.signedIn.removeListener(_changed);
+    AuthState.splashDone.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: AuthState.signedIn,
-      builder: (context, signedIn, _) {
-        // Mobile is the product: straight to login, no marketing demo.
-        // Web is the demo: landing page first, login pushed from it.
-        final child = signedIn
-            ? const HomeScreen()
-            : kIsWeb
-                ? const LandingScreen()
-                : const LoginScreen();
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 320),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          child: KeyedSubtree(
-            key: ValueKey<bool>(signedIn),
-            child: child,
-          ),
-        );
-      },
+    final signedIn = AuthState.signedIn.value;
+    final Widget child;
+    final String stage;
+    if (signedIn) {
+      child = const HomeScreen();
+      stage = 'home';
+    } else if (kIsWeb) {
+      child = const LandingScreen();
+      stage = 'landing';
+    } else if (AuthState.splashDone.value) {
+      child = const LoginScreen();
+      stage = 'login';
+    } else {
+      child = const SplashScreen();
+      stage = 'splash';
+    }
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 320),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      child: KeyedSubtree(
+        key: ValueKey<String>(stage),
+        child: child,
+      ),
     );
   }
 }

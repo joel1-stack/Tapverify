@@ -5,6 +5,7 @@ import '../main.dart';
 import '../models.dart';
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
+import 'payment_success_screen.dart';
 
 /// Member detail: a bottom sheet on phones, a centred dialog on desktop web.
 class MemberDetailSheet extends StatefulWidget {
@@ -12,12 +13,18 @@ class MemberDetailSheet extends StatefulWidget {
     super.key,
     required this.member,
     this.asDialog = false,
+    this.collectionTitle = '',
+    this.amountLabel = '',
   });
 
   final Member member;
 
   /// True when shown inside a [Dialog] on wide displays.
   final bool asDialog;
+
+  /// Shown on the Payment Received confirmation after a manual mark-paid.
+  final String collectionTitle;
+  final String amountLabel;
 
   @override
   State<MemberDetailSheet> createState() => _MemberDetailSheetState();
@@ -29,11 +36,15 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
 
   /// [worked] lets an action report a soft failure, like an SMS the provider
   /// refused. That used to show a green "Reminder sent" regardless.
+  ///
+  /// When [confirmation] is given (mark-paid), it is shown full screen first
+  /// and the sheet closes after the secretary taps Done.
   Future<void> _run(
     Future<bool> Function() action,
     String success, {
     bool closeOnSuccess = false,
     String? failureMessage,
+    Widget? confirmation,
   }) async {
     setState(() => _busy = true);
     try {
@@ -48,7 +59,11 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
         return;
       }
       if (closeOnSuccess) {
-        Navigator.pop(context, true);
+        if (confirmation != null) {
+          await Navigator.of(context)
+              .push<void>(MaterialPageRoute(builder: (_) => confirmation));
+        }
+        if (mounted) Navigator.pop(context, true);
       } else {
         showSuccessSnack(context, success);
       }
@@ -58,6 +73,15 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  /// The full-screen tick shown after a manual mark-paid.
+  Widget _paymentConfirmation(Member m) => PaymentSuccessScreen(
+        title: widget.collectionTitle.isEmpty ? 'Payment' : widget.collectionTitle,
+        amountLabel: widget.amountLabel.isEmpty
+            ? (m.paidAmount == null ? '' : Format.kes(m.paidAmount))
+            : widget.amountLabel,
+        memberName: m.displayName,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +198,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                               () => Api.markPaid(m.id, 'cash').then((_) => true),
                               '${m.displayName} marked as Paid (Cash)',
                               closeOnSuccess: true,
+                              confirmation: _paymentConfirmation(m),
                             ),
                     label: const Text('Mark as Paid (Cash)',
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
@@ -200,6 +225,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                               () => Api.markPaid(m.id, 'other').then((_) => true),
                               '${m.displayName} marked as Paid (Other)',
                               closeOnSuccess: true,
+                              confirmation: _paymentConfirmation(m),
                             ),
                     label: const Text('Mark as Paid (Other)',
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),

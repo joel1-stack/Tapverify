@@ -6,6 +6,7 @@ urlpatterns = [
     # Secretary API
     path('api/auth/otp/', views.RequestOTPView.as_view()),
     path('api/auth/verify/', views.VerifyOTPView.as_view()),
+    path('api/auth/register/', views.RegisterView.as_view()),
     path('api/me/', views.MeView.as_view()),
     path('api/collections/', views.CollectionsView.as_view()),
     path('api/collections/<int:pk>/', views.CollectionDetailView.as_view()),

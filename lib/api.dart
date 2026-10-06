@@ -103,7 +103,68 @@ class Api {
       throw ApiException('Unexpected reply from TapVerify');
     }
     await saveToken(token);
+    if (data is Map) {
+      await saveProfile(
+        name: (data['name'] ?? '') as String,
+        group: (data['group_name'] ?? '') as String,
+      );
+    }
     return token;
+  }
+
+  /// Create Account: name + phone + group name. Returns the OTP payload
+  /// ({'sent': bool, 'dev_code': String?}) because the next step is always
+  /// entering the code that was just sent.
+  static Future<Map<String, dynamic>> register({
+    required String name,
+    required String phone,
+    String group = '',
+  }) async {
+    final resp = await http
+        .post(_u('/api/auth/register/'),
+            headers: await _headers(auth: false),
+            body: jsonEncode({
+              'name': name,
+              'phone': phone,
+              'group_name': group,
+            }))
+        .timeout(_timeout);
+    final data = await _handle(resp);
+    if (data is! Map) throw ApiException('Unexpected reply from TapVerify');
+    return Map<String, dynamic>.from(data);
+  }
+
+  /// Session check plus profile: {'phone', 'name', 'group_name'}.
+  static Future<Map<String, dynamic>> me() async {
+    final resp =
+        await http.get(_u('/api/me/'), headers: await _headers()).timeout(_timeout);
+    final data = await _handle(resp);
+    if (data is! Map) throw ApiException('Unexpected reply from TapVerify');
+    return Map<String, dynamic>.from(data);
+  }
+
+  // ── Profile cache ─────────────────────────────────────────────────────
+
+  /// The signed-in secretary's name and group, kept locally so Home can show
+  /// them without a round trip on every open.
+  static Future<void> saveProfile({String name = '', String group = ''}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('me_name', name);
+    await prefs.setString('me_group', group);
+  }
+
+  static Future<Map<String, String>> loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'name': prefs.getString('me_name') ?? '',
+      'group': prefs.getString('me_group') ?? '',
+    };
+  }
+
+  static Future<void> clearProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('me_name');
+    await prefs.remove('me_group');
   }
 
   // ── Collections ───────────────────────────────────────────────────────

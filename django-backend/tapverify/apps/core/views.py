@@ -3,7 +3,8 @@
 Secretary API (Bearer token):
     POST /api/auth/otp/                      request login code
     POST /api/auth/verify/                   verify code, get token
-    GET  /api/me/                            session check
+    POST /api/auth/register/                 create account, then send OTP
+    GET  /api/me/                            session check + profile
     GET  /api/collections/                   my collections + stats
     POST /api/collections/                   create + notify everyone
     GET  /api/collections/<id>/              live list
@@ -95,6 +96,30 @@ def get_owned_collection(request, pk):
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
+def start_otp(phone):
+    """Create a fresh OTP for [phone] and try to SMS it.
+
+    Shared by the login and create-account flows so both behave identically.
+    """
+    code = f'{random.randint(0, 999999):06d}'
+    LoginOTP.objects.create(
+        phone=phone, code=code,
+        expires_at=timezone.now() + timedelta(minutes=OTP_TTL_MINUTES))
+    ok, _, error = sms.send_sms(phone, sms.build_otp_sms(code))
+    payload = {'sent': ok}
+    if not ok:
+        logger.warning('OTP SMS to %s failed: %s', phone, error)
+    if settings.DEBUG or settings.AFRICASTALKING_SANDBOX:
+        # Sandbox numbers never receive real SMS - expose the code so the
+        # flow stays testable. Never included in production.
+        payload['dev_code'] = code
+    return payload
+
+
+def secretary_dict(s):
+    return {'phone': s.phone, 'name': s.name, 'group_name': s.group_name}
+
+
 class RequestOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -103,19 +128,32 @@ class RequestOTPView(APIView):
         if not phone:
             return Response({'error': 'Enter a valid Kenyan phone number'},
                             status=status.HTTP_400_BAD_REQUEST)
-        code = f'{random.randint(0, 999999):06d}'
-        LoginOTP.objects.create(
-            phone=phone, code=code,
-            expires_at=timezone.now() + timedelta(minutes=OTP_TTL_MINUTES))
-        ok, _, error = sms.send_sms(phone, sms.build_otp_sms(code))
-        payload = {'sent': ok}
-        if not ok:
-            logger.warning('OTP SMS to %s failed: %s', phone, error)
-        if settings.DEBUG or settings.AFRICASTALKING_SANDBOX:
-            # Sandbox numbers never receive real SMS - expose the code so the
-            # flow stays testable. Never included in production.
-            payload['dev_code'] = code
-        return Response(payload)
+        return Response(start_otp(phone))
+
+
+class RegisterView(APIView):
+    """Create Account: name + phone + group name, then send the login OTP."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        name = (request.data.get('name') or '').strip()
+        phone = normalize_ke_phone(request.data.get('phone', ''))
+        group_name = (request.data.get('group_name') or '').strip()
+        if not name:
+            return Response({'error': 'Enter your full name'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not phone:
+            return Response({'error': 'Enter a valid Kenyan phone number'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        secretary, _ = Secretary.objects.get_or_create(phone=phone)
+        secretary.name = name
+        fields = ['name']
+        if group_name:
+            secretary.group_name = group_name
+            fields.append('group_name')
+        secretary.save(update_fields=fields)
+        return Response(start_otp(phone))
 
 
 class VerifyOTPView(APIView):
@@ -137,12 +175,17 @@ class VerifyOTPView(APIView):
         secretary, _ = Secretary.objects.get_or_create(phone=phone)
         secretary.auth_token = new_token()
         secretary.save(update_fields=['auth_token'])
-        return Response({'token': secretary.auth_token, 'phone': phone})
+        return Response({
+            'token': secretary.auth_token,
+            'phone': phone,
+            'name': secretary.name,
+            'group_name': secretary.group_name,
+        })
 
 
 class MeView(APIView):
     def get(self, request):
-        return Response({'phone': request.user.phone})
+        return Response(secretary_dict(request.user))
 
 
 # ── Collections ──────────────────────────────────────────────────────────────

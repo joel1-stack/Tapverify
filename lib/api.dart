@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'demo.dart';
 import 'main.dart';
 import 'models.dart';
 
@@ -50,6 +52,10 @@ class Api {
 
   static Uri _u(String path) => Uri.parse('$kApiBaseUrl$path');
 
+  /// Mobile is the product and always talks to Django. The web build is the
+  /// public demo with no server behind it, so it is answered in memory.
+  static bool get _demo => kIsWeb;
+
   static dynamic _decode(http.Response resp) {
     if (resp.bodyBytes.isEmpty) return null;
     try {
@@ -81,6 +87,7 @@ class Api {
 
   /// Returns {'sent': bool, 'dev_code': String?} (dev_code only in sandbox).
   static Future<Map<String, dynamic>> requestOtp(String phone) async {
+    if (_demo) return Demo.instance.requestOtp(phone);
     final resp = await http
         .post(_u('/api/auth/otp/'),
             headers: await _headers(auth: false),
@@ -92,6 +99,16 @@ class Api {
   }
 
   static Future<String> verifyOtp(String phone, String code) async {
+    if (_demo) {
+      final token = Demo.instance.verifyOtp(phone, code);
+      await saveToken(token);
+      final profile = Demo.instance.me();
+      await saveProfile(
+        name: (profile['name'] ?? '') as String,
+        group: (profile['group_name'] ?? '') as String,
+      );
+      return token;
+    }
     final resp = await http
         .post(_u('/api/auth/verify/'),
             headers: await _headers(auth: false),
@@ -120,6 +137,7 @@ class Api {
     required String phone,
     String group = '',
   }) async {
+    if (_demo) return Demo.instance.register(name: name, phone: phone, group: group);
     final resp = await http
         .post(_u('/api/auth/register/'),
             headers: await _headers(auth: false),
@@ -136,6 +154,7 @@ class Api {
 
   /// Session check plus profile: {'phone', 'name', 'group_name'}.
   static Future<Map<String, dynamic>> me() async {
+    if (_demo) return Demo.instance.me();
     final resp =
         await http.get(_u('/api/me/'), headers: await _headers()).timeout(_timeout);
     final data = await _handle(resp);
@@ -170,6 +189,7 @@ class Api {
   // ── Collections ───────────────────────────────────────────────────────
 
   static Future<List<CollectionSummary>> listCollections() async {
+    if (_demo) return Demo.instance.listCollections();
     final resp = await http
         .get(_u('/api/collections/'), headers: await _headers())
         .timeout(_timeout);
@@ -182,6 +202,7 @@ class Api {
   }
 
   static Future<CollectionDetail> getCollection(int id) async {
+    if (_demo) return Demo.instance.getCollection(id);
     final resp = await http
         .get(_u('/api/collections/$id/'), headers: await _headers())
         .timeout(_timeout);
@@ -199,6 +220,16 @@ class Api {
     Map<String, String> payoutFields = const {},
     required String membersText,
   }) async {
+    if (_demo) {
+      return Demo.instance.createCollection(
+        title: title,
+        amount: amount,
+        dueDate: dueDate,
+        payoutMethod: payoutMethod,
+        payoutFields: payoutFields,
+        membersText: membersText,
+      );
+    }
     final resp = await http
         .post(_u('/api/collections/'),
             headers: await _headers(),
@@ -217,6 +248,7 @@ class Api {
   }
 
   static Future<int> remindUnpaid(int collectionId) async {
+    if (_demo) return Demo.instance.remindUnpaid(collectionId);
     final resp = await http
         .post(_u('/api/collections/$collectionId/remind-unpaid/'),
             headers: await _headers())
@@ -227,6 +259,7 @@ class Api {
   }
 
   static Future<List<int>> exportCsv(int collectionId) async {
+    if (_demo) return Demo.instance.exportCsv(collectionId);
     final resp = await http
         .get(_u('/api/collections/$collectionId/export.csv'),
             headers: await _headers())
@@ -238,6 +271,7 @@ class Api {
   // ── Members ───────────────────────────────────────────────────────────
 
   static Future<Member> markPaid(int memberId, String method) async {
+    if (_demo) return Demo.instance.markPaid(memberId, method);
     final resp = await http
         .post(_u('/api/members/$memberId/mark-paid/'),
             headers: await _headers(), body: jsonEncode({'method': method}))
@@ -248,6 +282,7 @@ class Api {
   }
 
   static Future<bool> remindMember(int memberId) async {
+    if (_demo) return Demo.instance.remindMember(memberId);
     final resp = await http
         .post(_u('/api/members/$memberId/remind/'), headers: await _headers())
         .timeout(_timeout);

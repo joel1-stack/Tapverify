@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/auth_shell.dart';
 
-/// First screen on mobile: the smiling-woman photo, white logo and tagline
-/// while the stored session is checked, then Login (or straight to Home for a
-/// still-valid token).
+/// First screen on mobile, matching the splash mockup: full photo, deep
+/// green panel with the three-line promise, "Get Started" into Login, and
+/// the stored session checked while it is on screen.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -41,20 +42,17 @@ class SplashScreenState extends State<SplashScreen>
     _advance();
   }
 
-  /// Holds the splash until both the display time and the session check are
-  /// done, then lets the gate move on: Home if a token survived, Login if not.
+  /// Holds the splash until the session check finishes. A surviving session
+  /// swaps Home in through the gate by itself; otherwise the buttons decide
+  /// when to move on to Login.
   Future<void> _advance() async {
-    final minDisplay = Future<void>.delayed(const Duration(milliseconds: 1700));
     while (!AuthState.ready.value) {
       await Future<void>.delayed(const Duration(milliseconds: 60));
     }
-    await minDisplay;
-    if (!mounted) return;
-    if (!AuthState.signedIn.value) {
-      AuthState.splashDone.value = true;
-    }
-    // When a session exists, AuthState.signedIn is already true and the gate
-    // swaps Home in by itself; nothing to do here.
+  }
+
+  void _goLogin() {
+    AuthState.splashDone.value = true;
   }
 
   @override
@@ -78,31 +76,35 @@ class SplashScreenState extends State<SplashScreen>
             errorBuilder: (context, error, stack) =>
                 const ColoredBox(color: kDarkGreen),
           ),
-          // Soft dark green so the white logo and words stay readable.
+          // Photo fading into the deep green panel that holds the message.
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0x59005F3C),
-                  Color(0x1A005F3C),
-                  Color(0xE6005F3C),
+                  Color(0x00000000),
+                  Color(0x33005F3C),
+                  Color(0xCC003D28),
+                  Color(0xF2003D28),
+                  Color(0xF2003D28),
                 ],
-                stops: [0.0, 0.45, 1.0],
+                stops: [0.0, 0.42, 0.66, 0.85, 1.0],
               ),
             ),
           ),
+          const RepaintBoundary(
+            child: CustomPaint(painter: _SplashDecorPainter()),
+          ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(28),
+              padding: const EdgeInsets.fromLTRB(28, 14, 28, 26),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 8),
                   FadeTransition(
                     opacity: _textFade,
-                    child: const AppLogo(height: 40, onDark: true),
+                    child: const AppLogo(height: 38, onDark: true),
                   ),
                   const Spacer(),
                   ScaleTransition(
@@ -113,21 +115,41 @@ class SplashScreenState extends State<SplashScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Proof of Payment',
+                            'Secure payments.',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 34,
+                              fontSize: 32,
                               fontWeight: FontWeight.w900,
-                              height: 1.15,
+                              height: 1.18,
                               letterSpacing: -0.5,
                             ),
                           ),
-                          SizedBox(height: 10),
                           Text(
-                            'Stop asking people if they have paid.\nOpen this and see.',
+                            'Real people.',
+                            style: TextStyle(
+                              color: Color(0xFF6FE7AE),
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              height: 1.18,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          Text(
+                            'Total peace of mind.',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              height: 1.18,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: 14),
+                          Text(
+                            "For Kenya's chamas & savings groups.",
                             style: TextStyle(
                               color: Color(0xFFC8E6D7),
-                              fontSize: 16,
+                              fontSize: 15.5,
                               height: 1.5,
                               fontWeight: FontWeight.w500,
                             ),
@@ -136,21 +158,36 @@ class SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 30),
                   FadeTransition(
                     opacity: _textFade,
-                    child: const Center(
-                      child: SizedBox(
-                        width: 26,
-                        height: 26,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.4,
-                          color: Colors.white,
+                    child: PrimaryPill(label: 'Get Started', onPressed: _goLogin),
+                  ),
+                  const SizedBox(height: 18),
+                  FadeTransition(
+                    opacity: _textFade,
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Text(
+                          'Already have an account? ',
+                          style: TextStyle(color: Colors.white70, fontSize: 14.5),
                         ),
-                      ),
+                        GestureDetector(
+                          onTap: _goLogin,
+                          child: const Text(
+                            'Log in',
+                            style: TextStyle(
+                              color: Color(0xFF6FE7AE),
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -159,4 +196,51 @@ class SplashScreenState extends State<SplashScreen>
       ),
     );
   }
+}
+
+/// The mockup's green corner swoosh plus the two faint curves layered into
+/// the deep green panel at the foot of the screen.
+class _SplashDecorPainter extends CustomPainter {
+  const _SplashDecorPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Top-left green leaf over the photo.
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0)
+        ..lineTo(w * 0.46, 0)
+        ..quadraticBezierTo(w * 0.18, h * 0.05, 0, h * 0.12)
+        ..close(),
+      Paint()..color = kPrimary,
+    );
+
+    // Two faint lighter sweeps in the panel.
+    final sweep1 = Paint()..color = Colors.white.withValues(alpha: 0.05);
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, h * 0.78)
+        ..quadraticBezierTo(w * 0.5, h * 0.66, w, h * 0.76)
+        ..lineTo(w, h)
+        ..lineTo(0, h)
+        ..close(),
+      sweep1,
+    );
+    final sweep2 = Paint()..color = Colors.white.withValues(alpha: 0.05);
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, h * 0.88)
+        ..quadraticBezierTo(w * 0.45, h * 0.82, w, h * 0.90)
+        ..lineTo(w, h)
+        ..lineTo(0, h)
+        ..close(),
+      sweep2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SplashDecorPainter oldDelegate) => false;
 }

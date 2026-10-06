@@ -207,16 +207,23 @@ class _BottomWavesPainter extends CustomPainter {
 }
 
 /// "Trusted by chamas and savings groups across Kenya" with side rules.
+/// [onDark] switches to the light treatment used on the dark login screen.
 class TrustLine extends StatelessWidget {
-  const TrustLine({super.key, this.text = 'Trusted by chamas and savings groups across Kenya'});
+  const TrustLine({
+    super.key,
+    this.text = 'Trusted by chamas and savings groups across Kenya',
+    this.onDark = false,
+  });
 
   final String text;
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
+    final rule = onDark ? Colors.white24 : kHairline;
     return Row(
       children: [
-        const Expanded(child: Divider(color: kHairline, thickness: 1)),
+        Expanded(child: Divider(color: rule, thickness: 1)),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: Icon(Icons.verified_user_outlined, size: 15, color: kPrimary),
@@ -225,10 +232,10 @@ class TrustLine extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
-              color: kMuted,
+              color: onDark ? Colors.white70 : kMuted,
               height: 1.4,
             ),
           ),
@@ -237,7 +244,7 @@ class TrustLine extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: Icon(Icons.verified_user_outlined, size: 15, color: kPrimary),
         ),
-        const Expanded(child: Divider(color: kHairline, thickness: 1)),
+        Expanded(child: Divider(color: rule, thickness: 1)),
       ],
     );
   }

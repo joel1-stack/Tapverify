@@ -82,6 +82,16 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# --- SMS provider (sozuri | africastalking) ---
+SMS_PROVIDER = config('SMS_PROVIDER', default='sozuri')
+
+# --- Sozuri (SMS + OTP) ---
+SOZURI_ENDPOINT = config('SOZURI_ENDPOINT', default='https://sozuri.net/api/v1/messaging')
+SOZURI_API_KEY = config('SOZURI_API_KEY', default='')
+SOZURI_PROJECT = config('SOZURI_PROJECT', default='')
+SOZURI_FROM = config('SOZURI_FROM', default='Sozuri')
+SOZURI_TYPE = config('SOZURI_TYPE', default='promotional')
+
 # --- Africa's Talking (SMS + OTP) ---
 AFRICASTALKING_USERNAME = config('AFRICASTALKING_USERNAME', default='')
 AFRICASTALKING_API_KEY = config('AFRICASTALKING_API_KEY', default='')

@@ -3,9 +3,11 @@
 import 'dart:async';
 import 'dart:html' as html;
 
-/// Web: trigger a browser download.
-Future<void> downloadCsv(List<int> bytes, String filename) async {
-  final blob = html.Blob([bytes], 'text/csv');
+/// Web: trigger a browser download with the correct MIME type so the browser
+/// and the OS offer the right app (Word, Excel, PDF reader) to open it.
+Future<void> saveFile(List<int> bytes, String filename,
+    {String mime = 'application/octet-stream'}) async {
+  final blob = html.Blob([bytes], mime);
   final url = html.Url.createObjectUrlFromBlob(blob);
   html.AnchorElement(href: url)
     ..setAttribute('download', filename)

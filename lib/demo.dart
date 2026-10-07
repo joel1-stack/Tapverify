@@ -65,8 +65,9 @@ class Demo {
     final members = <Member>[];
     for (var i = 0; i < memberCount; i++) {
       final paid = i < paidCount;
+      final memberId = _nextMemberId++;
       members.add(Member(
-        id: _nextMemberId++,
+        id: memberId,
         name: _names[(i + iconSeed) % _names.length],
         phone: '07${(11 + ((i + iconSeed) % 80)).toString().padLeft(2, '0')} ${100 + ((i * 37 + iconSeed) % 900)} ${100 + ((i * 53 + iconSeed) % 900)}',
         status: paid ? 'paid' : 'unpaid',
@@ -75,7 +76,7 @@ class Demo {
         paidAmount: paid ? amount : null,
         amountMismatch: false,
         remindersSent: paid ? 0 : (i % 2),
-        payLink: 'https://tapverify.co/p/8f3k${id}n$i/',
+        payLink: 'https://tapverify.vercel.app/#/pay/$id/$memberId',
       ));
     }
     final collected =
@@ -212,6 +213,9 @@ class Demo {
         .map((l) => l.trim())
         .where((l) => l.isNotEmpty)
         .toList();
+    final collectionId = _collections.isEmpty
+        ? 1
+        : _collections.map((c) => c.summary.id).reduce(max) + 1;
     final members = <Member>[];
     for (final line in lines) {
       // "Mary Wanjiku - 0712345678", "0712345678", "Mary, 0712 345 678"...
@@ -230,20 +234,20 @@ class Demo {
         name = '';
       }
       if (phone.isEmpty) continue;
+      final memberId = _nextMemberId++;
       members.add(Member(
-        id: _nextMemberId++,
+        id: memberId,
         name: name,
         phone: phone,
         status: 'unpaid',
         amountMismatch: false,
         remindersSent: 0,
-        payLink:
-            'https://tapverify.co/p/8f3k${_collections.length + 1}n${members.length}/',
+        payLink: 'https://tapverify.vercel.app/#/pay/$collectionId/$memberId',
       ));
     }
     final detail = CollectionDetail(
       summary: CollectionSummary(
-        id: _collections.isEmpty ? 1 : _collections.map((c) => c.summary.id).reduce(max) + 1,
+        id: collectionId,
         title: title,
         amount: value,
         payoutMethod: payoutMethod,
@@ -314,6 +318,12 @@ class Demo {
       final paid = c.members.where((m) => m.isPaid).toList();
       final collected = paid.fold<double>(0, (s, m) => s + (m.paidAmount ?? 0));
       final s = c.summary;
+      // Partial payments count: someone still owes the missing difference.
+      final outstanding = c.members.fold<double>(0, (acc, m) {
+        if (!m.isPaid) return acc + s.amount;
+        final got = m.paidAmount ?? s.amount;
+        return acc + (got < s.amount ? s.amount - got : 0);
+      });
       // CollectionSummary is immutable: rebuild it around the same members.
       _collections[ci] = CollectionDetail(
         summary: CollectionSummary(
@@ -324,7 +334,7 @@ class Demo {
           memberCount: s.memberCount,
           paidCount: paid.length,
           collected: collected,
-          outstanding: (s.memberCount - paid.length) * s.amount,
+          outstanding: outstanding,
           dueDate: s.dueDate,
           autoDetect: s.autoDetect,
           payoutDetails: s.payoutDetails,
@@ -337,8 +347,15 @@ class Demo {
     }
   }
 
-  Member markPaid(int memberId, String method) {
+  Member markPaid(int memberId, String method, {double? amount}) {
     final m = _member(memberId);
+    final expected = _collections
+        .firstWhere((c) => c.members.any((x) => x.id == memberId))
+        .summary
+        .amount;
+    // A payer can record the full amount or any part of it; anything short
+    // of the collection amount is kept as a partial payment.
+    final paid = amount ?? m.paidAmount ?? expected;
     final updated = Member(
       id: m.id,
       name: m.name,
@@ -346,12 +363,8 @@ class Demo {
       status: 'paid',
       paidAt: DateTime.now().toIso8601String(),
       paidMethod: method,
-      paidAmount: m.paidAmount ??
-          _collections
-              .firstWhere((c) => c.members.any((x) => x.id == memberId))
-              .summary
-              .amount,
-      amountMismatch: false,
+      paidAmount: paid,
+      amountMismatch: paid < expected,
       transactionRef: 'DEMO${m.id}',
       remindersSent: m.remindersSent,
       payLink: m.payLink,

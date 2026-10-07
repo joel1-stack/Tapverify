@@ -46,27 +46,33 @@ class AuthShell extends StatelessWidget {
               children: [
                 _PhotoHeader(asset: photo, height: photoHeight, showLogo: showLogo),
                 Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 440),
-                        child: Container(
-                          margin: const EdgeInsets.only(top: -52),
-                          padding: const EdgeInsets.fromLTRB(24, 30, 24, 28),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(36)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.07),
-                                blurRadius: 34,
-                                offset: const Offset(0, -6),
-                              ),
-                            ],
+                  // The card overlaps the photo by 52px. The negative padding
+                  // lives OUTSIDE the scroll view: putting it on the card
+                  // instead let the viewport slice the rounded corners and
+                  // the icon badge off at the green edge.
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: -52),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(24, 30, 24, 28),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(36)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.07),
+                                  blurRadius: 34,
+                                  offset: const Offset(0, -6),
+                                ),
+                              ],
+                            ),
+                            child: child,
                           ),
-                          child: child,
                         ),
                       ),
                     ),
@@ -81,8 +87,8 @@ class AuthShell extends StatelessWidget {
   }
 }
 
-/// The photo, a dark green tint for readability, the logo, and the green
-/// wave that separates photo from card.
+/// The photo exactly as it is, the logo, and the green wave that separates
+/// photo from card. No tint or overlay on the picture itself.
 class _PhotoHeader extends StatelessWidget {
   const _PhotoHeader({
     required this.asset,
@@ -109,18 +115,6 @@ class _PhotoHeader extends StatelessWidget {
             cacheWidth: (1400 * dpr).round(),
             errorBuilder: (context, error, stack) =>
                 const ColoredBox(color: kPrimaryDark),
-          ),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x33005F3C),
-                  Color(0xB3005F3C),
-                ],
-              ),
-            ),
           ),
           Positioned(
             top: 14,

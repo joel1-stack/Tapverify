@@ -1768,7 +1768,7 @@ class _MemberExperienceState extends State<_MemberExperience> with SingleTickerP
                       'September Welfare, KES 500\n\n'
                       'Pay to Till: 567890\n'
                       '(Use your full name as reference)\n\n'
-                      'Or pay here: https://tapverify.co/p/abc123',
+                      'Or pay here: https://tapverify.vercel.app/#/pay/1/5000',
                       style: TextStyle(
                           fontFamily: 'monospace', fontSize: 13, height: 1.6, color: Color(0xFF333333)),
                     ),

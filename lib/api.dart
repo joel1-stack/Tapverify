@@ -52,9 +52,13 @@ class Api {
 
   static Uri _u(String path) => Uri.parse('$kApiBaseUrl$path');
 
-  /// Mobile is the product and always talks to Django. The web build is the
-  /// public demo with no server behind it, so it is answered in memory.
-  static bool get _demo => kIsWeb;
+  /// Mobile normally talks to Django. The web build is the public demo with
+  /// no server behind it, and a shareable APK can force the same in-memory
+  /// backend with --dart-define=DEMO=true so it works on any phone without
+  /// hosting.
+  static const bool _forceDemo = bool.fromEnvironment('DEMO');
+
+  static bool get _demo => kIsWeb || _forceDemo;
 
   static dynamic _decode(http.Response resp) {
     if (resp.bodyBytes.isEmpty) return null;
@@ -270,11 +274,18 @@ class Api {
 
   // ── Members ───────────────────────────────────────────────────────────
 
-  static Future<Member> markPaid(int memberId, String method) async {
-    if (_demo) return Demo.instance.markPaid(memberId, method);
+  static Future<Member> markPaid(int memberId, String method,
+      {double? amount}) async {
+    if (_demo) {
+      return Demo.instance.markPaid(memberId, method, amount: amount);
+    }
     final resp = await http
         .post(_u('/api/members/$memberId/mark-paid/'),
-            headers: await _headers(), body: jsonEncode({'method': method}))
+            headers: await _headers(),
+            body: jsonEncode({
+              'method': method,
+              if (amount != null) 'amount': amount,
+            }))
         .timeout(_timeout);
     final data = await _handle(resp);
     if (data is! Map) throw ApiException('Unexpected reply from TapVerify');

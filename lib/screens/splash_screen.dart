@@ -76,23 +76,8 @@ class SplashScreenState extends State<SplashScreen>
             errorBuilder: (context, error, stack) =>
                 const ColoredBox(color: kDarkGreen),
           ),
-          // Photo fading into the deep green panel that holds the message.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x00000000),
-                  Color(0x33005F3C),
-                  Color(0xCC003D28),
-                  Color(0xF2003D28),
-                  Color(0xF2003D28),
-                ],
-                stops: [0.0, 0.42, 0.66, 0.85, 1.0],
-              ),
-            ),
-          ),
+          // The photo stays fully visible; the message sits on the solid
+          // deep green panel painted by _SplashDecorPainter.
           const RepaintBoundary(
             child: CustomPaint(painter: _SplashDecorPainter()),
           ),
@@ -198,8 +183,9 @@ class SplashScreenState extends State<SplashScreen>
   }
 }
 
-/// The mockup's green corner swoosh plus the two faint curves layered into
-/// the deep green panel at the foot of the screen.
+/// The mockup's solid deep green message panel with its curved top edge,
+/// the green corner swoosh over the photo, and the two faint curves layered
+/// into the panel at the foot of the screen.
 class _SplashDecorPainter extends CustomPainter {
   const _SplashDecorPainter();
 
@@ -207,6 +193,17 @@ class _SplashDecorPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+
+    // Solid message panel: opaque, so the photo above it stays clean.
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, h * 0.46)
+        ..quadraticBezierTo(w * 0.5, h * 0.40, w, h * 0.50)
+        ..lineTo(w, h)
+        ..lineTo(0, h)
+        ..close(),
+      Paint()..color = const Color(0xFF003D28),
+    );
 
     // Top-left green leaf over the photo.
     canvas.drawPath(

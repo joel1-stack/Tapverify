@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../main.dart';
-import '../models.dart' show CollectionSummary, Member;
+import '../models.dart' show CollectionDetail, CollectionSummary, Member;
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
 import '../widgets/responsive.dart';
 import 'create_collection_screen.dart';
 import 'live_list_screen.dart';
+import 'member_detail_sheet.dart';
 
 /// Slide-up route used for the create flow.
 Route<bool> _createRoute() => PageRouteBuilder<bool>(
@@ -22,13 +23,12 @@ Route<bool> _createRoute() => PageRouteBuilder<bool>(
       transitionDuration: AppMotion.medium,
     );
 
-/// Member row shown on the Members tab: the person plus the collection they
-/// belong to, because the same name can appear in several collections.
-class _MemberRow {
-  const _MemberRow(this.member, this.collectionTitle);
+/// One section of the Members tab: a collection (chama) plus its members,
+/// so people are grouped under the collection they pay into.
+class _MemberGroup {
+  const _MemberGroup(this.detail);
 
-  final Member member;
-  final String collectionTitle;
+  final CollectionDetail detail;
 }
 
 class HomeScreen extends StatefulWidget {
@@ -41,7 +41,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<CollectionSummary>> _future = _load();
-  late Future<List<_MemberRow>> _membersFuture = _loadMembers();
+  late Future<List<_MemberGroup>> _membersFuture = _loadMembers();
   late final AnimationController _fabController;
   late final Animation<double> _fabScale;
   String _name = '';
@@ -50,18 +50,18 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<List<CollectionSummary>> _load() => Api.listCollections();
 
-  /// The Members tab aggregates every member across every collection, so a
-  /// treasurer can find one person without opening each list.
-  Future<List<_MemberRow>> _loadMembers() async {
+  /// The Members tab groups people under the collection they belong to, so
+  /// a treasurer sees one section per chama instead of one long list.
+  Future<List<_MemberGroup>> _loadMembers() async {
     final collections = await Api.listCollections();
-    final rows = <_MemberRow>[];
+    final groups = <_MemberGroup>[];
     for (final c in collections) {
       final detail = await Api.getCollection(c.id);
-      for (final m in detail.members) {
-        rows.add(_MemberRow(m, detail.summary.title));
+      if (detail.members.isNotEmpty) {
+        groups.add(_MemberGroup(detail));
       }
     }
-    return rows;
+    return groups;
   }
 
   @override
@@ -291,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen>
             onRefresh: _refresh,
             color: kPrimary,
             child: AppConstrained(
-              child: FutureBuilder<List<_MemberRow>>(
+              child: FutureBuilder<List<_MemberGroup>>(
                 future: _membersFuture,
                 builder: (context, snap) {
                   if (snap.hasError) {
@@ -301,19 +301,35 @@ class _HomeScreenState extends State<HomeScreen>
                           setState(() => _membersFuture = _loadMembers()),
                     );
                   }
-                  final rows = snap.data;
-                  if (rows == null) {
+                  final groups = snap.data;
+                  if (groups == null) {
                     return _buildLoadingState();
                   }
-                  if (rows.isEmpty) {
+                  if (groups.isEmpty) {
                     return const _EmptyMembers();
                   }
-                  return ListView.separated(
+                  return ListView(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
-                    itemCount: rows.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) =>
-                        _MemberTile(row: rows[i], seed: i),
+                    children: [
+                      for (var gi = 0; gi < groups.length; gi++) ...[
+                        _MemberGroupHeader(group: groups[gi]),
+                        const SizedBox(height: 8),
+                        for (var mi = 0;
+                            mi < groups[gi].detail.members.length;
+                            mi++) ...[
+                          _MemberTile(
+                            member: groups[gi].detail.members[mi],
+                            onTap: () => _openMember(
+                              groups[gi].detail,
+                              groups[gi].detail.members[mi],
+                            ),
+                          ),
+                          if (mi != groups[gi].detail.members.length - 1)
+                            const SizedBox(height: 10),
+                        ],
+                        const SizedBox(height: 18),
+                      ],
+                    ],
                   );
                 },
               ),
@@ -322,6 +338,24 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ],
     );
+  }
+
+  /// Opens the member sheet (same one the live list uses) and refreshes the
+  /// groups when something was changed from it.
+  Future<void> _openMember(CollectionDetail detail, Member member) async {
+    final changed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => MemberDetailSheet(
+        member: member,
+        collectionTitle: detail.summary.title,
+        amountLabel: Format.kes(detail.summary.amount),
+      ),
+    );
+    if (changed == true && mounted) {
+      setState(() => _membersFuture = _loadMembers());
+    }
   }
 
   /// The list body. [featured] lifts the first collection into the big
@@ -763,21 +797,108 @@ class _CollectionTile extends StatelessWidget {
   }
 }
 
-/// One member on the Members tab.
-class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.row, required this.seed});
+/// Section header on the Members tab: the collection its members pay into,
+/// with the paid count and a member-count pill.
+class _MemberGroupHeader extends StatelessWidget {
+  const _MemberGroupHeader({required this.group});
 
-  final _MemberRow row;
-  final int seed;
+  final _MemberGroup group;
 
   @override
   Widget build(BuildContext context) {
-    final m = row.member;
-    final paid = m.isPaid;
+    final s = group.detail.summary;
+    final memberNoun = s.memberCount == 1 ? 'member' : 'members';
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: kPrimaryLight,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [kPrimary, kPrimaryDark],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.groups_rounded,
+                color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: kPrimaryDark,
+                  ),
+                ),
+                Text(
+                  '${s.paidCount} of ${s.memberCount} paid',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: kPrimaryDark.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kSoftGreen),
+            ),
+            child: Text(
+              '${s.memberCount} $memberNoun',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: kPrimaryDark,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One member on the Members tab.
+class _MemberTile extends StatelessWidget {
+  const _MemberTile({required this.member, this.onTap});
+
+  final Member member;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final m = member;
+    final paid = m.isPaid;
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: kHairline),
         boxShadow: [
@@ -824,7 +945,7 @@ class _MemberTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${m.phone} · ${row.collectionTitle}',
+                  m.phone,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: Colors.grey[500]),
@@ -851,6 +972,8 @@ class _MemberTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }

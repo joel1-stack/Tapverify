@@ -7,6 +7,7 @@ import 'api.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/pay_screen.dart';
 import 'screens/splash_screen.dart';
 
 /// Where the API lives.
@@ -236,6 +237,12 @@ class _GateState extends State<_Gate> {
 
   @override
   Widget build(BuildContext context) {
+    // A pay link (#/pay/<collection>/<member>) opens the public payment
+    // page, signed in or not.
+    final pay = PayScreen.parseRoute(Uri.base);
+    if (pay != null) {
+      return PayScreen(collectionId: pay.$1, memberId: pay.$2);
+    }
     final signedIn = AuthState.signedIn.value;
     final Widget child;
     final String stage;

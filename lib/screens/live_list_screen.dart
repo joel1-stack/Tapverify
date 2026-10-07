@@ -5,6 +5,7 @@ import '../api.dart';
 import '../main.dart';
 import '../models.dart';
 import '../services/csv_download.dart';
+import '../services/report_export.dart';
 import '../utils/format.dart';
 import '../widgets/app_feedback.dart';
 import '../widgets/responsive.dart';
@@ -157,22 +158,89 @@ class _LiveListScreenState extends State<LiveListScreen>
     }
   }
 
+  /// Ask which document format the secretary wants, build it on device, then
+  /// open the share sheet (or a browser download on web) so the report can be
+  /// printed or handed over as a PDF, Word, Excel or CSV file.
   Future<void> _download() async {
+    final detail = _detail;
+    if (detail == null || _actionBusy) return;
+    final format = await showModalBottomSheet<ReportFormat>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
+              child: Text(
+                'Export collection',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: kBrandInk),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+              child: Text(
+                'Print it or share it as a document',
+                style: TextStyle(fontSize: 13.5, color: Colors.grey[600]),
+              ),
+            ),
+            for (final f in ReportFormat.values)
+              ListTile(
+                leading: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: const BoxDecoration(
+                    color: kPrimaryLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_formatIcon(f), color: kPrimaryDark, size: 20),
+                ),
+                title: Text(
+                  f.label,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+                subtitle: Text(
+                  f.hint,
+                  style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                ),
+                onTap: () => Navigator.of(sheetContext).pop(f),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (format == null || !mounted) return;
     setState(() => _actionBusy = true);
     try {
-      final bytes = await Api.exportCsv(widget.collectionId);
-      final slug = (_detail?.summary.title ?? '')
-          .toLowerCase()
-          .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-          .replaceAll(RegExp(r'^-+|-+$'), '');
-      final name = slug.isEmpty ? 'collection-${widget.collectionId}' : slug;
-      await downloadCsv(bytes, 'tapverify-$name.csv');
+      final bytes = await buildReport(detail, format);
+      await saveFile(
+        bytes,
+        'tapverify-${reportSlug(detail)}.${format.ext}',
+        mime: format.mime,
+      );
     } catch (e) {
       _showError(e);
     } finally {
       if (mounted) setState(() => _actionBusy = false);
     }
   }
+
+  IconData _formatIcon(ReportFormat f) => switch (f) {
+        ReportFormat.pdf => Icons.picture_as_pdf_outlined,
+        ReportFormat.word => Icons.article_outlined,
+        ReportFormat.excel => Icons.table_chart_outlined,
+        ReportFormat.csv => Icons.file_upload_outlined,
+      };
 
   Future<void> _openMember(Member member) async {
     final wide = isWideDisplay(context);

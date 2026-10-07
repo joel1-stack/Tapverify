@@ -82,23 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
             errorBuilder: (context, error, stack) =>
                 const ColoredBox(color: kDarkGreen),
           ),
-          // Photo dissolving into the deep green message panel.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x00000000),
-                  Color(0x55005F3C),
-                  Color(0xD9004029),
-                  Color(0xF2003D28),
-                  Color(0xF2003D28),
-                ],
-                stops: [0.0, 0.28, 0.55, 0.72, 1.0],
-              ),
-            ),
-          ),
+          // The photo stays fully visible; _LoginWavesPainter lays the solid
+          // deep green panel (and its sweeps) over the lower part.
           const RepaintBoundary(
             child: CustomPaint(painter: _LoginWavesPainter()),
           ),
@@ -229,7 +214,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-/// Two faint lighter-green sweeps along the foot of the dark panel, as in
+/// The solid deep green panel with its curved top edge (so the photo above
+/// stays clean), plus two faint lighter-green sweeps along its foot, as in
 /// the login mockup.
 class _LoginWavesPainter extends CustomPainter {
   const _LoginWavesPainter();
@@ -238,6 +224,16 @@ class _LoginWavesPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, h * 0.54)
+        ..quadraticBezierTo(w * 0.5, h * 0.47, w, h * 0.57)
+        ..lineTo(w, h)
+        ..lineTo(0, h)
+        ..close(),
+      Paint()..color = const Color(0xFF003D28),
+    );
 
     void sweep(double top, double dip, double end, double alpha) {
       final path = Path()

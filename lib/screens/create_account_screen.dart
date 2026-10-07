@@ -82,15 +82,21 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: const BoxDecoration(
-              color: kPrimaryLight,
-              shape: BoxShape.circle,
+          // The card column stretches its children to full width, so this
+          // badge needs an Align or its circle paints centred; the mockup
+          // shows it at the top-left, above the heading.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: const BoxDecoration(
+                color: kPrimaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.person_add_alt_1_outlined,
+                  color: kPrimaryDark, size: 24),
             ),
-            child: const Icon(Icons.person_add_alt_1_outlined,
-                color: kPrimaryDark, size: 24),
           ),
           const SizedBox(height: 18),
           Text.rich(

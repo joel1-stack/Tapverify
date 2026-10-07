@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api.dart';
 import '../main.dart';
@@ -82,6 +83,44 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
             : widget.amountLabel,
         memberName: m.displayName,
       );
+
+  /// WhatsApp's international format: digits only, no "+", never a leading 0.
+  static String _waNumber(String phone) {
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('254')) return digits;
+    if (digits.startsWith('0')) return '254${digits.substring(1)}';
+    if (digits.length == 9) return '254$digits';
+    return digits;
+  }
+
+  /// Opens this member's chat with the payment link already typed out, so the
+  /// secretary just presses send. WhatsApp sends it as the message itself.
+  Future<void> _sendWhatsApp(Member m) async {
+    final link = (m.payLink ?? '').trim();
+    final where = widget.collectionTitle.isEmpty
+        ? 'your TapVerify collection'
+        : 'your TapVerify collection "${widget.collectionTitle}"';
+    final body = link.isEmpty
+        ? 'Hi ${m.displayName}, the payment for $where is still due. '
+            'Please send it when you can. Thank you!'
+        : 'Hi ${m.displayName}, your payment link for $where:\n'
+            '$link\nTap the link to open it and pay.';
+    final uri = Uri.parse(
+        'https://wa.me/${_waNumber(m.phone)}?text=${Uri.encodeComponent(body)}');
+    try {
+      final ok =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        showErrorSnack(
+            context, ApiException('WhatsApp could not be opened.'));
+      }
+    } catch (_) {
+      if (mounted) {
+        showErrorSnack(
+            context, ApiException('WhatsApp could not be opened.'));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +285,20 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                     style: TextButton.styleFrom(
                       foregroundColor: kAccentDark,
                       padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                    onPressed: _busy ? null : () => _sendWhatsApp(m),
+                    label: const Text('Send payment link on WhatsApp',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF075E54),
+                      side: const BorderSide(color: Color(0xFF075E54), width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ] else ...[

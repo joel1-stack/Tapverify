@@ -1,6 +1,15 @@
+import 'dart:convert';
+
+import 'package:excel/excel.dart' show Excel;
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart'
+    show PdfDocument, PdfTextExtractor;
 
 import '../api.dart';
 import '../main.dart';
@@ -56,11 +65,13 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
   final _paybillController = TextEditingController();
   final _paybillAccountController = TextEditingController();
   final _personalPhoneController = TextEditingController();
-  final _bankController = TextEditingController();
+  final _bankAccountController = TextEditingController();
+  final _bankBusinessController = TextEditingController();
 
   String _payoutMethod = 'till';
   DateTime? _dueDate;
   bool _busy = false;
+  bool _reading = false;
   String? _error;
 
   late final AnimationController _controller;
@@ -83,7 +94,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
     for (final c in [
       _titleController, _amountController, _membersController, _tillController,
       _paybillController, _paybillAccountController, _personalPhoneController,
-      _bankController,
+      _bankAccountController, _bankBusinessController,
     ]) {
       c.dispose();
     }
@@ -102,7 +113,11 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
       case 'personal':
         return {'personal_phone': _personalPhoneController.text.trim()};
       case 'bank':
-        return {'bank_details': _bankController.text.trim()};
+        // The API stores one string, so the two form fields travel together.
+        return {
+          'bank_details':
+              'Account ${_bankAccountController.text.trim()}, Business ${_bankBusinessController.text.trim()}',
+        };
       default:
         return {};
     }
@@ -117,7 +132,8 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
       case 'personal':
         return _personalPhoneController.text.trim().isNotEmpty;
       case 'bank':
-        return _bankController.text.trim().isNotEmpty;
+        return _bankAccountController.text.trim().isNotEmpty &&
+            _bankBusinessController.text.trim().isNotEmpty;
       default:
         return false;
     }
@@ -167,6 +183,130 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Snap a picture of a written or printed list (attendance sheet, phone
+  /// screen) and pull the phone numbers out of it with on-device OCR.
+  Future<void> _scanCamera() async {
+    if (_reading || _busy) return;
+    if (kIsWeb) {
+      setState(() => _error = 'Photo scanning works in the phone app');
+      return;
+    }
+    setState(() {
+      _reading = true;
+      _error = null;
+    });
+    try {
+      final shot = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2200,
+        imageQuality: 95,
+      );
+      if (shot == null) return;
+      final input = InputImage.fromFilePath(shot.path);
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      String text;
+      try {
+        final result = await recognizer.processImage(input);
+        text = result.text;
+      } finally {
+        await recognizer.close();
+      }
+      if (!mounted) return;
+      _appendFound(text, 'the photo');
+    } catch (e) {
+      if (mounted) setState(() => _error = friendlyError(e));
+    } finally {
+      if (mounted) setState(() => _reading = false);
+    }
+  }
+
+  /// Pull phone numbers out of an uploaded PDF, Excel sheet, CSV or text file.
+  Future<void> _uploadList() async {
+    if (_reading || _busy) return;
+    setState(() {
+      _reading = true;
+      _error = null;
+    });
+    try {
+      final picked = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'xlsx', 'csv', 'txt'],
+        withData: true,
+      );
+      if (picked == null || picked.files.isEmpty) return;
+      final file = picked.files.first;
+      final bytes = file.bytes;
+      if (bytes == null) {
+        throw ApiException('That file could not be read. Try again.');
+      }
+      final ext = (file.extension ?? '').toLowerCase();
+      final String text;
+      if (ext == 'pdf') {
+        text = PdfTextExtractor(PdfDocument(inputBytes: bytes)).extractText();
+      } else if (ext == 'xlsx') {
+        text = _excelToText(bytes);
+      } else {
+        text = utf8.decode(bytes, allowMalformed: true);
+      }
+      if (!mounted) return;
+      _appendFound(text, 'the ${ext.toUpperCase()} file');
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = friendlyError(e));
+      }
+    } finally {
+      if (mounted) setState(() => _reading = false);
+    }
+  }
+
+  /// Every cell of every sheet, one spreadsheet row per line, so the same
+  /// "name, number" parser used for pasted text can read it.
+  String _excelToText(Uint8List bytes) {
+    final book = Excel.decodeBytes(bytes);
+    final buffer = StringBuffer();
+    for (final table in book.tables.values) {
+      for (final row in table.rows) {
+        final cells = row
+            .map((c) => c?.value?.toString().trim() ?? '')
+            .toList();
+        if (cells.any((v) => v.isNotEmpty)) {
+          buffer.writeln(cells.join(','));
+        }
+      }
+    }
+    return buffer.toString();
+  }
+
+  /// Merges numbers found in a photo/file into the paste box, skipping
+  /// duplicates that are already there.
+  void _appendFound(String text, String source) {
+    final found = _parsePasted(text);
+    if (found.isEmpty) {
+      setState(() => _error = 'No phone numbers found in $source');
+      return;
+    }
+    final existing =
+        _parsePasted(_membersController.text).map((m) => m.phone).toSet();
+    final fresh = found.where((m) => !existing.contains(m.phone)).toList();
+    if (fresh.isEmpty) {
+      showSuccessSnack(context, 'Those numbers are already in your list');
+      return;
+    }
+    final lines = fresh
+        .map((m) => m.name.isEmpty ? m.phone : '${m.name}, ${m.phone}')
+        .join('\n');
+    final current = _membersController.text.trimRight();
+    setState(() {
+      _membersController.text = current.isEmpty ? lines : '$current\n$lines';
+      _error = null;
+    });
+    showSuccessSnack(
+      context,
+      'Added ${fresh.length} phone number${fresh.length == 1 ? '' : 's'} '
+      'from $source',
+    );
   }
 
   void _openLiveList(int collectionId) {
@@ -338,6 +478,64 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                _reading || _busy ? null : _scanCamera,
+                            icon: const Icon(Icons.camera_alt_outlined,
+                                size: 18),
+                            label: const Text('Scan a photo',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimaryDark,
+                              side: const BorderSide(
+                                  color: kSoftGreen, width: 1.5),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                _reading || _busy ? null : _uploadList,
+                            icon: const Icon(Icons.upload_file_outlined,
+                                size: 18),
+                            label: const Text('Upload file',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimaryDark,
+                              side: const BorderSide(
+                                  color: kSoftGreen, width: 1.5),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_reading) ...[
+                      const SizedBox(height: 10),
+                      const LinearProgressIndicator(
+                        minHeight: 3,
+                        color: kPrimary,
+                        backgroundColor: kPrimaryLight,
+                      ),
+                    ],
+                    const SizedBox(height: 10),
                     _MemberPreview(text: _membersController.text),
                   ],
                 ),
@@ -479,9 +677,17 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
       case 'bank':
         return [
           _StyledField(
-            controller: _bankController,
-            label: 'Bank details (bank, account no., name)',
+            controller: _bankAccountController,
+            label: 'Account number',
+            keyboardType: TextInputType.number,
             icon: Icons.account_balance_outlined,
+          ),
+          const SizedBox(height: 14),
+          _StyledField(
+            controller: _bankBusinessController,
+            label: 'Business number',
+            keyboardType: TextInputType.number,
+            icon: Icons.badge_outlined,
           ),
         ];
       default:

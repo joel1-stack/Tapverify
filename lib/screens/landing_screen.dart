@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import '../widgets/app_feedback.dart';
+import 'legal_screen.dart';
 import 'login_screen.dart';
 
 /// Public marketing page: what a visitor sees before logging in.
@@ -1939,6 +1940,48 @@ class _Footer extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 18,
+                        runSpacing: 6,
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const LegalScreen(
+                                    doc: LegalDoc.terms),
+                              ),
+                            ),
+                            child: const Text(
+                              'Terms of Service',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white38,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const LegalScreen(
+                                    doc: LegalDoc.privacy),
+                              ),
+                            ),
+                            child: const Text(
+                              'Privacy Policy',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white38,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 48),
                       // Trust strip: icon, bold title, short subtitle.

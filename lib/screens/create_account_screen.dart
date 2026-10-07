@@ -5,6 +5,7 @@ import '../api.dart';
 import '../main.dart';
 import '../widgets/app_feedback.dart';
 import '../widgets/auth_shell.dart';
+import 'legal_screen.dart';
 import 'otp_screen.dart';
 
 /// Create Account: name + phone + group. Registers the profile, then the
@@ -73,6 +74,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   void _backToLogin() {
     Navigator.of(context).pop();
+  }
+
+  void _openDoc(LegalDoc doc) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LegalScreen(doc: doc)),
+    );
   }
 
   @override
@@ -177,7 +184,51 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             const SizedBox(height: 16),
             ErrorNote(message: _error!),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
+          // Consent line: Terms of Service + Privacy Policy links.
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              const Text(
+                'By creating an account you agree to our',
+                style: TextStyle(fontSize: 12.5, color: kMuted),
+              ),
+              GestureDetector(
+                onTap: () => _openDoc(LegalDoc.terms),
+                child: const Text(
+                  'Terms of Service',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: kPrimary,
+                    fontWeight: FontWeight.w800,
+                    decoration: TextDecoration.underline,
+                    decorationColor: kPrimary,
+                  ),
+                ),
+              ),
+              const Text(
+                'and',
+                style: TextStyle(fontSize: 12.5, color: kMuted),
+              ),
+              GestureDetector(
+                onTap: () => _openDoc(LegalDoc.privacy),
+                child: const Text(
+                  'Privacy Policy',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: kPrimary,
+                    fontWeight: FontWeight.w800,
+                    decoration: TextDecoration.underline,
+                    decorationColor: kPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           PrimaryPill(
             label: 'Create Account',
             busy: _busy,

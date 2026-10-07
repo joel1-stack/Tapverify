@@ -12,11 +12,13 @@ Secretary API (Bearer token):
     GET  /api/collections/<id>/export.csv
     POST /api/members/<id>/mark-paid/        {method: cash|other}
     POST /api/members/<id>/remind/
+    POST /api/members/<id>/stk-push/         request M-Pesa STK push
 
 Public (no login - the member experience):
     GET  /p/<pay_code>/                      member payment page (HTML)
     GET  /api/p/<pay_code>/                  payment info (JSON)
-    POST /api/p/<pay_code>/pay/              start M-Pesa payment
+    POST /api/p/<pay_code>/pay/              start M-Pesa payment (STK Push)
+    POST /api/webhooks/mpesa/                Daraja STK result
     POST /api/webhooks/sasapay/              payment notifications
 """
 import csv
@@ -36,6 +38,7 @@ from rest_framework.views import APIView
 
 from .models import Collection, LoginOTP, Member, Payment, Secretary, new_token
 from .services import sms
+from .services.mpesa import get_mpesa_client, parse_callback
 from .services.sasapay import get_sasapay_client
 from .utils import normalize_ke_phone, parse_members_text
 
@@ -372,8 +375,41 @@ class PayInfoView(APIView):
         })
 
 
+def start_member_stk(member, phone=None):
+    """Start a Daraja STK Push for this member and record a pending Payment.
+
+    Returns (ok, result_dict, error_string).
+    """
+    client = get_mpesa_client()
+    if not client.configured:
+        return False, {}, 'M-Pesa credentials are not configured yet'
+    phone = normalize_ke_phone(phone or '') or member.phone
+    result = client.stk_push(
+        phone=phone,
+        amount=member.collection.amount,
+        account_reference=member.pay_code,
+        description='TapVerify',
+    )
+    if not result.get('success'):
+        logger.warning('STK push failed for %s: %s', phone, result.get('error'))
+        return False, result, result.get('error') or 'Could not start payment'
+    Payment.objects.create(
+        member=member,
+        collection=member.collection,
+        phone=phone,
+        amount=member.collection.amount,
+        reference=result.get('checkout_request_id', ''),
+        status=Payment.UNMATCHED,
+        raw={'state': 'stk_pending',
+             'checkout_request_id': result.get('checkout_request_id', '')},
+    )
+    logger.info('STK push sent to %s for "%s" (%s)',
+                phone, member.collection.title, member.pay_code)
+    return True, result, None
+
+
 class PayStartView(APIView):
-    """Start an M-Pesa payment for this member via the SasaPay checkout."""
+    """Start an M-Pesa payment for this member (STK Push or SasaPay)."""
     permission_classes = [AllowAny]
 
     def post(self, request, pay_code):
@@ -382,6 +418,20 @@ class PayStartView(APIView):
             return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
         if member.status == Member.PAID:
             return Response({'paid': True})
+
+        if settings.PAYMENT_RAIL == 'mpesa':
+            ok, result, error = start_member_stk(
+                member, request.data.get('phone'))
+            if not ok:
+                return Response({'error': error},
+                                status=status.HTTP_502_BAD_GATEWAY)
+            return Response({
+                'paid': False,
+                'stk': True,
+                'message': result.get('customer_message'),
+                'checkout_request_id': result.get('checkout_request_id'),
+            })
+
         phone = normalize_ke_phone(request.data.get('phone', '')) or member.phone
         client = get_sasapay_client()
         result = client.create_checkout(
@@ -403,6 +453,29 @@ class PayStartView(APIView):
         return Response({
             'paid': False,
             'checkout_url': result.get('checkout_url'),
+            'checkout_request_id': result.get('checkout_request_id'),
+        })
+
+
+class MemberStkPushView(APIView):
+    """The treasurer asks Daraja to prompt this member's phone (STK Push)."""
+
+    def post(self, request, pk):
+        member = Member.objects.filter(
+            pk=pk, collection__secretary=request.user).first()
+        if not member:
+            return Response({'error': 'Not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        if member.status == Member.PAID:
+            return Response({'paid': True})
+        phone = request.data.get('phone') if isinstance(request.data, dict) else None
+        ok, result, error = start_member_stk(member, phone)
+        if not ok:
+            return Response({'error': error},
+                            status=status.HTTP_502_BAD_GATEWAY)
+        return Response({
+            'sent': True,
+            'message': result.get('customer_message'),
             'checkout_request_id': result.get('checkout_request_id'),
         })
 
@@ -461,6 +534,91 @@ class SasaPayWebhookView(APIView):
 
     @staticmethod
     def _parse_amount(raw):
+        try:
+            return Decimal(str(raw)) if raw is not None else None
+        except (InvalidOperation, TypeError):
+            return None
+
+
+# ── Daraja M-Pesa webhook: STK Push results ──────────────────────────────────
+
+class MpesaWebhookView(APIView):
+    """Where the Vercel relay (tapverify.vercel.app/api/mpesa/callback)
+    forwards Daraja STK Push results. No login: Safaricom calls this."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        parsed = parse_callback(request.data)
+        if not parsed['checkout_request_id']:
+            logger.warning('M-Pesa callback without CheckoutRequestID: %s',
+                           request.data)
+            return Response({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+        pending = (Payment.objects
+                   .filter(reference=parsed['checkout_request_id'])
+                   .order_by('-created_at').first())
+        member = pending.member if pending else None
+        if member is None and parsed.get('account_reference'):
+            member = Member.objects.filter(
+                pay_code=parsed['account_reference']).first()
+
+        if parsed['success']:
+            amount = self._amount(parsed.get('amount'))
+            if member is not None:
+                paid_amount = amount or member.collection.amount
+                if pending:
+                    pending.transaction_code = parsed['receipt']
+                    pending.status = Payment.MATCHED
+                    pending.raw = {**(pending.raw or {}),
+                                   'callback': request.data}
+                    pending.save(update_fields=['transaction_code', 'status', 'raw'])
+                else:
+                    Payment.objects.create(
+                        member=member,
+                        collection=member.collection,
+                        phone=parsed.get('phone') or member.phone,
+                        amount=paid_amount,
+                        reference=parsed['checkout_request_id'],
+                        transaction_code=parsed['receipt'],
+                        status=Payment.MATCHED,
+                        raw={'callback': request.data},
+                    )
+                if member.status != Member.PAID:
+                    member.mark_paid(method='auto', amount=paid_amount,
+                                     transaction_ref=parsed['receipt'])
+                    sms.send_sms(
+                        member.phone,
+                        sms.build_payment_confirmation_sms(
+                            member.collection, member))
+                    logger.info('STK payment confirmed: %s -> "%s" (%s)',
+                                member.phone, member.collection.title,
+                                parsed['receipt'])
+            else:
+                Payment.objects.create(
+                    phone=str(parsed.get('phone') or ''),
+                    amount=self._amount(parsed.get('amount')),
+                    reference=parsed['checkout_request_id'],
+                    transaction_code=parsed['receipt'],
+                    status=Payment.UNMATCHED,
+                    raw={'callback': request.data},
+                )
+                logger.warning('STK payment with no member match: %s',
+                               parsed['checkout_request_id'])
+        else:
+            if pending:
+                pending.raw = {**(pending.raw or {}),
+                               'callback': request.data,
+                               'state': 'stk_failed'}
+                pending.save(update_fields=['raw'])
+            logger.info('STK push failed (%s): %s',
+                        parsed['result_code'], parsed['result_desc'])
+
+        # Daraja expects this exact shape to stop retrying.
+        return Response({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+    @staticmethod
+    def _amount(raw):
         try:
             return Decimal(str(raw)) if raw is not None else None
         except (InvalidOperation, TypeError):

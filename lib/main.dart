@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/legal_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/pay_screen.dart';
 import 'screens/splash_screen.dart';
@@ -242,6 +243,11 @@ class _GateState extends State<_Gate> {
     final pay = PayScreen.parseRoute(Uri.base);
     if (pay != null) {
       return PayScreen(collectionId: pay.$1, memberId: pay.$2);
+    }
+    // Legal pages (#/terms, #/privacy) are public too.
+    final legal = LegalScreen.parseRoute(Uri.base);
+    if (legal != null) {
+      return LegalScreen(doc: legal);
     }
     final signedIn = AuthState.signedIn.value;
     final Widget child;

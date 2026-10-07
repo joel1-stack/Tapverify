@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/collections/<int:pk>/export.csv', views.CollectionExportView.as_view()),
     path('api/members/<int:pk>/mark-paid/', views.MarkPaidView.as_view()),
     path('api/members/<int:pk>/remind/', views.RemindMemberView.as_view()),
+    path('api/members/<int:pk>/stk-push/', views.MemberStkPushView.as_view()),
 
     # Member payment experience (public)
     path('p/<str:pay_code>/', views.pay_page, name='pay-page'),
@@ -22,6 +23,8 @@ urlpatterns = [
          name='pay-start'),
 
     # Payment provider callbacks
+    path('api/webhooks/mpesa/', views.MpesaWebhookView.as_view(),
+         name='mpesa-webhook'),
     path('api/webhooks/sasapay/', views.SasaPayWebhookView.as_view(),
          name='sasapay-webhook'),
 ]

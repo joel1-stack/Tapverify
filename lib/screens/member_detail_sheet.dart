@@ -84,6 +84,26 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
         memberName: m.displayName,
       );
 
+  /// Sends an M-Pesa STK Push: the member gets a PIN prompt on their phone
+  /// and the payment is detected automatically once they enter it.
+  Future<void> _requestMpesa(Member m) async {
+    setState(() => _busy = true);
+    try {
+      final data = await Api.stkPush(m.id);
+      if (!mounted) return;
+      if (data['demo'] == true) {
+        showSuccessSnack(context, 'Demo mode: M-Pesa is not connected here');
+      } else {
+        showSuccessSnack(
+            context, 'M-Pesa prompt sent to ${Format.phone(m.phone)}');
+      }
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   /// WhatsApp's international format: digits only, no "+", never a leading 0.
   static String _waNumber(String phone) {
     final digits = phone.replaceAll(RegExp(r'\D'), '');
@@ -229,6 +249,21 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 ),
                 const SizedBox(height: 24),
                 if (!paid) ...[
+                  FilledButton.icon(
+                    icon: const Icon(Icons.phone_iphone, size: 18),
+                    onPressed:
+                        _busy ? null : () => _requestMpesa(m),
+                    label: const Text('Request M-Pesa Payment',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: kPrimary.withValues(alpha: 0.5),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   FilledButton.icon(
                     icon: const Icon(Icons.payments_outlined, size: 18),
                     onPressed: _busy

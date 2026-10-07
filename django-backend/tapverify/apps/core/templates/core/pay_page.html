@@ -215,6 +215,8 @@ form.addEventListener('submit', async (e) => {
     const data = await resp.json();
     if (data.paid) {
       showSuccess();
+    } else if (data.stk) {
+      showStkPending(data.message || 'Check your phone for the M-Pesa prompt.');
     } else if (data.checkout_url) {
       btn.innerHTML = '<span class="spinner"></span>Complete payment...';
       window.location.href = data.checkout_url;
@@ -226,6 +228,39 @@ form.addEventListener('submit', async (e) => {
     err.classList.add('show');
     btn.disabled = false;
     btn.textContent = 'Pay with M-Pesa';
+  }
+});
+
+function showStkPending(message) {
+  document.querySelector('.card').innerHTML =
+    '<div class="success">' +
+    '<div class="tick" style="background:linear-gradient(135deg,var(--teal),var(--teal-dark))">&#8987;</div>' +
+    '<h1>Check your phone</h1>' +
+    '<p>' + message + '</p>' +
+    '<p class="note">Enter your M-PESA PIN to pay KES {{ amount }} for <b>{{ title }}</b>. ' +
+    'This page updates by itself once the payment arrives.</p>' +
+    '<p class="note" id="waiting">Waiting for confirmation...</p>' +
+    '</div>';
+  pollStatus();
+}
+
+async function pollStatus() {
+  const INFO_URL = '{% url "pay-info" pay_code %}';
+  for (let i = 0; i < 24; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      const resp = await fetch(INFO_URL, {cache: 'no-store'});
+      const data = await resp.json();
+      if (data.status === 'paid') { showSuccess(); return; }
+    } catch (e) { /* network hiccup: keep polling */ }
+    const waiting = document.getElementById('waiting');
+    if (waiting) {
+      waiting.textContent = 'Still waiting... (' + ((i + 1) * 5) + ' seconds)';
+    }
+  }
+  const waiting = document.getElementById('waiting');
+  if (waiting) {
+    waiting.textContent = 'Still pending. The secretary will see it as soon as M-Pesa confirms - you can reload this page.';
   }
 });
 

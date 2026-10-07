@@ -107,6 +107,21 @@ SASAPAY_ACCOUNT_NUMBER = config('SASAPAY_ACCOUNT_NUMBER', default='')
 SASAPAY_CALLBACK_URL = config('SASAPAY_CALLBACK_URL', default='')
 SASAPAY_MOCK_MODE = config('SASAPAY_MOCK_MODE', default=True, cast=bool)
 
+# --- M-Pesa Daraja (STK Push: "Pay with M-Pesa" on the payment page) ---
+# Which rail PayStartView uses: 'mpesa' (Daraja STK) or 'sasapay'.
+PAYMENT_RAIL = config('PAYMENT_RAIL', default='mpesa')
+MPESA_ENV = config('MPESA_ENV', default='sandbox')
+MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='')
+MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='')
+MPESA_PASSKEY = config('MPESA_PASSKEY', default='')
+MPESA_SHORTCODE = config('MPESA_SHORTCODE', default='174379')
+# Sent with every STK Push request. Vercel relays it to MPESA_FORWARD_URL
+# (set in the Vercel dashboard once this backend has a public URL).
+MPESA_CALLBACK_URL = config(
+    'MPESA_CALLBACK_URL',
+    default='https://tapverify.vercel.app/api/mpesa/callback',
+)
+
 # Base URL used when building member payment links sent by SMS, e.g. https://tapverify.co
 PAYMENT_LINK_BASE = config(
     'PAYMENT_LINK_BASE',

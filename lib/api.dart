@@ -304,6 +304,22 @@ class Api {
     return data is Map && data['sent'] == true;
   }
 
+  /// Asks the backend to send this member an M-Pesa STK Push prompt
+  /// (the "check your phone" PIN request from Daraja).
+  static Future<Map<String, dynamic>> stkPush(int memberId) async {
+    if (_demo) {
+      // The demo has no Safaricom behind it; say so instead of faking it.
+      return {'sent': true, 'demo': true};
+    }
+    final resp = await http
+        .post(_u('/api/members/$memberId/stk-push/'),
+            headers: await _headers(), body: jsonEncode(const {}))
+        .timeout(_timeout);
+    final data = await _handle(resp);
+    if (data is! Map) throw ApiException('Unexpected reply from TapVerify');
+    return Map<String, dynamic>.from(data);
+  }
+
   /// What a member reported from the public payment link page.
   /// [status] is one of: claimed, partial, cancelled, issue.
   static Future<Member> submitClaim(

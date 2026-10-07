@@ -60,12 +60,33 @@ class Demo {
     required int paidCount,
     required int memberCount,
     String? dueDate,
+    String description = '',
     int iconSeed = 0,
   }) {
     final members = <Member>[];
     for (var i = 0; i < memberCount; i++) {
       final paid = i < paidCount;
       final memberId = _nextMemberId++;
+      // A few pre-loaded claims so the treasurer's Claims tab has content.
+      String? claimStatus;
+      String? claimCode;
+      double? claimAmount;
+      String? claimNote;
+      if (id == 1 && !paid) {
+        if (i == 18) {
+          claimStatus = 'claimed';
+          claimCode = 'SJ7K2M9PQ';
+        } else if (i == 20) {
+          claimStatus = 'partial';
+          claimCode = 'SJ8X41LBL';
+          claimAmount = 300;
+        } else if (i == 22) {
+          claimStatus = 'issue';
+          claimNote = 'I already paid cash to the treasurer on Friday';
+        } else if (i == 24) {
+          claimStatus = 'cancelled';
+        }
+      }
       members.add(Member(
         id: memberId,
         name: _names[(i + iconSeed) % _names.length],
@@ -77,6 +98,10 @@ class Demo {
         amountMismatch: false,
         remindersSent: paid ? 0 : (i % 2),
         payLink: 'https://tapverify.vercel.app/#/pay/$id/$memberId',
+        claimStatus: claimStatus,
+        claimCode: claimCode,
+        claimAmount: claimAmount,
+        claimNote: claimNote,
       ));
     }
     final collected =
@@ -91,6 +116,7 @@ class Demo {
         paidCount: paidCount,
         collected: collected,
         outstanding: (memberCount - paidCount) * amount,
+        description: description,
         dueDate: dueDate,
         payoutDetails: const {'till_number': '567890'},
       ),
@@ -111,6 +137,7 @@ class Demo {
         paidCount: 18,
         memberCount: 40,
         dueDate: '2026-10-31',
+        description: 'Monthly contribution to the group savings fund',
       ),
       _make(
         id: 2,
@@ -119,6 +146,7 @@ class Demo {
         paidCount: 5,
         memberCount: 20,
         dueDate: '2026-11-15',
+        description: 'Helping members pay school fees in time',
         iconSeed: 3,
       ),
       _make(
@@ -128,6 +156,7 @@ class Demo {
         paidCount: 12,
         memberCount: 30,
         dueDate: '2026-12-20',
+        description: 'Saving together for the festive season',
         iconSeed: 6,
       ),
       _make(
@@ -136,6 +165,7 @@ class Demo {
         amount: 1000,
         paidCount: 8,
         memberCount: 25,
+        description: 'Contribution to the group emergency kitty',
         iconSeed: 9,
       ),
       _make(
@@ -144,6 +174,7 @@ class Demo {
         amount: 1000,
         paidCount: 6,
         memberCount: 15,
+        description: 'Saving towards a group phone',
         iconSeed: 12,
       ),
     ]);
@@ -202,6 +233,7 @@ class Demo {
     required String title,
     required String amount,
     String? dueDate,
+    String description = '',
     required String payoutMethod,
     Map<String, String> payoutFields = const {},
     required String membersText,
@@ -255,6 +287,7 @@ class Demo {
         paidCount: 0,
         collected: 0,
         outstanding: members.length * value,
+        description: description,
         dueDate: dueDate,
         payoutDetails: payoutFields,
       ),
@@ -283,6 +316,10 @@ class Demo {
         transactionRef: m.transactionRef,
         remindersSent: m.remindersSent + 1,
         payLink: m.payLink,
+        claimStatus: m.claimStatus,
+        claimCode: m.claimCode,
+        claimAmount: m.claimAmount,
+        claimNote: m.claimNote,
       );
       sent++;
     }
@@ -335,6 +372,7 @@ class Demo {
           paidCount: paid.length,
           collected: collected,
           outstanding: outstanding,
+          description: s.description,
           dueDate: s.dueDate,
           autoDetect: s.autoDetect,
           payoutDetails: s.payoutDetails,
@@ -354,7 +392,8 @@ class Demo {
         .summary
         .amount;
     // A payer can record the full amount or any part of it; anything short
-    // of the collection amount is kept as a partial payment.
+    // of the collection amount is kept as a partial payment. An approved
+    // payment retires any claim the member had open.
     final paid = amount ?? m.paidAmount ?? expected;
     final updated = Member(
       id: m.id,
@@ -373,6 +412,68 @@ class Demo {
     return updated;
   }
 
+  // ── Claims (from the public payment link page) ────────────────────────
+
+  Member submitClaim(int memberId,
+      {required String status,
+      double? amount,
+      String? code,
+      String? note}) {
+    final m = _member(memberId);
+    _replace(
+      memberId,
+      Member(
+        id: m.id,
+        name: m.name,
+        phone: m.phone,
+        status: m.status,
+        paidAt: m.paidAt,
+        paidMethod: m.paidMethod,
+        paidAmount: m.paidAmount,
+        amountMismatch: m.amountMismatch,
+        transactionRef: m.transactionRef,
+        remindersSent: m.remindersSent,
+        payLink: m.payLink,
+        claimStatus: status,
+        claimCode: (code == null || code.trim().isEmpty) ? null : code.trim(),
+        claimAmount: amount,
+        claimNote: (note == null || note.trim().isEmpty) ? null : note.trim(),
+      ),
+    );
+    return _member(memberId);
+  }
+
+  /// The treasurer approves (mark paid) or rejects (drop) a member's claim.
+  Member resolveClaim(int memberId, {required bool approve}) {
+    final m = _member(memberId);
+    if (!approve) {
+      // Rejected, cancelled or dismissed: nothing owed changes, claim clears.
+      _replace(
+        memberId,
+        Member(
+          id: m.id,
+          name: m.name,
+          phone: m.phone,
+          status: m.status,
+          paidAt: m.paidAt,
+          paidMethod: m.paidMethod,
+          paidAmount: m.paidAmount,
+          amountMismatch: m.amountMismatch,
+          transactionRef: m.transactionRef,
+          remindersSent: m.remindersSent,
+          payLink: m.payLink,
+        ),
+      );
+      return _member(memberId);
+    }
+    if (m.claimStatus == 'claimed') return markPaid(memberId, 'cash');
+    if (m.claimStatus == 'partial') {
+      return markPaid(memberId, 'cash', amount: m.claimAmount);
+    }
+    // 'issue' or 'cancelled': approving just clears the notice.
+    return resolveClaim(memberId, approve: false);
+  }
+
   bool remindMember(int memberId) {
     final m = _member(memberId);
     _replace(
@@ -389,6 +490,10 @@ class Demo {
         transactionRef: m.transactionRef,
         remindersSent: m.remindersSent + 1,
         payLink: m.payLink,
+        claimStatus: m.claimStatus,
+        claimCode: m.claimCode,
+        claimAmount: m.claimAmount,
+        claimNote: m.claimNote,
       ),
     );
     return true;

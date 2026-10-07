@@ -59,6 +59,7 @@ class CreateCollectionScreen extends StatefulWidget {
 class _CreateCollectionScreenState extends State<CreateCollectionScreen>
     with SingleTickerProviderStateMixin {
   final _titleController = TextEditingController();
+  final _descController = TextEditingController();
   final _amountController = TextEditingController();
   final _membersController = TextEditingController();
   final _tillController = TextEditingController();
@@ -92,7 +93,8 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
   void dispose() {
     _controller.dispose();
     for (final c in [
-      _titleController, _amountController, _membersController, _tillController,
+      _titleController, _descController, _amountController, _membersController,
+      _tillController,
       _paybillController, _paybillAccountController, _personalPhoneController,
       _bankAccountController, _bankBusinessController,
     ]) {
@@ -167,6 +169,7 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
         dueDate: _dueDate == null
             ? null
             : DateFormat('yyyy-MM-dd').format(_dueDate!),
+        description: _descController.text.trim(),
         payoutMethod: _payoutMethod,
         payoutFields: _payoutFields,
         membersText: _membersController.text.trim(),
@@ -429,6 +432,13 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen>
                       label: 'Title',
                       hint: 'September Welfare',
                       icon: Icons.title_outlined,
+                    ),
+                    const SizedBox(height: 14),
+                    _StyledField(
+                      controller: _descController,
+                      label: 'Description (optional)',
+                      hint: 'Monthly welfare contribution for September',
+                      icon: Icons.notes_outlined,
                     ),
                     const SizedBox(height: 14),
                     Row(

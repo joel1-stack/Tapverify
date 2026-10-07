@@ -31,6 +31,15 @@ class _MemberGroup {
   final CollectionDetail detail;
 }
 
+/// One waiting item on the Claims tab: what a member reported from their
+/// payment link, so the treasurer can confirm it.
+class _ClaimRow {
+  const _ClaimRow(this.collection, this.member);
+
+  final CollectionSummary collection;
+  final Member member;
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -42,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<CollectionSummary>> _future = _load();
   late Future<List<_MemberGroup>> _membersFuture = _loadMembers();
+  late Future<List<_ClaimRow>> _claimsFuture = _loadClaims();
   late final AnimationController _fabController;
   late final Animation<double> _fabScale;
   String _name = '';
@@ -62,6 +72,20 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
     return groups;
+  }
+
+  /// Every member who reported something from their payment link, waiting
+  /// for the treasurer to confirm or dismiss it.
+  Future<List<_ClaimRow>> _loadClaims() async {
+    final collections = await Api.listCollections();
+    final rows = <_ClaimRow>[];
+    for (final c in collections) {
+      final detail = await Api.getCollection(c.id);
+      for (final m in detail.members) {
+        if (m.hasClaim) rows.add(_ClaimRow(c, m));
+      }
+    }
+    return rows;
   }
 
   @override
@@ -99,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _future = _load();
       _membersFuture = _loadMembers();
+      _claimsFuture = _loadClaims();
     });
     // Swallow the error here: the FutureBuilder renders it, and an unhandled
     // rejection would otherwise surface as a red screen in debug.
@@ -142,6 +167,8 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => _tab = index);
     if (index == 2) {
       setState(() => _membersFuture = _loadMembers());
+    } else if (index == 3) {
+      setState(() => _claimsFuture = _loadClaims());
     }
   }
 
@@ -154,7 +181,8 @@ class _HomeScreenState extends State<HomeScreen>
       body: switch (_tab) {
         0 => _homeTab(),
         1 => _collectionsTab(),
-        _ => _membersTab(),
+        2 => _membersTab(),
+        _ => _claimsTab(),
       },
       bottomNavigationBar: _HomeNavBar(tab: _tab, onChanged: _goTab),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -355,6 +383,97 @@ class _HomeScreenState extends State<HomeScreen>
     );
     if (changed == true && mounted) {
       setState(() => _membersFuture = _loadMembers());
+    }
+  }
+
+  /// The Claims tab: everything members reported from their payment links.
+  Widget _claimsTab() {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+              20, MediaQuery.paddingOf(context).top + 18, 20, 16),
+          color: kPrimaryDark,
+          child: const Text(
+            'Claims',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _refresh,
+            color: kPrimary,
+            child: AppConstrained(
+              child: FutureBuilder<List<_ClaimRow>>(
+                future: _claimsFuture,
+                builder: (context, snap) {
+                  if (snap.hasError) {
+                    return _ErrorState(
+                      message: friendlyError(snap.error!),
+                      onRetry: () =>
+                          setState(() => _claimsFuture = _loadClaims()),
+                    );
+                  }
+                  final rows = snap.data;
+                  if (rows == null) {
+                    return _buildLoadingState();
+                  }
+                  if (rows.isEmpty) {
+                    return const _EmptyClaims();
+                  }
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10, left: 2),
+                        child: Text(
+                          '${rows.length} waiting for you',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: kMuted,
+                          ),
+                        ),
+                      ),
+                      for (var i = 0; i < rows.length; i++) ...[
+                        _ClaimTile(
+                          row: rows[i],
+                          onDecide: (approve) =>
+                              _resolveClaim(rows[i], approve: approve),
+                        ),
+                        if (i != rows.length - 1) const SizedBox(height: 12),
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Approves (mark as paid) or rejects a claim from the Claims tab.
+  Future<void> _resolveClaim(_ClaimRow row, {required bool approve}) async {
+    try {
+      await Api.resolveClaim(row.member.id, approve: approve);
+      if (!mounted) return;
+      setState(() => _claimsFuture = _loadClaims());
+      final status = row.member.claimStatus;
+      final message = !approve
+          ? 'Claim rejected'
+          : (status == 'issue' || status == 'cancelled')
+              ? 'Dismissed'
+              : 'Marked as Paid';
+      showSuccessSnack(context, message);
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
     }
   }
 
@@ -1038,6 +1157,8 @@ class _HomeNavBar extends StatelessWidget {
             item(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
             item(1, Icons.list_alt, Icons.list_alt_rounded, 'Collections'),
             item(2, Icons.people_outline, Icons.people_rounded, 'Members'),
+            item(3, Icons.assignment_outlined,
+                Icons.assignment_turned_in_outlined, 'Claims'),
           ],
         ),
       ),
@@ -1340,6 +1461,250 @@ class _EmptyMembers extends StatelessWidget {
             SizedBox(height: 8),
             Text(
               'Members appear here once you\ncreate a collection.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: kMuted, height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One claim on the Claims tab: who reported what, with the treasurer's
+/// decisions (mark as paid / reject, or dismiss notices).
+class _ClaimTile extends StatelessWidget {
+  const _ClaimTile({required this.row, required this.onDecide});
+
+  final _ClaimRow row;
+  final ValueChanged<bool> onDecide;
+
+  (String, Color) get _chip => switch (row.member.claimStatus) {
+        'claimed' => ('Claimed paid', kPrimaryDark),
+        'partial' => ('Partial payment', kAccentDark),
+        'cancelled' => ('Cancelled', kMuted),
+        'issue' => ('Issue raised', kDanger),
+        _ => ('Claim', kMuted),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final m = row.member;
+    final s = row.collection;
+    final (chipLabel, chipColor) = _chip;
+    final pending = m.claimStatus == 'claimed' || m.claimStatus == 'partial';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kHairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: kPrimaryLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  Format.initial(m.displayName),
+                  style: const TextStyle(
+                    color: kPrimaryDark,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      m.displayName,
+                      style: const TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w900,
+                        color: kBrandInk,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${s.title} · ${Format.kes(s.amount)}',
+                      style: TextStyle(
+                          fontSize: 12.5, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: chipColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  chipLabel,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: chipColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (m.claimAmount != null ||
+              m.claimCode != null ||
+              m.claimNote != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (m.claimAmount != null)
+                    Text(
+                      'Claimed: ${Format.kes(m.claimAmount!)} of ${Format.kes(s.amount)}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: kBrandInk,
+                      ),
+                    ),
+                  if (m.claimCode != null) ...[
+                    if (m.claimAmount != null) const SizedBox(height: 4),
+                    Text(
+                      'M-Pesa code: ${m.claimCode}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: kBrandInk,
+                      ),
+                    ),
+                  ],
+                  if (m.claimNote != null) ...[
+                    if (m.claimAmount != null || m.claimCode != null)
+                      const SizedBox(height: 4),
+                    Text(
+                      m.claimNote!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (pending) ...[
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => onDecide(true),
+                    icon: const Icon(Icons.check_rounded, size: 18),
+                    label: const Text('Mark as Paid',
+                        style: TextStyle(
+                            fontSize: 13.5, fontWeight: FontWeight.w800)),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                OutlinedButton(
+                  onPressed: () => onDecide(false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: kDanger,
+                    side: BorderSide(
+                        color: kDanger.withValues(alpha: 0.5), width: 1.4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 11),
+                  ),
+                  child: const Text('Reject',
+                      style: TextStyle(
+                          fontSize: 13.5, fontWeight: FontWeight.w700)),
+                ),
+              ] else ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => onDecide(true),
+                    icon: const Icon(Icons.done_all_rounded, size: 18),
+                    label: const Text('Dismiss',
+                        style: TextStyle(
+                            fontSize: 13.5, fontWeight: FontWeight.w700)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: kPrimaryDark,
+                      side: const BorderSide(color: kPrimary, width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyClaims extends StatelessWidget {
+  const _EmptyClaims();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: kPrimaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.assignment_turned_in_outlined,
+                  size: 40, color: kPrimaryDark),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No claims yet',
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.w800, color: kBrandInk),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'When members submit a payment from their\nlink, it waits for you here.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: kMuted, height: 1.5),
             ),

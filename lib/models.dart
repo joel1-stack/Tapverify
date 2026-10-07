@@ -8,6 +8,7 @@ class CollectionSummary {
     required this.paidCount,
     required this.collected,
     required this.outstanding,
+    this.description = '',
     this.dueDate,
     this.autoDetect = false,
     this.payoutDetails = const {},
@@ -22,6 +23,7 @@ class CollectionSummary {
         paidCount: j['paid_count'] as int,
         collected: double.parse(j['collected'].toString()),
         outstanding: double.parse(j['outstanding'].toString()),
+        description: (j['description'] as String?) ?? '',
         dueDate: j['due_date'] as String?,
         autoDetect: j['auto_detect'] as bool? ?? false,
         payoutDetails: (j['payout_details'] as Map?)?.map(
@@ -38,6 +40,9 @@ class CollectionSummary {
   final int paidCount;
   final double collected;
   final double outstanding;
+
+  /// Optional line the treasurer wrote, shown on the payment link page.
+  final String description;
   final String? dueDate;
 
   /// True when the API will match Till/Paybill payments on its own.
@@ -62,7 +67,7 @@ class CollectionSummary {
         return account.isEmpty ? 'Paybill $paybill' : 'Paybill $paybill, $account';
       case 'personal':
         final phone = payoutDetails['personal_phone'] ?? '';
-        return phone.isEmpty ? 'Personal number' : 'Personal ${phone}';
+        return phone.isEmpty ? 'Personal number' : 'Personal $phone';
       case 'bank':
         final bank = payoutDetails['bank_details'] ?? '';
         return bank.isEmpty ? 'Bank account' : bank;
@@ -85,6 +90,10 @@ class Member {
     this.paidAmount,
     this.transactionRef,
     this.payLink,
+    this.claimStatus,
+    this.claimCode,
+    this.claimAmount,
+    this.claimNote,
   });
 
   factory Member.fromJson(Map<String, dynamic> j) => Member(
@@ -101,6 +110,12 @@ class Member {
         transactionRef: j['transaction_ref'] as String?,
         remindersSent: j['reminders_sent'] as int? ?? 0,
         payLink: j['pay_link'] as String?,
+        claimStatus: j['claim_status'] as String?,
+        claimCode: j['claim_code'] as String?,
+        claimAmount: j['claim_amount'] == null
+            ? null
+            : double.parse(j['claim_amount'].toString()),
+        claimNote: j['claim_note'] as String?,
       );
 
   final int id;
@@ -115,7 +130,21 @@ class Member {
   final int remindersSent;
   final String? payLink;
 
+  /// What this member reported from the payment link page, waiting on the
+  /// treasurer: 'claimed', 'partial', 'cancelled' or 'issue'.
+  final String? claimStatus;
+
+  /// M-Pesa / transaction code they typed, when they gave one.
+  final String? claimCode;
+
+  /// How much a partial claim says was sent.
+  final double? claimAmount;
+
+  /// Their note or issue text.
+  final String? claimNote;
+
   bool get isPaid => status == 'paid';
+  bool get hasClaim => claimStatus != null && claimStatus!.isNotEmpty;
   String get displayName => name.isNotEmpty ? name : phone;
 }
 

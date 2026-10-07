@@ -57,4 +57,67 @@ void main() {
     expect(created.summary.title, 'Test Chama');
     expect(Demo.instance.listCollections(), hasLength(before + 1));
   });
+
+  test('payment link claims reach the treasurer and can be settled', () {
+    Demo.instance.requestOtp('0715641339');
+    Demo.instance.verifyOtp('0715641339', '123456');
+
+    final detail = Demo.instance.getCollection(1);
+    // The seeded data ships with claims so the Claims tab is never empty.
+    expect(detail.members.where((m) => m.claimStatus == 'claimed'), isNotEmpty);
+    expect(detail.members.where((m) => m.claimStatus == 'partial'), isNotEmpty);
+    expect(detail.members.where((m) => m.claimStatus == 'issue'), isNotEmpty);
+    expect(detail.members.where((m) => m.claimStatus == 'cancelled'), isNotEmpty);
+
+    // A member claims a full payment from their pay link: waits for the
+    // treasurer, nobody is paid yet.
+    final member =
+        detail.members.firstWhere((m) => !m.isPaid && !m.hasClaim);
+    Demo.instance.submitClaim(
+      member.id,
+      status: 'claimed',
+      amount: 500,
+      code: 'SJ1TEST01',
+      note: 'Paid at noon',
+    );
+    var after = Demo.instance
+        .getCollection(1)
+        .members
+        .firstWhere((m) => m.id == member.id);
+    expect(after.claimStatus, 'claimed');
+    expect(after.claimCode, 'SJ1TEST01');
+    expect(after.isPaid, isFalse);
+
+    // Approving the claim marks the member paid and clears it.
+    Demo.instance.resolveClaim(member.id, approve: true);
+    after = Demo.instance
+        .getCollection(1)
+        .members
+        .firstWhere((m) => m.id == member.id);
+    expect(after.isPaid, isTrue);
+    expect(after.hasClaim, isFalse);
+
+    // A partial claim that the treasurer rejects changes nothing.
+    final other =
+        Demo.instance.getCollection(1).members.firstWhere((m) => !m.isPaid && !m.hasClaim);
+    Demo.instance.submitClaim(other.id, status: 'partial', amount: 200, code: 'SJ2TEST02');
+    Demo.instance.resolveClaim(other.id, approve: false);
+    after = Demo.instance
+        .getCollection(1)
+        .members
+        .firstWhere((m) => m.id == other.id);
+    expect(after.isPaid, isFalse);
+    expect(after.hasClaim, isFalse);
+
+    // Cancelling from the link is recorded so the treasurer can see it.
+    final cancelled =
+        Demo.instance.getCollection(1).members.firstWhere((m) => !m.isPaid && !m.hasClaim);
+    Demo.instance.submitClaim(cancelled.id, status: 'cancelled');
+    after = Demo.instance
+        .getCollection(1)
+        .members
+        .firstWhere((m) => m.id == cancelled.id);
+    expect(after.claimStatus, 'cancelled');
+    expect(after.isPaid, isFalse);
+  });
 }

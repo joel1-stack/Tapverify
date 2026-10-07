@@ -220,6 +220,7 @@ class Api {
     required String title,
     required String amount,
     String? dueDate,
+    String description = '',
     required String payoutMethod,
     Map<String, String> payoutFields = const {},
     required String membersText,
@@ -229,6 +230,7 @@ class Api {
         title: title,
         amount: amount,
         dueDate: dueDate,
+        description: description,
         payoutMethod: payoutMethod,
         payoutFields: payoutFields,
         membersText: membersText,
@@ -241,6 +243,7 @@ class Api {
               'title': title,
               'amount': amount,
               if (dueDate != null) 'due_date': dueDate,
+              if (description.isNotEmpty) 'description': description,
               'payout_method': payoutMethod,
               ...payoutFields,
               'members_text': membersText,
@@ -299,5 +302,46 @@ class Api {
         .timeout(_timeout);
     final data = await _handle(resp);
     return data is Map && data['sent'] == true;
+  }
+
+  /// What a member reported from the public payment link page.
+  /// [status] is one of: claimed, partial, cancelled, issue.
+  static Future<Member> submitClaim(
+    int memberId, {
+    required String status,
+    double? amount,
+    String? code,
+    String? note,
+  }) async {
+    if (_demo) {
+      return Demo.instance.submitClaim(memberId,
+          status: status, amount: amount, code: code, note: note);
+    }
+    final resp = await http
+        .post(_u('/api/members/$memberId/claim/'),
+            headers: await _headers(),
+            body: jsonEncode({
+              'status': status,
+              if (amount != null) 'amount': amount,
+              if (code != null && code.isNotEmpty) 'code': code,
+              if (note != null && note.isNotEmpty) 'note': note,
+            }))
+        .timeout(_timeout);
+    final data = await _handle(resp);
+    if (data is! Map) throw ApiException('Unexpected reply from TapVerify');
+    return Member.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  /// The treasurer approves (mark as paid) or rejects a member's claim.
+  static Future<Member> resolveClaim(int memberId, {required bool approve}) async {
+    if (_demo) return Demo.instance.resolveClaim(memberId, approve: approve);
+    final resp = await http
+        .post(_u('/api/members/$memberId/claim/resolve/'),
+            headers: await _headers(),
+            body: jsonEncode({'approve': approve}))
+        .timeout(_timeout);
+    final data = await _handle(resp);
+    if (data is! Map) throw ApiException('Unexpected reply from TapVerify');
+    return Member.fromJson(Map<String, dynamic>.from(data));
   }
 }
